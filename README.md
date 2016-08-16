@@ -8,7 +8,7 @@ Source code [flume-configurator] (https://github.com/keedio/flume-configurator)
 
 Clone the project:
 
-
+```sh
 $ git clone https://github.com/keedio/flume-configurator.git
 ```
 
@@ -39,6 +39,7 @@ where parameters are:
 ```
 
 Example:
+
 ```sh
 java -jar flume-configurator-0.1.0.jar flume1.properties ; true true output
 ```
