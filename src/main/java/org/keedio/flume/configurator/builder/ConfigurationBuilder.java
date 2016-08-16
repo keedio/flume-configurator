@@ -827,7 +827,7 @@ public class ConfigurationBuilder {
 				//Write Flume configuration files
 				writeConfigurationFiles();
 
-				logger.info("The process has ended correcly. The output files are in " + pathConfigurationGeneratedFile);
+				logger.info("The process has ended correctly. The output files are in " + pathConfigurationGeneratedFile);
 				logger.info("******* END FLUME CONFIGURATOR PROCESS *****************");
 				return true;
 
@@ -897,7 +897,7 @@ public class ConfigurationBuilder {
 
 
 		} catch (Exception e) {
-			logger.error("Ha ocurrido un error en Flume Configurator. Revise la configuración", e);
+			logger.error("An error has occurred in Flume configurator. Check the properties configuration file and the generated logs", e);
 			logger.info("******* END FLUME CONFIGURATOR PROCESS *****************");
 
 		}
