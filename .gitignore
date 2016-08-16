@@ -1,0 +1,12 @@
+# Created by .ignore support plugin (hsz.mobi)
+/target/
+.idea/
+/agent1_flume.conf
+/agent2_flume.conf
+/dependency-reduced-pom.xml
+/agent3_flume.conf
+/agent_flume.conf
+/outputFile.conf_agent1_flume.conf
+/outputFile.conf_agent3_flume.conf
+/outputFile.conf
+/outputFile.conf_agent2_flume.conf
