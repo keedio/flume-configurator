@@ -6,7 +6,7 @@
 
     <groupId>org.keedio.flume</groupId>
     <artifactId>flume-configurator</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.0git checkout develop</version>
     <packaging>jar</packaging>
 
     <name>flume-configurator</name>
