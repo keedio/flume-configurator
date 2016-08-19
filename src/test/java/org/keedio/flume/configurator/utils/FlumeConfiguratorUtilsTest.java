@@ -16,13 +16,12 @@ import org.junit.Test;
 import org.keedio.flume.configurator.constants.FlumeConfiguratorConstants;
 import org.keedio.flume.configurator.structures.LinkedProperties;
 import org.keedio.flume.configurator.structures.PartialProperties;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
 public class FlumeConfiguratorUtilsTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(FlumeConfiguratorUtilsTest.class);
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(FlumeConfiguratorUtilsTest.class);
 
     private static final String DEFAULT_SEPARATOR = ";";
 

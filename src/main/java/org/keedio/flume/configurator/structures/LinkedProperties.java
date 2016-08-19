@@ -13,10 +13,10 @@ import java.util.*;
  * Ordered properties implementation
  */
 
-public class LinkedProperties extends Properties implements Serializable {
+public class LinkedProperties extends Properties {
     private static final long serialVersionUID = 1L;
 
-    private Map<Object, Object> linkMap = new LinkedHashMap<>();
+    private transient Map<Object, Object> linkMap = new LinkedHashMap<>();
 
     @Override
     public void clear(){

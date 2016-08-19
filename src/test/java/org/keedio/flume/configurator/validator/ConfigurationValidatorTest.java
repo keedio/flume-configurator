@@ -14,12 +14,11 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
 import org.keedio.flume.configurator.constants.FlumeConfiguratorConstants;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ConfigurationValidatorTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(ConfigurationValidatorTest.class);
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(ConfigurationValidatorTest.class);
 
 
     private static final String AGENT1_NAME = "agent1";

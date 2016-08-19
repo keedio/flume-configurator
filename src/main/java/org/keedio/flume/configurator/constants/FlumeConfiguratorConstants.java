@@ -2,9 +2,7 @@ package org.keedio.flume.configurator.constants;
 
 public class FlumeConfiguratorConstants {
 
-    private FlumeConfiguratorConstants() {
-        super();
-    }
+
 
     public static final String WHITE_SPACE = " ";
     public static final String ASTERISK = "*";
@@ -49,6 +47,10 @@ public class FlumeConfiguratorConstants {
     public static final String PARTIAL_PROPERTY_COMMENT_PROPERTIES_PREFIX = "comment";
 
     public static final String CONFIGURATION_ERROR = "Configuration error ==> ";
+
+    private FlumeConfiguratorConstants() {
+        super();
+    }
 
 }
 

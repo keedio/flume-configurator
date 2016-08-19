@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ConfigurationBuilderTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(ConfigurationBuilderTest.class);
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(ConfigurationBuilderTest.class);
 
     private static final String PROPERTIES_FILE_PATH = "src/test/resources/FlumeConfigurationExample.properties";
     private static final String PROPERTIES_FILE_VALIDATION_ERROR_PATH = "src/test/resources/FlumeConfigurationExampleValidationError.properties";
@@ -127,7 +127,7 @@ public class ConfigurationBuilderTest {
     
   
     @Test
-    public void test_01_testLoadPropertiesFileFileNotFound() {
+    public void test01LoadPropertiesFileFileNotFound() {
 
         try {
 
@@ -146,19 +146,19 @@ public class ConfigurationBuilderTest {
 
         } catch (InvocationTargetException ite) {
                if (!(ite.getCause() instanceof FileNotFoundException)) {
-                   Assert.fail("An error has occurred [test_01_testLoadPropertiesFileFileNotFound] method");
-                   logger.error("An error has occurred [test_01_testLoadPropertiesFileFileNotFound] method", ite);
+                   Assert.fail("An error has occurred [test01LoadPropertiesFileFileNotFound] method");
+                   logger.error("An error has occurred [test01LoadPropertiesFileFileNotFound] method", ite);
                }
         } catch (Exception e) {
-            Assert.fail("An error has occurred [test_01_testLoadPropertiesFileFileNotFound] method");
-            logger.error("An error has occurred [test_01_testLoadPropertiesFileFileNotFound] method", e);
+            Assert.fail("An error has occurred [test01LoadPropertiesFileFileNotFound] method");
+            logger.error("An error has occurred [test01LoadPropertiesFileFileNotFound] method", e);
         }
     }
     
     
     
     @Test
-    public void test_02_testLoadPropertiesFile() {
+    public void test02LoadPropertiesFile() {
 
         try {
 
@@ -174,15 +174,15 @@ public class ConfigurationBuilderTest {
             Assert.assertTrue("The load of the properties is not correct", flumeConfigurationProperties.size() > 0);
 
         } catch (Exception e) {
-            Assert.fail("An error has occurred [test_02_testLoadPropertiesFile] method");
-            logger.error("An error has occurred [test_02_testLoadPropertiesFile] method", e);
+            Assert.fail("An error has occurred [test02LoadPropertiesFile] method");
+            logger.error("An error has occurred [test02LoadPropertiesFile] method", e);
         }
     }    
    
     
     
     @Test
-    public void test_03_testGenerateAgentsList() {
+    public void test03GenerateAgentsList() {
 
         try {
 
@@ -200,7 +200,7 @@ public class ConfigurationBuilderTest {
 
             agentList = configurationBuilder.getAgentsList();
             Assert.assertNotNull("The generation of the list of agents is not correct", agentList);
-            Assert.assertTrue("The generation of the list of agents is not correct", agentList.size() > 0);
+            Assert.assertFalse("The generation of the list of agents is not correct", agentList.isEmpty());
 
             configurationInitialMap = configurationBuilder.getConfigurationInitialMap();
             Assert.assertTrue("The generation of the list of agents is not correct", configurationInitialMap.size() > 0);
@@ -209,8 +209,8 @@ public class ConfigurationBuilderTest {
             Assert.assertTrue("The generation of the list of agents is not correct", afterGenerateAgentsListPropertiesNumber == beforeGenerateAgentsListPropertiesNumber);
 
         } catch (Exception e) {
-            Assert.fail("An error has occurred [test_03_testGenerateAgentsList] method");
-            logger.error("An error has occurred [test_03_testGenerateAgentsList] method", e);
+            Assert.fail("An error has occurred [test03GenerateAgentsList] method");
+            logger.error("An error has occurred [test03GenerateAgentsList] method", e);
         }
     }  
     
@@ -218,7 +218,7 @@ public class ConfigurationBuilderTest {
     
     @Test
     @SuppressWarnings("unchecked")
-    public void test_04_testGenerateAgentElements() {
+    public void test04GenerateAgentElements() {
 
         try {
 
@@ -268,15 +268,15 @@ public class ConfigurationBuilderTest {
             Assert.assertTrue("The generation of the list of sinks is not correct", containsAgentElementsSinks);
 
         } catch (Exception e) {
-            Assert.fail("An error has occurred [test_04_testGenerateAgentElements] method");
-            logger.error("An error has occurred [test_04_testGenerateAgentElements] method", e);
+            Assert.fail("An error has occurred [test04GenerateAgentElements] method");
+            logger.error("An error has occurred [test04GenerateAgentElements] method", e);
         }
     }  
     
     
     
     @Test
-    public void test_05_testGenerateSourcesInterceptors() {
+    public void test05GenerateSourcesInterceptors() {
 
         try {    
 
@@ -300,15 +300,15 @@ public class ConfigurationBuilderTest {
             Assert.assertTrue("The generation of the list of interceptors is not correct", containsSourcesInterceptors);
 
         } catch (Exception e) {
-            Assert.fail("An error has occurred [test_05_testGenerateSourcesInterceptors] method");
-            logger.error("An error has occurred [test_05_testGenerateSourcesInterceptors] method", e);
+            Assert.fail("An error has occurred [test05GenerateSourcesInterceptors] method");
+            logger.error("An error has occurred [test05GenerateSourcesInterceptors] method", e);
         }
     }  
     
     
     
     @Test
-    public void test_06_testGenerateSourcesInterceptorsCommonProperties() {
+    public void test06GenerateSourcesInterceptorsCommonProperties() {
 
         try {    
 
@@ -325,15 +325,15 @@ public class ConfigurationBuilderTest {
             Assert.assertTrue("The generation of the list of interceptors common properties is not correct", containsInterceptorsProperties);
   
         } catch (Exception e) {
-            Assert.fail("An error has occurred [test_06_testGenerateSourcesInterceptorsCommonProperties] method");
-            logger.error("An error has occurred [test_06_testGenerateSourcesInterceptorsCommonProperties] method", e);
+            Assert.fail("An error has occurred [test06GenerateSourcesInterceptorsCommonProperties] method");
+            logger.error("An error has occurred [test06GenerateSourcesInterceptorsCommonProperties] method", e);
         }
     }    
     
     
     
     @Test
-    public void test_07_testGenerateSourcesInterceptorsPartialProperties() {
+    public void test07GenerateSourcesInterceptorsPartialProperties() {
 
         try {    
 
@@ -346,15 +346,15 @@ public class ConfigurationBuilderTest {
             Assert.assertTrue("The generation of the list of interceptors partial properties is not correct", afterGenerateSourcesInterceptorsCommonPropertiesPropertiesNumber > beforeGenerateSourcesInterceptorsCommonPropertiesPropertiesNumber);
 
         } catch (Exception e) {
-            Assert.fail("An error has occurred [test_07_testGenerateSourcesInterceptorsPartialProperties] method");
-            logger.error("An error has occurred [test_07_testGenerateSourcesInterceptorsPartialProperties] method", e);
+            Assert.fail("An error has occurred [test07GenerateSourcesInterceptorsPartialProperties] method");
+            logger.error("An error has occurred [test07GenerateSourcesInterceptorsPartialProperties] method", e);
         }
     }     
     
     
     
     @Test
-    public void test_08_testGenerateElementsCommonProperties() {
+    public void test08GenerateElementsCommonProperties() {
 
         try {    
 
@@ -398,15 +398,15 @@ public class ConfigurationBuilderTest {
             Assert.assertTrue("The generation of the list of sinks common properties is not correct", containsSinksProperties);
 
         } catch (Exception e) {
-            Assert.fail("An error has occurred [test_08_testGenerateElementsCommonProperties] method");
-            logger.error("An error has occurred [test_08_testGenerateElementsCommonProperties] method", e);
+            Assert.fail("An error has occurred [test08GenerateElementsCommonProperties] method");
+            logger.error("An error has occurred [test08GenerateElementsCommonProperties] method", e);
         }
     }      
     
     
     
     @Test
-    public void test_09_testGenerateElementsPartialProperties() {
+    public void test09GenerateElementsPartialProperties() {
 
         try {    
 
@@ -452,14 +452,14 @@ public class ConfigurationBuilderTest {
             Assert.assertTrue("The generation of the list of sinks partial properties is not correct", containsSinksProperties);
 
         } catch (Exception e) {
-            Assert.fail("An error has occurred [test_09_testGenerateElementsPartialProperties] method");
-            logger.error("An error has occurred [test_09_testGenerateElementsPartialProperties] method", e);
+            Assert.fail("An error has occurred [test09GenerateElementsPartialProperties] method");
+            logger.error("An error has occurred [test09GenerateElementsPartialProperties] method", e);
         }
     }  
     
     
     @Test
-    public void test_10_testGenerateFinalStructureMaps() {
+    public void test10GenerateFinalStructureMaps() {
 
         try {
 
@@ -480,15 +480,15 @@ public class ConfigurationBuilderTest {
             }
 
         } catch (Exception e) {
-            Assert.fail("An error has occurred [test_10_testGenerateFinalStructureMaps] method");
-            logger.error("An error has occurred [test_10_testGenerateFinalStructureMaps] method", e);
+            Assert.fail("An error has occurred [test10GenerateFinalStructureMaps] method");
+            logger.error("An error has occurred [test10GenerateFinalStructureMaps] method", e);
         }
     }  
     
    
     
     @Test
-    public void test_11_testWriteConfigurationFilesInvalidPath() {
+    public void test11WriteConfigurationFilesInvalidPath() {
 
         try {
 
@@ -500,17 +500,18 @@ public class ConfigurationBuilderTest {
 
         } catch (InvocationTargetException ite) {
                if (!(ite.getCause() instanceof InvalidPathException)) {
-                   Assert.fail("An error has occurred [test_11_testWriteConfigurationFilesInvalidPath] method");
+                   Assert.fail("An error has occurred [test11WriteConfigurationFilesInvalidPath] method");
+                   logger.error("An error has occurred [test11WriteConfigurationFilesInvalidPath] method", ite);
                }
         } catch (Exception e) {
-            Assert.fail("An error has occurred [test_11_testWriteConfigurationFilesInvalidPath] method");
-            logger.error("An error has occurred [test_11_testWriteConfigurationFilesInvalidPath] method", e);
+            Assert.fail("An error has occurred [test11WriteConfigurationFilesInvalidPath] method");
+            logger.error("An error has occurred [test11WriteConfigurationFilesInvalidPath] method", e);
         }
     }    
     
     
     @Test
-    public void test_12_testWriteConfigurationFiles() {
+    public void test12WriteConfigurationFiles() {
 
         try {
 
@@ -546,14 +547,14 @@ public class ConfigurationBuilderTest {
             writeConfigurationFilesMethod.invoke(configurationBuilder, objectNull);
 
         } catch (Exception e) {
-            Assert.fail("An error has occurred [test_12_testWriteConfigurationFiles] method");
-            logger.error("An error has occurred [test_12_testWriteConfigurationFiles] method", e);
+            Assert.fail("An error has occurred [test12WriteConfigurationFiles] method");
+            logger.error("An error has occurred [test12WriteConfigurationFiles] method", e);
         }
     }   
     
     
     @Test
-    public void test_13_testBuildConfigurationMap() {
+    public void test13BuildConfigurationMap() {
 
         try {  
 
@@ -577,8 +578,8 @@ public class ConfigurationBuilderTest {
             Assert.assertTrue("The Flume configuration file has not been built correctly", isCorrect);
             
         } catch (Exception e) {
-            Assert.fail("An error has occurred [test_13_testBuildConfigurationMap] method");
-            logger.error("An error has occurred [test_13_testBuildConfigurationMap] method", e);
+            Assert.fail("An error has occurred [test13BuildConfigurationMap] method");
+            logger.error("An error has occurred [test13BuildConfigurationMap] method", e);
         }
     } 
     
