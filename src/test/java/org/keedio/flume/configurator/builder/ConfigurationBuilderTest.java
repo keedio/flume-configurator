@@ -17,7 +17,6 @@ import org.junit.runners.MethodSorters;
 import org.keedio.flume.configurator.constants.FlumeConfiguratorConstants;
 import org.keedio.flume.configurator.structures.AgentConfigurationProperties;
 import org.keedio.flume.configurator.structures.LinkedProperties;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
