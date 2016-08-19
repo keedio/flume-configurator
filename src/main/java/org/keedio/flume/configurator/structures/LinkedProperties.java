@@ -1,7 +1,10 @@
 package org.keedio.flume.configurator.structures;
 
+import org.keedio.flume.configurator.exceptions.FlumeConfiguratorException;
+
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.io.Serializable;
 import java.util.*;
 
 
@@ -10,7 +13,7 @@ import java.util.*;
  * Ordered properties implementation
  */
 
-public class LinkedProperties extends Properties{
+public class LinkedProperties extends Properties implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private Map<Object, Object> linkMap = new LinkedHashMap<>();
@@ -38,7 +41,7 @@ public class LinkedProperties extends Properties{
     @Override
     @SuppressWarnings("unchecked")
     public Enumeration elements(){
-        throw new RuntimeException("Method elements is not supported in LinkedProperties class");
+        throw new FlumeConfiguratorException("Method elements is not supported in LinkedProperties class");
     }
 
     @Override
@@ -51,6 +54,10 @@ public class LinkedProperties extends Properties{
     public boolean equals(Object o){
         return linkMap.equals(o);
     }
+
+    @Override
+    public int hashCode() { return  linkMap.hashCode(); }
+
 
     @Override
     public Object get(Object key){

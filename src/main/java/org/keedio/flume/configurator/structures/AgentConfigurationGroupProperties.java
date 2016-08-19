@@ -9,60 +9,60 @@ import java.util.Map;
 public class AgentConfigurationGroupProperties {
 
 
-	private List listSourceProperties;
-	private List listChannelProperties;
-	private List listSinkProperties;
-	private Map<String,List<String>> mapSourceInterceptorProperties;
+    private List listSourceProperties;
+    private List listChannelProperties;
+    private List listSinkProperties;
+    private Map<String,List<String>> mapSourceInterceptorProperties;
 
 
 
-	public AgentConfigurationGroupProperties() {
-		super();
+    public AgentConfigurationGroupProperties() {
+        super();
 
-		listSourceProperties = new ArrayList();
-		listChannelProperties = new ArrayList();
-		listSinkProperties = new ArrayList();
-		mapSourceInterceptorProperties = new LinkedHashMap<>();
+        listSourceProperties = new ArrayList();
+        listChannelProperties = new ArrayList();
+        listSinkProperties = new ArrayList();
+        mapSourceInterceptorProperties = new LinkedHashMap<>();
 
-	}
-
-
-	public List getListSourceProperties() {
-		return listSourceProperties;
-	}
+    }
 
 
-	public void setListSourceProperties(List<Map.Entry<String,String>> listSourceProperties) {
-		this.listSourceProperties = listSourceProperties;
-	}
+    public List getListSourceProperties() {
+        return listSourceProperties;
+    }
 
 
-	public List getListChannelProperties() {
-		return listChannelProperties;
-	}
+    public void setListSourceProperties(List<Map.Entry<String,String>> listSourceProperties) {
+        this.listSourceProperties = listSourceProperties;
+    }
 
 
-	public void setListChannelProperties(List listChannelProperties) {
-		this.listChannelProperties = listChannelProperties;
-	}
+    public List getListChannelProperties() {
+        return listChannelProperties;
+    }
 
 
-	public List getListSinkProperties() {
-		return listSinkProperties;
-	}
+    public void setListChannelProperties(List listChannelProperties) {
+        this.listChannelProperties = listChannelProperties;
+    }
 
 
-	public void setListSinkProperties(List listSinkProperties) {
-		this.listSinkProperties = listSinkProperties;
-	}
+    public List getListSinkProperties() {
+        return listSinkProperties;
+    }
 
 
-	public Map<String, List<String>> getMapSourceInterceptorProperties() {
-		return mapSourceInterceptorProperties;
-	}
+    public void setListSinkProperties(List listSinkProperties) {
+        this.listSinkProperties = listSinkProperties;
+    }
 
-	public void setMapSourceInterceptorProperties(Map<String, List<String>> mapSourceInterceptorProperties) {
-		this.mapSourceInterceptorProperties = mapSourceInterceptorProperties;
-	}
+
+    public Map<String, List<String>> getMapSourceInterceptorProperties() {
+        return mapSourceInterceptorProperties;
+    }
+
+    public void setMapSourceInterceptorProperties(Map<String, List<String>> mapSourceInterceptorProperties) {
+        this.mapSourceInterceptorProperties = mapSourceInterceptorProperties;
+    }
 
 }
