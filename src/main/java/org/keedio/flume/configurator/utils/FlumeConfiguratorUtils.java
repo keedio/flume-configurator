@@ -677,7 +677,7 @@ public class FlumeConfiguratorUtils {
         }
 
 
-        return 	elementPartialProperties;
+        return elementPartialProperties;
     }
 
 

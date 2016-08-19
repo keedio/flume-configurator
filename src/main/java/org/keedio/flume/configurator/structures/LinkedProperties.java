@@ -4,7 +4,6 @@ import org.keedio.flume.configurator.exceptions.FlumeConfiguratorException;
 
 import java.io.PrintStream;
 import java.io.PrintWriter;
-import java.io.Serializable;
 import java.util.*;
 
 

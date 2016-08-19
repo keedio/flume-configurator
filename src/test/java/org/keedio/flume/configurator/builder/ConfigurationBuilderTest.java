@@ -70,7 +70,7 @@ public class ConfigurationBuilderTest {
         //generateAgentElements is a private method. Access by reflection
         Class<?>[] argsGenerateAgentElements = new Class[2];
         argsGenerateAgentElements[0] = String.class;
-        argsGenerateAgentElements[1] = String.class;	
+        argsGenerateAgentElements[1] = String.class;
         
         generateAgentElementsMethod = ConfigurationBuilder.class.getDeclaredMethod("generateAgentElements", argsGenerateAgentElements);
         generateAgentElementsMethod.setAccessible(true);
