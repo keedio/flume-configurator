@@ -6,8 +6,10 @@ public class FlumeConfiguratorConstants {
 
     public static final String WHITE_SPACE = " ";
     public static final String ASTERISK = "*";
+    public static final String HASH = "#";
     public static final String DOT_SEPARATOR = ".";
     public static final String UNDERSCORE_SEPARATOR = "_";
+    public static final String PROPERTY_SEPARATOR_DEFAULT = ";";
     public static final String NEW_LINE = "\n";
 
     public static final String DOT_REGEX = "\\.";
@@ -47,6 +49,20 @@ public class FlumeConfiguratorConstants {
     public static final String PARTIAL_PROPERTY_COMMENT_PROPERTIES_PREFIX = "comment";
 
     public static final String CONFIGURATION_ERROR = "Configuration error ==> ";
+
+    public static final String FLUME_TOPOLOGY_AGENT = "Agent";
+    public static final String FLUME_TOPOLOGY_SOURCE = "Source";
+    public static final String FLUME_TOPOLOGY_CHANNEL = "Channel";
+    public static final String FLUME_TOPOLOGY_SINK = "Sink";
+    public static final String FLUME_TOPOLOGY_INTERCEPTOR = "Interceptor";
+    public static final String FLUME_TOPOLOGY_CONNECTION = "Connection";
+
+    public static final String FLUME_TOPOLOGY_PROPERTY_AGENT_NAME = "agentName";
+    public static final String FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME = "elementTopologyName";
+
+
+
+
 
     private FlumeConfiguratorConstants() {
         super();

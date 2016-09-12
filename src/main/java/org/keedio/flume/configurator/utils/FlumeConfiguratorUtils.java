@@ -1,22 +1,17 @@
 package org.keedio.flume.configurator.utils;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
 import org.keedio.flume.configurator.constants.FlumeConfiguratorConstants;
 import org.keedio.flume.configurator.structures.AgentConfigurationGroupProperties;
 import org.keedio.flume.configurator.structures.AgentConfigurationProperties;
 import org.keedio.flume.configurator.structures.LinkedProperties;
 import org.keedio.flume.configurator.structures.PartialProperties;
+import org.keedio.flume.configurator.structures.FlumeTopology;
+
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreeNode;
 
 public class FlumeConfiguratorUtils {
 
@@ -197,9 +192,10 @@ public class FlumeConfiguratorUtils {
      * @param headerText StringBuilder with the text to decorate
      * @param asteriskLinesNumber int with the number of lines of asterisks to generate
      * @param newLinesAfterHeaderNumber int with the number of new lines to generate after decorated text
+     * @param decoratorCharacter String with the decorator character
      * @return String with the decorated text
      */
-    private static String getHeaderAgentConfiguration(StringBuilder headerText, int asteriskLinesNumber, int newLinesAfterHeaderNumber) {
+    public static String getHeaderAgentConfiguration(StringBuilder headerText, int asteriskLinesNumber, int newLinesAfterHeaderNumber, String decoratorCharacter) {
 
         StringBuilder sbHeader = new StringBuilder();
 
@@ -214,13 +210,13 @@ public class FlumeConfiguratorUtils {
         for (int i=0; i<asteriskLinesNumber; i++) {
 
             for (int j=0; j<lineSize; j++) {
-                sbHeader.append(FlumeConfiguratorConstants.ASTERISK);
+                sbHeader.append(decoratorCharacter);
             }
             sbHeader.append(FlumeConfiguratorConstants.NEW_LINE);
         }
 
         for (int i=0; i<asteriskNumberPrePost; i++) {
-            sbHeader.append(FlumeConfiguratorConstants.ASTERISK);
+            sbHeader.append(decoratorCharacter);
         }
         for (int i=0; i<spacesPrePost; i++) {
             sbHeader.append(FlumeConfiguratorConstants.WHITE_SPACE);
@@ -230,7 +226,7 @@ public class FlumeConfiguratorUtils {
             sbHeader.append(FlumeConfiguratorConstants.WHITE_SPACE);
         }
         for (int i=0; i<asteriskNumberPrePost; i++) {
-            sbHeader.append(FlumeConfiguratorConstants.ASTERISK);
+            sbHeader.append(decoratorCharacter);
         }
         sbHeader.append(FlumeConfiguratorConstants.NEW_LINE);
 
@@ -238,7 +234,7 @@ public class FlumeConfiguratorUtils {
         for (int i=0; i<asteriskLinesNumber; i++) {
 
             for (int j=0; j<lineSize; j++) {
-                sbHeader.append(FlumeConfiguratorConstants.ASTERISK);
+                sbHeader.append(decoratorCharacter);
             }
             sbHeader.append(FlumeConfiguratorConstants.NEW_LINE);
         }
@@ -271,11 +267,11 @@ public class FlumeConfiguratorUtils {
 
         if (addBuiltDate) {
             textHeader = new StringBuilder().append("Built by Flume Configurator on:  ").append(sdf.format(Calendar.getInstance().getTime()));
-            sb.append(getHeaderAgentConfiguration(textHeader,2,2));
+            sb.append(getHeaderAgentConfiguration(textHeader,2,2,FlumeConfiguratorConstants.ASTERISK));
         }
 
         textHeader = new StringBuilder().append("CONFIGURATION AGENT:  ").append(agentName);
-        sb.append(getHeaderAgentConfiguration(textHeader,2,2));
+        sb.append(getHeaderAgentConfiguration(textHeader,2,2,FlumeConfiguratorConstants.ASTERISK));
 
         //General Properties
         for (Object generalProperty : agentConfigurationProperties.getListGeneralProperties()) {
@@ -291,7 +287,7 @@ public class FlumeConfiguratorUtils {
         for (String groupName : agentConfigurationGroupPropertiesMap.keySet()) {
 
             textHeader = new StringBuilder().append("GROUP:  ").append(groupName);
-            sb.append(getHeaderAgentConfiguration(textHeader,1,1));
+            sb.append(getHeaderAgentConfiguration(textHeader,1,1,FlumeConfiguratorConstants.ASTERISK));
 
             AgentConfigurationGroupProperties agentConfigurationGroupProperties = agentConfigurationGroupPropertiesMap.get(groupName);
 
@@ -794,6 +790,8 @@ public class FlumeConfiguratorUtils {
             return splittedValues;
         } return new String[]{};
     }
+
+
 
 }
 
