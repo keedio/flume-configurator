@@ -5,6 +5,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class FlumeTopology {
@@ -27,7 +28,7 @@ public class FlumeTopology {
         this.type = type;
         this.id = id;
         if (data == null) {
-            data = new HashMap<String, String>();
+            data = new LinkedHashMap<String, String>();
         } else {
             this.data = data;
         }
@@ -37,7 +38,7 @@ public class FlumeTopology {
 
     public FlumeTopology() {
 
-        data = new HashMap<String, String>();
+        data = new LinkedHashMap<String, String>();
     }
 
 
@@ -45,7 +46,7 @@ public class FlumeTopology {
 
         this.type = type;
         this.id = id;
-        data = new HashMap<String, String>();
+        data = new LinkedHashMap<String, String>();
     }
 
 

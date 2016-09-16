@@ -16,6 +16,7 @@ public class JSONStringSerializer {
         mapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL);
         mapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
         mapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
+        mapper.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
     }
 
     private JSONStringSerializer() {
