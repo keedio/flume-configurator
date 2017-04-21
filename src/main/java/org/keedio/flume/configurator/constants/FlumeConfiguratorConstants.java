@@ -1,5 +1,7 @@
 package org.keedio.flume.configurator.constants;
 
+import java.util.ArrayList;
+
 public class FlumeConfiguratorConstants {
 
 
@@ -12,6 +14,7 @@ public class FlumeConfiguratorConstants {
     public static final String COMMA_SEPARATOR = ",";
     public static final String PROPERTY_SEPARATOR_DEFAULT = ";";
     public static final String NEW_LINE = "\n";
+    public static final String TABULATOR = "\t";
 
     public static final String DOT_REGEX = "\\.";
     public static final String WHITE_SPACE_REGEX = "\\s+";

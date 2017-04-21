@@ -267,11 +267,11 @@ public class FlumeConfiguratorUtils {
 
         if (addBuiltDate) {
             textHeader = new StringBuilder().append("Built by Flume Configurator on:  ").append(sdf.format(Calendar.getInstance().getTime()));
-            sb.append(getHeaderAgentConfiguration(textHeader,2,2,FlumeConfiguratorConstants.ASTERISK));
+            sb.append(getHeaderAgentConfiguration(textHeader,2,2,FlumeConfiguratorConstants.HASH));
         }
 
         textHeader = new StringBuilder().append("CONFIGURATION AGENT:  ").append(agentName);
-        sb.append(getHeaderAgentConfiguration(textHeader,2,2,FlumeConfiguratorConstants.ASTERISK));
+        sb.append(getHeaderAgentConfiguration(textHeader,2,2,FlumeConfiguratorConstants.HASH));
 
         //General Properties
         for (Object generalProperty : agentConfigurationProperties.getListGeneralProperties()) {
@@ -287,7 +287,7 @@ public class FlumeConfiguratorUtils {
         for (String groupName : agentConfigurationGroupPropertiesMap.keySet()) {
 
             textHeader = new StringBuilder().append("GROUP:  ").append(groupName);
-            sb.append(getHeaderAgentConfiguration(textHeader,1,1,FlumeConfiguratorConstants.ASTERISK));
+            sb.append(getHeaderAgentConfiguration(textHeader,1,1,FlumeConfiguratorConstants.HASH));
 
             AgentConfigurationGroupProperties agentConfigurationGroupProperties = agentConfigurationGroupPropertiesMap.get(groupName);
 
@@ -790,6 +790,7 @@ public class FlumeConfiguratorUtils {
             return splittedValues;
         } return new String[]{};
     }
+
 
 
 

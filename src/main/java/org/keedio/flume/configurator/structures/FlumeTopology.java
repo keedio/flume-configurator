@@ -2,13 +2,15 @@ package org.keedio.flume.configurator.structures;
 
 import org.codehaus.jackson.annotate.JsonCreator;
 import org.codehaus.jackson.annotate.JsonProperty;
+import org.keedio.flume.configurator.constants.FlumeConfiguratorConstants;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class FlumeTopology {
+public class FlumeTopology implements Comparable {
 
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(FlumeTopology.class);
 
@@ -17,6 +19,19 @@ public class FlumeTopology {
     private Map<String, String> data;
     private String sourceConnection;
     private String targetConnection;
+    private static ArrayList<String> orderTypeArrayList;
+
+    static {
+
+        orderTypeArrayList = new ArrayList<String>();
+        orderTypeArrayList.add(FlumeConfiguratorConstants.FLUME_TOPOLOGY_AGENT);
+        orderTypeArrayList.add(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE);
+        orderTypeArrayList.add(FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR);
+        orderTypeArrayList.add(FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL);
+        orderTypeArrayList.add(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK);
+        orderTypeArrayList.add(FlumeConfiguratorConstants.FLUME_TOPOLOGY_CONNECTION);
+
+    }
 
 
     @JsonCreator
@@ -91,6 +106,7 @@ public class FlumeTopology {
         this.targetConnection = targetConnection;
     }
 
+/*
     public String toString() {
         StringBuilder sb = new StringBuilder(1000);
         sb.append("type: ").append(type).append("\n");
@@ -103,5 +119,54 @@ public class FlumeTopology {
         sb.append("targetConnection: ").append(targetConnection).append("\n");
 
         return sb.toString();
+    }
+*/
+
+    public String toString() {
+        String topologyName =  this.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
+
+        return "\"" + topologyName + " (" + id + ")" + "\"" ;
+    }
+
+
+    public String getAgentName() {
+        String agentName = null;
+
+        if (this != null) {
+            String flumeTopologyElementType = this.getType();
+            if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE.equals(flumeTopologyElementType)) {
+                Map<String, String> data = this.getData();
+                if (data != null) {
+                    agentName = data.get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_AGENT_NAME).toLowerCase();
+                }
+            } else if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_AGENT.equals(flumeTopologyElementType)) {
+                Map<String, String> data = this.getData();
+                if (data != null) {
+                    agentName = data.get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME).toLowerCase();
+                }
+            }
+        }
+
+        return agentName;
+    }
+
+    public int compareTo(Object anotherFlumeTopology) {
+
+        FlumeTopology theAnotherFlumeTopology = (FlumeTopology) anotherFlumeTopology;
+
+        String topologyType = this.getType();
+        String anotherTopolotyType = theAnotherFlumeTopology.getType();
+        String elementName = this.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
+        String anotherElementName = theAnotherFlumeTopology.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
+
+
+        if (topologyType.equals(anotherTopolotyType)) {
+            return elementName.compareTo(anotherElementName);
+        } else {
+            int indexTopologyType = orderTypeArrayList.indexOf(topologyType);
+            int indexAnotherTopolotyType = orderTypeArrayList.indexOf(anotherTopolotyType);
+
+            return  indexTopologyType - indexAnotherTopolotyType;
+        }
     }
 }
