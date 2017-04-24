@@ -66,7 +66,7 @@ public class FlumeConfiguratorConstants {
     public static final String FLUME_TOPOLOGY_GROUP_NAME_DEFAULT = "GROUP";
     public static final String FLUME_TOPOLOGY_PROPERTY_COMMENT_SUFIX = "_comment";
 
-    public static final double FLUME_TOPOLOGY_COMMON_PROPERTY_RATIO = 1.0d;
+    //public static final double FLUME_TOPOLOGY_COMMON_PROPERTY_RATIO = 0.75d;
     public static final String CONFIGURATION_BASE_PROPERTIES_FILE = "flume_configuration_base.properties";
 
 

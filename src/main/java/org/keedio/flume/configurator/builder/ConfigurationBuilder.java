@@ -361,14 +361,14 @@ public class ConfigurationBuilder {
 
                             //Check if the interceptor property exists in agent configuration
                             if (configurationInitialMap.get(agentName).containsKey(fullInterceptorPropertyCommentName)) {
-                                logger.info("----MODIFY INTERCEPTOR comment property " + fullInterceptorPropertyCommentName + " to [Agent= " + agentName + " , Source= " + sourceName + ", Interceptor= " + appliedInterceptor + "]");
+                                logger.debug("----MODIFY INTERCEPTOR comment property " + fullInterceptorPropertyCommentName + " to [Agent= " + agentName + " , Source= " + sourceName + ", Interceptor= " + appliedInterceptor + "]");
 
                                 //Modify interceptor property comment to agent
                                 configurationInitialMap.get(agentName).put(fullInterceptorPropertyCommentName, interceptorPropertyComment);
 
 
                             } else {
-                                logger.info("----ADD INTERCEPTOR comment property " + fullInterceptorPropertyCommentName + " to [Agent= " + agentName + " , Source= " + sourceName + ", Interceptor= " + appliedInterceptor + "]");
+                                logger.debug("----ADD INTERCEPTOR comment property " + fullInterceptorPropertyCommentName + " to [Agent= " + agentName + " , Source= " + sourceName + ", Interceptor= " + appliedInterceptor + "]");
 
                                 //ADD interceptor property to agent
                                 configurationInitialMap.get(agentName).put(fullInterceptorPropertyCommentName, interceptorPropertyComment);
@@ -383,14 +383,14 @@ public class ConfigurationBuilder {
 
                         //Check if the interceptor property exists in agent configuration
                         if (configurationInitialMap.get(agentName).containsKey(fullInterceptorPropertyName)) {
-                            logger.info("----MODIFY INTERCEPTOR property " + fullInterceptorPropertyName + " to [Agent= " + agentName + " , Source= " + sourceName + ", Interceptor= " + appliedInterceptor + "]");
+                            logger.debug("----MODIFY INTERCEPTOR property " + fullInterceptorPropertyName + " to [Agent= " + agentName + " , Source= " + sourceName + ", Interceptor= " + appliedInterceptor + "]");
 
                             //Modify property to agent
                             configurationInitialMap.get(agentName).put(fullInterceptorPropertyName, interceptorPropertyValue);
 
 
                         } else {
-                            logger.info("----ADD INTERCEPTOR property " + fullInterceptorPropertyName + " to [Agent= " + agentName + " , Source= " + sourceName + ", Interceptor= " + appliedInterceptor + "]");
+                            logger.debug("----ADD INTERCEPTOR property " + fullInterceptorPropertyName + " to [Agent= " + agentName + " , Source= " + sourceName + ", Interceptor= " + appliedInterceptor + "]");
 
                             //ADD property to agent
                             configurationInitialMap.get(agentName).put(fullInterceptorPropertyName, interceptorPropertyValue);
@@ -496,13 +496,13 @@ public class ConfigurationBuilder {
 
                         //Check if the property exists in agent configuration
                         if (configurationInitialMap.get(agentName).containsKey(fullElementPropertyCommentName)) {
-                            logger.info("----MODIFY " + prefixProperty + " comment property [" + fullElementPropertyCommentName + "] to [Agent= " + agentName + " , " + prefixProperty + " = " + appliedElement + "]");
+                            logger.debug("----MODIFY " + prefixProperty + " comment property [" + fullElementPropertyCommentName + "] to [Agent= " + agentName + " , " + prefixProperty + " = " + appliedElement + "]");
 
                             //Modify property comment to agent
                             configurationInitialMap.get(agentName).put(fullElementPropertyCommentName, elementPropertyComment);
 
                         } else {
-                            logger.info("----ADD " + prefixProperty + " comment property [" + fullElementPropertyCommentName + "] to [Agent= " + agentName + " , " + prefixProperty + " = " + appliedElement + "]");
+                            logger.debug("----ADD " + prefixProperty + " comment property [" + fullElementPropertyCommentName + "] to [Agent= " + agentName + " , " + prefixProperty + " = " + appliedElement + "]");
 
                             //ADD property to agent
                             configurationInitialMap.get(agentName).put(fullElementPropertyCommentName, elementPropertyComment);
@@ -515,13 +515,13 @@ public class ConfigurationBuilder {
 
                     //Check if the property exists in agent configuration
                     if (configurationInitialMap.get(agentName).containsKey(fullElementPropertyName)) {
-                        logger.info("----MODIFY " + prefixProperty + " property [" + fullElementPropertyName + "] to [Agent= " + agentName + " , " + prefixProperty + " = " + appliedElement + "]");
+                        logger.debug("----MODIFY " + prefixProperty + " property [" + fullElementPropertyName + "] to [Agent= " + agentName + " , " + prefixProperty + " = " + appliedElement + "]");
 
                         //Modify property to agent
                         configurationInitialMap.get(agentName).put(fullElementPropertyName, elementPropertyValue);
 
                     } else {
-                        logger.info("----ADD " + prefixProperty + " property [" + fullElementPropertyName + "] to [Agent= " + agentName + " , " + prefixProperty + " = " + appliedElement + "]");
+                        logger.debug("----ADD " + prefixProperty + " property [" + fullElementPropertyName + "] to [Agent= " + agentName + " , " + prefixProperty + " = " + appliedElement + "]");
 
                         //ADD property to agent
                         configurationInitialMap.get(agentName).put(fullElementPropertyName, elementPropertyValue);

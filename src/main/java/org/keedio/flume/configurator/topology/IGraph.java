@@ -31,13 +31,13 @@ public interface IGraph {
 
     /**
      * Find the cycles of the graph
-     * @return
+     * @return cycles found
      */
     Set<FlumeTopology> findCycles();
 
     /**
      * Add a vertex to the graph
-     * @param node
+     * @param node Vertex to be added
      */
     void addGraphVertex(FlumeTopology node);
 
@@ -61,18 +61,20 @@ public interface IGraph {
 
     /**
      * Export the graph to DOT format
-     * @param fileName
+     * @param fileName Name of the file
      */
     void exportToDot(String fileName);
 
     /**
      * Export the graph to DOT format
-     * @param stream
+     * @param stream outputstream
      */
     void exportToDot(OutputStream stream);
 
+
     /**
      * Export the graph to DOT format
+     * @return String with de dot representation of the graph
      */
     String exportToDot();
 
@@ -85,29 +87,29 @@ public interface IGraph {
 
     /**
      * Get List of succesors
-     * @param vertex
-     * @return
+     * @param vertex Vertex
+     * @return List of succesors of the vertex
      */
     List<FlumeTopology> successorListOf(FlumeTopology vertex);
 
     /**
      * Get list of predecessors
-     * @param vertex
-     * @return
+     * @param vertex Vertex
+     * @return List of predecessors
      */
     List<FlumeTopology> predecessorListOf(FlumeTopology vertex);
 
     /**
      * Get ancestors of the vertex
-     * @param vertex
-     * @return
+     * @param vertex Vertex
+     * @return Set of ancestors or the vertex
      */
     Set<FlumeTopology> getVertexAncestors(FlumeTopology vertex);
 
     /**
      * Get descendants of the vertex
-     * @param vertex
-     * @return
+     * @param vertex Vertex
+     * @return Set of descendants of the vertex
      */
     Set<FlumeTopology> getVertexDescendants(FlumeTopology vertex);
 

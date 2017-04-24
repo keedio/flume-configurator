@@ -28,7 +28,7 @@ public class FlumeTopologyPropertiesGeneratorTreeTest {
 
     private static final String TREE_TOPOLOGY_FILE_PATH = "src/test/resources/FlumeTopologyWithComments_with2Agent.json";
     private static final String TOPOLOGY_FILE_PATH_ERROR = "src/test/resources/FlumeTopologyError.json";
-    private static final String OUTPUT_GENERATED_FILE_PATH_DIRECTORY = ".";
+    private static final String OUTPUT_GENERATED_FILE_PATH_DIRECTORY = "./";
     private static final String OUTPUT_GENERATED_FILE_PATH_FILE = "." + File.separator + "outputFile.conf";
     private static final Object[] objectNull = null; //to prevent warning
     private static final Class<?>[] classNull = null; //to prevent warning
@@ -415,6 +415,8 @@ public class FlumeTopologyPropertiesGeneratorTreeTest {
 
         try {
 
+            FlumeTopologyPropertiesGenerator.setPathConfigurationGeneratedFile(null);
+
             //Invoke method
             writeConfigurationPropertiesFileMethod.invoke(flumeTopologyPropertiesGenerator, objectNull);
 
@@ -440,6 +442,7 @@ public class FlumeTopologyPropertiesGeneratorTreeTest {
 
             //Check output directory & several configuration files
             FlumeTopologyPropertiesGenerator.setPathConfigurationGeneratedFile(OUTPUT_GENERATED_FILE_PATH_DIRECTORY);
+            FlumeTopologyPropertiesGenerator.setPathBasePropertiesGeneratedFile(null);
             FlumeTopologyPropertiesGenerator.setMultipleAgentConfigurationFiles(true);
             FlumeTopologyPropertiesGenerator.setGenerateBaseConfigurationFiles(true);
 

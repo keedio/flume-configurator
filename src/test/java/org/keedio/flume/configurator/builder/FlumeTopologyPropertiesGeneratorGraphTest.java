@@ -415,6 +415,8 @@ public class FlumeTopologyPropertiesGeneratorGraphTest {
 
         try {
 
+            FlumeTopologyPropertiesGenerator.setPathConfigurationGeneratedFile(null);
+
             //Invoke method
             writeConfigurationPropertiesFileMethod.invoke(flumeTopologyPropertiesGenerator, objectNull);
 
@@ -440,6 +442,7 @@ public class FlumeTopologyPropertiesGeneratorGraphTest {
 
             //Check output directory & several configuration files
             FlumeTopologyPropertiesGenerator.setPathConfigurationGeneratedFile(OUTPUT_GENERATED_FILE_PATH_DIRECTORY);
+            FlumeTopologyPropertiesGenerator.setPathConfigurationGeneratedFile(null);
             FlumeTopologyPropertiesGenerator.setMultipleAgentConfigurationFiles(true);
             FlumeTopologyPropertiesGenerator.setGenerateBaseConfigurationFiles(true);
 

@@ -125,7 +125,7 @@ public class FlumeTopology implements Comparable {
     public String toString() {
         String topologyName =  this.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
 
-        return "\"" + topologyName + " (" + id + ")" + "\"" ;
+        return "\"[" + this.getType().toUpperCase() + "]\\n" + topologyName + "\\n (" + id + ")" + "\"" ;
     }
 
 

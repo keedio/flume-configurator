@@ -35,6 +35,7 @@ public class FlumeTopologyPropertiesGenerator {
     private static boolean computeTreeAsGraph = false;
     private static String pathBasePropertiesGeneratedFile;
     private static String pathConfigurationGeneratedFile;
+    private static double ratioCommonProperty = 1.0d;
 
     private byte[] flumeJSONTopology;
     private List<FlumeTopology> flumeTopologyList;
@@ -205,9 +206,17 @@ public class FlumeTopologyPropertiesGenerator {
 
         flumeJSONTopology = Files.readAllBytes(Paths.get(pathJSONTopology));
 
+        if (logger.isInfoEnabled()) {
+            String topologyStr = new String(flumeJSONTopology);
+            logger.info(topologyStr);
+        }
+
         flumeTopologyList =  Arrays.asList(JSONStringSerializer.fromBytes(flumeJSONTopology, FlumeTopology[].class));
 
-        logger.debug(flumeTopologyList.toString());
+        if (logger.isDebugEnabled()) {
+            logger.debug(flumeTopologyList.toString());
+        }
+
 
         if (logger.isDebugEnabled()) {
             logger.debug("END loadJSONTopologyFile");
@@ -273,8 +282,8 @@ public class FlumeTopologyPropertiesGenerator {
             createTreeTopology(withAgentNodes);
 
             //Show tree structure
-            if (logger.isDebugEnabled()) {
-                logger.debug(FlumeConfiguratorTopologyUtils.renderFlumeTopology(flumeTreeTopology.values()));
+            if (logger.isInfoEnabled()) {
+                logger.info(FlumeConfiguratorTopologyUtils.renderFlumeTopology(flumeTreeTopology.values()));
             }
 
             getElementsNumber();
@@ -298,8 +307,8 @@ public class FlumeTopologyPropertiesGenerator {
 
 
             //Show graph structure
-            if (logger.isDebugEnabled()) {
-                logger.debug(FlumeConfiguratorTopologyUtils.renderFlumeTopologyGraph(flumeGraphTopology.values(), true));
+            if (logger.isInfoEnabled()) {
+                logger.info(FlumeConfiguratorTopologyUtils.renderFlumeTopologyGraph(flumeGraphTopology.values(), true));
             }
 
             getElementsNumber();
@@ -488,7 +497,7 @@ public class FlumeTopologyPropertiesGenerator {
                         throw new FlumeConfiguratorException("flumeGraphTopology doesn't contain root node for agent " + agentName);
                     }
                 } else {
-                    throw new FlumeConfiguratorException("Topology sources must be filled 'agentName' property");
+                    throw new FlumeConfiguratorException("The agent name can't be obtained for the node id: " + flumeTopologyElementId);
                 }
 
 
@@ -537,7 +546,7 @@ public class FlumeTopologyPropertiesGenerator {
                             throw new FlumeConfiguratorException("flumeGraphTopology doesn't contain root node for agent " + agentName);
                         }
                     } else {
-                        throw new FlumeConfiguratorException("Topology sources must be filled 'agentName' property");
+                        throw new FlumeConfiguratorException("The agent name can't be obtained for the node id: " + flumeTopologyElementId);
                     }
 
                 }
@@ -1948,7 +1957,7 @@ public class FlumeTopologyPropertiesGenerator {
         for (String propertyKey : elementsMap.keySet()) {
             List<TopologyPropertyBean> listPropertyBeans = elementsMap.get(propertyKey);
 
-            String valueCommonProperty = FlumeConfiguratorTopologyUtils.getValueCommonProperty(listPropertyBeans, elementsNumber, FlumeConfiguratorConstants.FLUME_TOPOLOGY_COMMON_PROPERTY_RATIO);
+            String valueCommonProperty = FlumeConfiguratorTopologyUtils.getValueCommonProperty(listPropertyBeans, elementsNumber, ratioCommonProperty);
 
             if (valueCommonProperty != null) {
                 //Get the comment from the any member of the list.
@@ -2114,8 +2123,8 @@ public class FlumeTopologyPropertiesGenerator {
     /**
      * Generate flume properties from a json file
      * @param jsonTopology String with JSON topology
-     * @param generateBaseConfigurationProperties true -> the base configuration properties is generates, false otherwise
-     * @param generateFlumeConfigurationProperties true -> the flume configuration properties is generated, false otherwise
+     * @param generateBaseConfigurationProperties true:  the base configuration properties is generates, false otherwise
+     * @param generateFlumeConfigurationProperties true: the flume configuration properties is generated, false otherwise
      * @return String with the content of properties generated
      */
     public String generateInputPropertiesFromJSONTopology(String jsonTopology, boolean generateBaseConfigurationProperties, boolean generateFlumeConfigurationProperties) {
@@ -2338,12 +2347,13 @@ public class FlumeTopologyPropertiesGenerator {
         try {
 
 
-            if (args.length == 4) {
+            if (args.length == 6) {
                 pathJSONTopology = args[0];
                 multipleAgentConfigurationFiles = Boolean.valueOf(args[1]);
                 addComments = Boolean.valueOf(args[2]);
                 computeTreeAsGraph = Boolean.valueOf(args[3]);
                 pathConfigurationGeneratedFile = args[4];
+                ratioCommonProperty = Double.valueOf(args[5]);
 
 
                 logger.info("Parameter pathJSONTopology: " + pathJSONTopology);
@@ -2356,7 +2366,7 @@ public class FlumeTopologyPropertiesGenerator {
 
                 flumeTopologyPropertiesGenerator.generateInputProperties();
 
-            } else if (args.length == 5) {
+            } else if (args.length == 7) {
                 pathJSONTopology = args[0];
                 multipleAgentConfigurationFiles = Boolean.valueOf(args[1]);
                 addComments = Boolean.valueOf(args[2]);
@@ -2364,6 +2374,7 @@ public class FlumeTopologyPropertiesGenerator {
                 pathConfigurationGeneratedFile = args[4];
                 generateBaseConfigurationFiles = true;
                 pathBasePropertiesGeneratedFile = args[5];
+                ratioCommonProperty = Double.valueOf(args[6]);
 
                 logger.info("Parameter pathJSONTopology: " + pathJSONTopology);
                 logger.info("Parameter multipleAgentConfigurationFiles: " + multipleAgentConfigurationFiles);
