@@ -44,6 +44,8 @@ Example:
 java -jar flume-configurator-0.1.0.jar flume1.properties ; true true output
 ```
 
+A log4j.properties file is required in order to determine the level and output of the generated logs
+(An example log4j.properties can be downloaded from resources directory of the project)
 
 
 

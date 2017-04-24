@@ -1,0 +1,16 @@
+[ { type: 'Source',
+  id: '4ba63761-5d62-9aa1-0986-0e9d8cfeed21',
+  data:
+  { type: 'AvroSource',
+    AgentName: '1',
+    channels: '2',
+    bind: '3',
+    port: '',
+    threads: '',
+    'compression-type': '',
+    ssl: '',
+    keystore: '',
+    'keystore-password': '',
+    'keystore-type': '',
+    'exclude-protocols': '',
+    ipFilter: ''

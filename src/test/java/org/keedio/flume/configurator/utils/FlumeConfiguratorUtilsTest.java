@@ -16,9 +16,12 @@ import org.junit.Test;
 import org.keedio.flume.configurator.constants.FlumeConfiguratorConstants;
 import org.keedio.flume.configurator.structures.LinkedProperties;
 import org.keedio.flume.configurator.structures.PartialProperties;
+import org.slf4j.LoggerFactory;
 
 
 public class FlumeConfiguratorUtilsTest {
+
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(FlumeConfiguratorUtilsTest.class);
 
     private static final String DEFAULT_SEPARATOR = ";";
 
@@ -45,8 +48,8 @@ public class FlumeConfiguratorUtilsTest {
         String interceptorSourceExpected = "source1_1";
         
         try {
-        	
-        	//Check source agents
+
+            //Check source agents
             Map<String, List<String>> mapAgentsSourcesList = FlumeConfiguratorUtils.getAgentElementsMapFromProperties(flumeConfigurationProperties, FlumeConfiguratorConstants.SOURCES_LIST_PROPERTIES_PREFIX, DEFAULT_SEPARATOR);
             List<String> agentList = FlumeConfiguratorUtils.getElementsAgents(mapAgentsSourcesList, sourceName);
             Assert.assertEquals("The agent of the source is not correct", agentList.size() , 1);
@@ -74,6 +77,7 @@ public class FlumeConfiguratorUtilsTest {
             
         } catch (Exception e) {
             Assert.fail("An error has occurred [testGetElementsAgentsFromMap] method");
+            logger.error("An error has occurred [testGetElementsAgentsFromMap] method", e);
         }
     }
     
@@ -91,8 +95,8 @@ public class FlumeConfiguratorUtilsTest {
         String interceptorSourceExpected = "source1_1";
         
         try {
-        	
-        	//Check source agents
+
+            //Check source agents
             List<String> agentList = FlumeConfiguratorUtils.getElementsAgents(flumeConfigurationProperties, FlumeConfiguratorConstants.SOURCES_LIST_PROPERTIES_PREFIX, sourceName);
             Assert.assertEquals("The agent of the source is not correct", agentList.size() , 1);
             Assert.assertEquals("The agent of the source is not correct", agentList.get(0) , sourceAgentExpected);
@@ -116,6 +120,7 @@ public class FlumeConfiguratorUtilsTest {
             
         } catch (Exception e) {
             Assert.fail("An error has occurred [testGetElementsAgentsFromProperties] method");
+            logger.error("An error has occurred [testGetElementsAgentsFromProperties] method", e);
         }
     }    
     
@@ -128,14 +133,15 @@ public class FlumeConfiguratorUtilsTest {
         String elemementGroupExpected = "GROUP_3_2";
         
         try {
-        	
-        	Map<String, Map<String, String>> agentConfigurationGroupsMap = FlumeConfiguratorUtils.getAgentConfigurationGroupsMapFromProperties(flumeConfigurationProperties, DEFAULT_SEPARATOR);
+
+            Map<String, Map<String, String>> agentConfigurationGroupsMap = FlumeConfiguratorUtils.getAgentConfigurationGroupsMapFromProperties(flumeConfigurationProperties, DEFAULT_SEPARATOR);
             String group = FlumeConfiguratorUtils.getGroupFromElement(agentConfigurationGroupsMap, elementName);
             Assert.assertEquals("The group of the element is not correct", group , elemementGroupExpected);
 
             
         } catch (Exception e) {
             Assert.fail("An error has occurred [testGetGroupFromElement] method");
+            logger.error("An error has occurred [testGetGroupFromElement] method", e);
         }
     }    
     
@@ -148,10 +154,10 @@ public class FlumeConfiguratorUtilsTest {
         String agentGroupsSetExpected = "GROUP_2_1;GROUP_2_2;GROUP_2_3";
         
         try {
-        	
-        	List<String> agentGroupsSetExpectedList = Arrays.asList(agentGroupsSetExpected.split(DEFAULT_SEPARATOR));
-        	
-        	Map<String, Map<String, String>> agentConfigurationGroupsMap = FlumeConfiguratorUtils.getAgentConfigurationGroupsMapFromProperties(flumeConfigurationProperties, DEFAULT_SEPARATOR);
+
+            List<String> agentGroupsSetExpectedList = Arrays.asList(agentGroupsSetExpected.split(DEFAULT_SEPARATOR));
+
+            Map<String, Map<String, String>> agentConfigurationGroupsMap = FlumeConfiguratorUtils.getAgentConfigurationGroupsMapFromProperties(flumeConfigurationProperties, DEFAULT_SEPARATOR);
             Set<String> groupsSet = FlumeConfiguratorUtils.getAgentGroupsSet(agentConfigurationGroupsMap, elementName);
             Assert.assertEquals("The groups of the agent are not correct", agentGroupsSetExpectedList.size() , groupsSet.size());
 
@@ -159,6 +165,7 @@ public class FlumeConfiguratorUtilsTest {
             
         } catch (Exception e) {
             Assert.fail("An error has occurred [testGetAgentGroupsSet] method");
+            logger.error("An error has occurred [testGetAgentGroupsSet] method", e);
         }
     }       
         
@@ -231,6 +238,7 @@ public class FlumeConfiguratorUtilsTest {
 
         } catch (Exception e) {
             Assert.fail("An error has occurred [testMatchingSubset] method");
+            logger.error("An error has occurred [testMatchingSubset] method", e);
         }
     }
 
@@ -262,6 +270,7 @@ public class FlumeConfiguratorUtilsTest {
 
         } catch (Exception e) {
             Assert.fail("An error has occurred [testGetAgentsListFromProperties] method");
+            logger.error("An error has occurred [testGetAgentsListFromProperties] method", e);
         }
     }
 
@@ -348,12 +357,13 @@ public class FlumeConfiguratorUtilsTest {
             for (String sourceName : mapSourcesInterceptorsList.keySet()) {
                 //Get List elements
                 List<String> sourceInterceptorsList = mapSourcesInterceptorsList.get(sourceName);
-                Assert.assertTrue("The interceptor is not correct", sourceInterceptorsList.size()>0);
+                Assert.assertFalse("The interceptor is not correct", sourceInterceptorsList.isEmpty());
 
             }
 
         } catch (Exception e) {
             Assert.fail("An error has occurred [testGetAgentElementsMapFromProperties] method");
+            logger.error("An error has occurred [testGetAgentElementsMapFromProperties] method", e);
         }
     }
 
@@ -388,6 +398,7 @@ public class FlumeConfiguratorUtilsTest {
 
         } catch (Exception e) {
             Assert.fail("An error has occurred [testGetMeasuredPropertyString] method");
+            logger.error("An error has occurred [testGetMeasuredPropertyString] method", e);
         }
 
     }
@@ -397,86 +408,87 @@ public class FlumeConfiguratorUtilsTest {
     @Test
     public void testGetElementsCommonPropertiesFromProperties() {
 
-    	int numberSourcesCommonProperties = 6;  //3 properties + their comment properties
-    	int numberChannelsCommonProperties = 4; //2 properties + their comment properties
-    	int numberSinksCommonProperties = 20; //10 properties + their comment properties
-    	int numberInterceptorsCommonProperties = 14; //7 properties + their comment properties
-    	
+        int numberSourcesCommonProperties = 6;  //3 properties + their comment properties
+        int numberChannelsCommonProperties = 4; //2 properties + their comment properties
+        int numberSinksCommonProperties = 20; //10 properties + their comment properties
+        int numberInterceptorsCommonProperties = 14; //7 properties + their comment properties
+
         try { 
-        	
+
             //Check sources common properties list
-        	LinkedProperties sourcesCommonPropertiesList = FlumeConfiguratorUtils.getElementsCommonPropertiesFromProperties(flumeConfigurationProperties, FlumeConfiguratorConstants.SOURCES_COMMON_PROPERTY_PROPERTIES_PREFIX);
+            LinkedProperties sourcesCommonPropertiesList = FlumeConfiguratorUtils.getElementsCommonPropertiesFromProperties(flumeConfigurationProperties, FlumeConfiguratorConstants.SOURCES_COMMON_PROPERTY_PROPERTIES_PREFIX);
             Assert.assertEquals("The number of sources common properties is not correct", sourcesCommonPropertiesList.size(), numberSourcesCommonProperties);
             for (Object key : sourcesCommonPropertiesList.keySet()) {
-            	String propertyName = (String) key;
-            	Assert.assertNotNull("The sources common properties are not correct",sourcesCommonPropertiesList.get(key));
-            	
-            	if (propertyName.startsWith(FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX)) {
-            		String propertyReference = propertyName.substring(FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX.length() + 1);
-            		Assert.assertNotNull("The sources common properties are not correct", sourcesCommonPropertiesList.get(propertyReference));
-            	} else {
-            		String propertyCommentReference = FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + propertyName;
-            		Assert.assertNotNull("The sources common properties are not correct", sourcesCommonPropertiesList.get(propertyCommentReference));
-            	}
+                String propertyName = (String) key;
+                Assert.assertNotNull("The sources common properties are not correct",sourcesCommonPropertiesList.get(key));
+
+                if (propertyName.startsWith(FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX)) {
+                    String propertyReference = propertyName.substring(FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX.length() + 1);
+                    Assert.assertNotNull("The sources common properties are not correct", sourcesCommonPropertiesList.get(propertyReference));
+                } else {
+                    String propertyCommentReference = FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + propertyName;
+                    Assert.assertNotNull("The sources common properties are not correct", sourcesCommonPropertiesList.get(propertyCommentReference));
+                }
             }
             
             
 
             //Check channels common properties list
-        	LinkedProperties channelsCommonPropertiesList = FlumeConfiguratorUtils.getElementsCommonPropertiesFromProperties(flumeConfigurationProperties, FlumeConfiguratorConstants.CHANNELS_COMMON_PROPERTY_PROPERTIES_PREFIX);
+            LinkedProperties channelsCommonPropertiesList = FlumeConfiguratorUtils.getElementsCommonPropertiesFromProperties(flumeConfigurationProperties, FlumeConfiguratorConstants.CHANNELS_COMMON_PROPERTY_PROPERTIES_PREFIX);
             Assert.assertEquals("The number of channels common properties is not correct", channelsCommonPropertiesList.size(), numberChannelsCommonProperties);
             for (Object key : channelsCommonPropertiesList.keySet()) {
-            	String propertyName = (String) key;
-            	Assert.assertNotNull("The channels common properties are not correct",channelsCommonPropertiesList.get(key));
-            	            	
-            	if (propertyName.startsWith(FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX)) {
-            		String propertyReference = propertyName.substring(FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX.length() + 1);
-            		Assert.assertNotNull("The channels common properties are not correct", channelsCommonPropertiesList.get(propertyReference));
-            	} else {
-            		String propertyCommentReference = FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + propertyName;
-            		Assert.assertNotNull("The sources common properties are not correct", channelsCommonPropertiesList.get(propertyCommentReference));
-            	}
+                String propertyName = (String) key;
+                Assert.assertNotNull("The channels common properties are not correct",channelsCommonPropertiesList.get(key));
+
+                if (propertyName.startsWith(FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX)) {
+                    String propertyReference = propertyName.substring(FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX.length() + 1);
+                    Assert.assertNotNull("The channels common properties are not correct", channelsCommonPropertiesList.get(propertyReference));
+                } else {
+                    String propertyCommentReference = FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + propertyName;
+                    Assert.assertNotNull("The sources common properties are not correct", channelsCommonPropertiesList.get(propertyCommentReference));
+                }
             }
             
             
             
             //Check sinks common properties list
-        	LinkedProperties sinksCommonPropertiesList = FlumeConfiguratorUtils.getElementsCommonPropertiesFromProperties(flumeConfigurationProperties, FlumeConfiguratorConstants.SINKS_COMMON_PROPERTY_PROPERTIES_PREFIX);
+            LinkedProperties sinksCommonPropertiesList = FlumeConfiguratorUtils.getElementsCommonPropertiesFromProperties(flumeConfigurationProperties, FlumeConfiguratorConstants.SINKS_COMMON_PROPERTY_PROPERTIES_PREFIX);
             Assert.assertEquals("The number of sinks common properties is not correct", sinksCommonPropertiesList.size(), numberSinksCommonProperties);
             for (Object key : sinksCommonPropertiesList.keySet()) {
-            	String propertyName = (String) key;
-            	Assert.assertNotNull("The sinks common properties are not correct",sinksCommonPropertiesList.get(key));
-            	            	
-            	if (propertyName.startsWith(FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX)) {
-            		String propertyReference = propertyName.substring(FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX.length() + 1);
-            		Assert.assertNotNull("The sinks common properties are not correct", sinksCommonPropertiesList.get(propertyReference));
-            	} else {
-            		String propertyCommentReference = FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + propertyName;
-            		Assert.assertNotNull("The sinks common properties are not correct", sinksCommonPropertiesList.get(propertyCommentReference));
-            	}
+                String propertyName = (String) key;
+                Assert.assertNotNull("The sinks common properties are not correct",sinksCommonPropertiesList.get(key));
+
+                if (propertyName.startsWith(FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX)) {
+                    String propertyReference = propertyName.substring(FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX.length() + 1);
+                    Assert.assertNotNull("The sinks common properties are not correct", sinksCommonPropertiesList.get(propertyReference));
+                } else {
+                    String propertyCommentReference = FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + propertyName;
+                    Assert.assertNotNull("The sinks common properties are not correct", sinksCommonPropertiesList.get(propertyCommentReference));
+                }
             }
             
             
             
             //Check interceptors common properties list
-        	LinkedProperties interceptorsCommonPropertiesList = FlumeConfiguratorUtils.getElementsCommonPropertiesFromProperties(flumeConfigurationProperties, FlumeConfiguratorConstants.INTERCEPTORS_COMMON_PROPERTY_PROPERTIES_PREFIX);
+            LinkedProperties interceptorsCommonPropertiesList = FlumeConfiguratorUtils.getElementsCommonPropertiesFromProperties(flumeConfigurationProperties, FlumeConfiguratorConstants.INTERCEPTORS_COMMON_PROPERTY_PROPERTIES_PREFIX);
             Assert.assertEquals("The number of sinks common properties is not correct", interceptorsCommonPropertiesList.size(), numberInterceptorsCommonProperties);
             for (Object key : interceptorsCommonPropertiesList.keySet()) {
-            	String propertyName = (String) key;
-            	Assert.assertNotNull("The interceptors common properties are not correct",interceptorsCommonPropertiesList.get(key));
+                String propertyName = (String) key;
+                Assert.assertNotNull("The interceptors common properties are not correct",interceptorsCommonPropertiesList.get(key));
 
-            	if (propertyName.startsWith(FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX)) {
-            		String propertyReference = propertyName.substring(FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX.length() + 1);
-            		Assert.assertNotNull("The interceptors common properties are not correct", interceptorsCommonPropertiesList.get(propertyReference));
-            	} else {
-            		String propertyCommentReference = FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + propertyName;
-            		Assert.assertNotNull("The interceptors common properties are not correct", interceptorsCommonPropertiesList.get(propertyCommentReference));
-            	}
+                if (propertyName.startsWith(FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX)) {
+                    String propertyReference = propertyName.substring(FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX.length() + 1);
+                    Assert.assertNotNull("The interceptors common properties are not correct", interceptorsCommonPropertiesList.get(propertyReference));
+                } else {
+                    String propertyCommentReference = FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + propertyName;
+                    Assert.assertNotNull("The interceptors common properties are not correct", interceptorsCommonPropertiesList.get(propertyCommentReference));
+                }
             }             
             
             
         } catch (Exception e) {
             Assert.fail("An error has occurred [testGetElementsCommonPropertiesFromProperties] method");
+            logger.error("An error has occurred [testGetElementsCommonPropertiesFromProperties] method", e);
         }
 
     }
@@ -486,88 +498,89 @@ public class FlumeConfiguratorUtilsTest {
     @Test
     public void testGetElementsPartialPropertiesFromProperties() {
 
-    	int numberSourcesPartialProperties = 9;  //3 appliedElements properties  + their propertyValues properties + their comment properties
-    	int numberChannelsPartialProperties = 6; //2 appliedElements properties  + their propertyValues properties + their comment properties
-    	int numberSinksPartialProperties = 6; //2 appliedElements properties  + their propertyValues properties + their comment properties
-    	int numberInterceptorsPartialProperties = 6; //2 appliedElements properties  + their propertyValues properties + their comment properties
-    	
-    	
+        int numberSourcesPartialProperties = 9;  //3 appliedElements properties  + their propertyValues properties + their comment properties
+        int numberChannelsPartialProperties = 6; //2 appliedElements properties  + their propertyValues properties + their comment properties
+        int numberSinksPartialProperties = 6; //2 appliedElements properties  + their propertyValues properties + their comment properties
+        int numberInterceptorsPartialProperties = 6; //2 appliedElements properties  + their propertyValues properties + their comment properties
+
+
         try {  
-        	
+
             //Check sources partial properties list
-        	PartialProperties sourcesPartialPropertiesList = FlumeConfiguratorUtils.getElementsPartialPropertiesFromProperties(flumeConfigurationProperties, FlumeConfiguratorConstants.SOURCES_PARTIAL_PROPERTY_PROPERTIES_PREFIX, DEFAULT_SEPARATOR);
-        	
-    		LinkedProperties appliedElements = sourcesPartialPropertiesList.getAppliedElements();
-    		LinkedProperties elementsPropertiesValues = sourcesPartialPropertiesList.getPropertiesValues();
-    		LinkedProperties elementsPropertiesComments = sourcesPartialPropertiesList.getPropertiesComments();
+            PartialProperties sourcesPartialPropertiesList = FlumeConfiguratorUtils.getElementsPartialPropertiesFromProperties(flumeConfigurationProperties, FlumeConfiguratorConstants.SOURCES_PARTIAL_PROPERTY_PROPERTIES_PREFIX, DEFAULT_SEPARATOR);
 
-           	Assert.assertNotNull("The sources partial properties are not correct",appliedElements);
-           	Assert.assertNotNull("The sources partial properties are not correct",elementsPropertiesValues);
-           	Assert.assertNotNull("The sources partial properties are not correct",elementsPropertiesComments);
+            LinkedProperties appliedElements = sourcesPartialPropertiesList.getAppliedElements();
+            LinkedProperties elementsPropertiesValues = sourcesPartialPropertiesList.getPropertiesValues();
+            LinkedProperties elementsPropertiesComments = sourcesPartialPropertiesList.getPropertiesComments();
 
-        	int propertiesNumber = appliedElements.size() + elementsPropertiesValues.size() + elementsPropertiesComments.size();
-        	Assert.assertEquals("The number of sources partial properties is not correct", propertiesNumber, numberSourcesPartialProperties);
+            Assert.assertNotNull("The sources partial properties are not correct",appliedElements);
+            Assert.assertNotNull("The sources partial properties are not correct",elementsPropertiesValues);
+            Assert.assertNotNull("The sources partial properties are not correct",elementsPropertiesComments);
 
-        	Assert.assertTrue("The sources partial properties are not correct", appliedElements.keySet().equals(elementsPropertiesValues.keySet()));
-        	Assert.assertTrue("The sources partial properties are not correct", elementsPropertiesValues.keySet().equals(elementsPropertiesComments.keySet()));
+            int propertiesNumber = appliedElements.size() + elementsPropertiesValues.size() + elementsPropertiesComments.size();
+            Assert.assertEquals("The number of sources partial properties is not correct", propertiesNumber, numberSourcesPartialProperties);
+
+            Assert.assertTrue("The sources partial properties are not correct", appliedElements.keySet().equals(elementsPropertiesValues.keySet()));
+            Assert.assertTrue("The sources partial properties are not correct", elementsPropertiesValues.keySet().equals(elementsPropertiesComments.keySet()));
 
  
             //Check sources partial properties list
-        	PartialProperties channelsPartialPropertiesList = FlumeConfiguratorUtils.getElementsPartialPropertiesFromProperties(flumeConfigurationProperties, FlumeConfiguratorConstants.CHANNELS_PARTIAL_PROPERTY_PROPERTIES_PREFIX, DEFAULT_SEPARATOR);
-        	
-    		appliedElements = channelsPartialPropertiesList.getAppliedElements();
-    		elementsPropertiesValues = channelsPartialPropertiesList.getPropertiesValues();
-    		elementsPropertiesComments = channelsPartialPropertiesList.getPropertiesComments();
+            PartialProperties channelsPartialPropertiesList = FlumeConfiguratorUtils.getElementsPartialPropertiesFromProperties(flumeConfigurationProperties, FlumeConfiguratorConstants.CHANNELS_PARTIAL_PROPERTY_PROPERTIES_PREFIX, DEFAULT_SEPARATOR);
 
-           	Assert.assertNotNull("The channels partial properties are not correct",appliedElements);
-           	Assert.assertNotNull("The channels partial properties are not correct",elementsPropertiesValues);
-           	Assert.assertNotNull("The channels partial properties are not correct",elementsPropertiesComments);
+            appliedElements = channelsPartialPropertiesList.getAppliedElements();
+            elementsPropertiesValues = channelsPartialPropertiesList.getPropertiesValues();
+            elementsPropertiesComments = channelsPartialPropertiesList.getPropertiesComments();
 
-        	propertiesNumber = appliedElements.size() + elementsPropertiesValues.size() + elementsPropertiesComments.size();
-        	Assert.assertEquals("The number of channels partial properties is not correct", propertiesNumber, numberChannelsPartialProperties);
+            Assert.assertNotNull("The channels partial properties are not correct",appliedElements);
+            Assert.assertNotNull("The channels partial properties are not correct",elementsPropertiesValues);
+            Assert.assertNotNull("The channels partial properties are not correct",elementsPropertiesComments);
 
-        	Assert.assertTrue("The channels partial properties are not correct", appliedElements.keySet().equals(elementsPropertiesValues.keySet()));
-        	Assert.assertTrue("The channels partial properties are not correct", elementsPropertiesValues.keySet().equals(elementsPropertiesComments.keySet()));
-        	
+            propertiesNumber = appliedElements.size() + elementsPropertiesValues.size() + elementsPropertiesComments.size();
+            Assert.assertEquals("The number of channels partial properties is not correct", propertiesNumber, numberChannelsPartialProperties);
+
+            Assert.assertTrue("The channels partial properties are not correct", appliedElements.keySet().equals(elementsPropertiesValues.keySet()));
+            Assert.assertTrue("The channels partial properties are not correct", elementsPropertiesValues.keySet().equals(elementsPropertiesComments.keySet()));
+
  
             //Check sinks partial properties list
-        	PartialProperties sinksPartialPropertiesList = FlumeConfiguratorUtils.getElementsPartialPropertiesFromProperties(flumeConfigurationProperties, FlumeConfiguratorConstants.SINKS_PARTIAL_PROPERTY_PROPERTIES_PREFIX, DEFAULT_SEPARATOR);
-        	
-    		appliedElements = sinksPartialPropertiesList.getAppliedElements();
-    		elementsPropertiesValues = sinksPartialPropertiesList.getPropertiesValues();
-    		elementsPropertiesComments = sinksPartialPropertiesList.getPropertiesComments();
+            PartialProperties sinksPartialPropertiesList = FlumeConfiguratorUtils.getElementsPartialPropertiesFromProperties(flumeConfigurationProperties, FlumeConfiguratorConstants.SINKS_PARTIAL_PROPERTY_PROPERTIES_PREFIX, DEFAULT_SEPARATOR);
 
-           	Assert.assertNotNull("The sinks partial properties are not correct",appliedElements);
-           	Assert.assertNotNull("The sinks partial properties are not correct",elementsPropertiesValues);
-           	Assert.assertNotNull("The sinks partial properties are not correct",elementsPropertiesComments);
+            appliedElements = sinksPartialPropertiesList.getAppliedElements();
+            elementsPropertiesValues = sinksPartialPropertiesList.getPropertiesValues();
+            elementsPropertiesComments = sinksPartialPropertiesList.getPropertiesComments();
 
-        	propertiesNumber = appliedElements.size() + elementsPropertiesValues.size() + elementsPropertiesComments.size();
-        	Assert.assertEquals("The number of sinks partial properties is not correct", propertiesNumber, numberSinksPartialProperties);
+            Assert.assertNotNull("The sinks partial properties are not correct",appliedElements);
+            Assert.assertNotNull("The sinks partial properties are not correct",elementsPropertiesValues);
+            Assert.assertNotNull("The sinks partial properties are not correct",elementsPropertiesComments);
 
-        	Assert.assertTrue("The sinks partial properties are not correct", appliedElements.keySet().equals(elementsPropertiesValues.keySet()));
-        	Assert.assertTrue("The sinks partial properties are not correct", elementsPropertiesValues.keySet().equals(elementsPropertiesComments.keySet()));
-        	        	
+            propertiesNumber = appliedElements.size() + elementsPropertiesValues.size() + elementsPropertiesComments.size();
+            Assert.assertEquals("The number of sinks partial properties is not correct", propertiesNumber, numberSinksPartialProperties);
+
+            Assert.assertTrue("The sinks partial properties are not correct", appliedElements.keySet().equals(elementsPropertiesValues.keySet()));
+            Assert.assertTrue("The sinks partial properties are not correct", elementsPropertiesValues.keySet().equals(elementsPropertiesComments.keySet()));
+
  
             //Check interceptors partial properties list
-        	PartialProperties interceptorsPartialPropertiesList = FlumeConfiguratorUtils.getElementsPartialPropertiesFromProperties(flumeConfigurationProperties, FlumeConfiguratorConstants.INTERCEPTORS_PARTIAL_PROPERTY_PROPERTIES_PREFIX, DEFAULT_SEPARATOR);
-        	
-    		appliedElements = interceptorsPartialPropertiesList.getAppliedElements();
-    		elementsPropertiesValues = interceptorsPartialPropertiesList.getPropertiesValues();
-    		elementsPropertiesComments = interceptorsPartialPropertiesList.getPropertiesComments();
+            PartialProperties interceptorsPartialPropertiesList = FlumeConfiguratorUtils.getElementsPartialPropertiesFromProperties(flumeConfigurationProperties, FlumeConfiguratorConstants.INTERCEPTORS_PARTIAL_PROPERTY_PROPERTIES_PREFIX, DEFAULT_SEPARATOR);
 
-           	Assert.assertNotNull("The interceptors partial properties are not correct",appliedElements);
-           	Assert.assertNotNull("The interceptors partial properties are not correct",elementsPropertiesValues);
-           	Assert.assertNotNull("The interceptors partial properties are not correct",elementsPropertiesComments);
+            appliedElements = interceptorsPartialPropertiesList.getAppliedElements();
+            elementsPropertiesValues = interceptorsPartialPropertiesList.getPropertiesValues();
+            elementsPropertiesComments = interceptorsPartialPropertiesList.getPropertiesComments();
 
-        	propertiesNumber = appliedElements.size() + elementsPropertiesValues.size() + elementsPropertiesComments.size();
-        	Assert.assertEquals("The number of interceptors partial properties is not correct", propertiesNumber, numberInterceptorsPartialProperties);
+            Assert.assertNotNull("The interceptors partial properties are not correct",appliedElements);
+            Assert.assertNotNull("The interceptors partial properties are not correct",elementsPropertiesValues);
+            Assert.assertNotNull("The interceptors partial properties are not correct",elementsPropertiesComments);
 
-        	Assert.assertTrue("The interceptors partial properties are not correct", appliedElements.keySet().equals(elementsPropertiesValues.keySet()));
-        	Assert.assertTrue("The interceptors partial properties are not correct", elementsPropertiesValues.keySet().equals(elementsPropertiesComments.keySet()));
-        	        	
-        	
+            propertiesNumber = appliedElements.size() + elementsPropertiesValues.size() + elementsPropertiesComments.size();
+            Assert.assertEquals("The number of interceptors partial properties is not correct", propertiesNumber, numberInterceptorsPartialProperties);
+
+            Assert.assertTrue("The interceptors partial properties are not correct", appliedElements.keySet().equals(elementsPropertiesValues.keySet()));
+            Assert.assertTrue("The interceptors partial properties are not correct", elementsPropertiesValues.keySet().equals(elementsPropertiesComments.keySet()));
+
+
         } catch (Exception e) {
             Assert.fail("An error has occurred [testGetElementsPartialPropertiesFromProperties] method");
+            logger.error("An error has occurred [testGetElementsPartialPropertiesFromProperties] method", e);
         }
 
     }
@@ -577,43 +590,44 @@ public class FlumeConfiguratorUtilsTest {
     @Test
     public void testGetAgentConfigurationGroupsMapFromProperties() {
 
-    	int agentsNumber = 3;
-    	int groupsAgentNumber = 3;
-    	int elementsGroupNumber = 3;
-    	
-    	String elementsAgent1 = "source1_1;channel1_1;sink1_1;source1_2;channel1_2;sink1_2;source1_3;channel1_3;sink1_3";
-    	String elementsAgent2 = "source2_1;channel2_1;sink2_1;source2_2;channel2_2;sink2_2;source2_3;channel2_3;sink2_3";
-    	String elementsAgent3 = "source3_1;channel3_1;sink3_1;source3_2;channel3_2;sink3_2;source3_3;channel3_3;sink3_3";
-    	
+        int agentsNumber = 3;
+        int groupsAgentNumber = 3;
+        int elementsGroupNumber = 3;
+
+        String elementsAgent1 = "source1_1;channel1_1;sink1_1;source1_2;channel1_2;sink1_2;source1_3;channel1_3;sink1_3";
+        String elementsAgent2 = "source2_1;channel2_1;sink2_1;source2_2;channel2_2;sink2_2;source2_3;channel2_3;sink2_3";
+        String elementsAgent3 = "source3_1;channel3_1;sink3_1;source3_2;channel3_2;sink3_2;source3_3;channel3_3;sink3_3";
+
         try {   
-        	
+
             //Check groups properties list
-        	Map<String,  Map<String, String>> mapAgentConfigurationGroups = FlumeConfiguratorUtils.getAgentConfigurationGroupsMapFromProperties(flumeConfigurationProperties, DEFAULT_SEPARATOR);
-        	
-        	Assert.assertEquals("The groups configuration is not correct", mapAgentConfigurationGroups.keySet().size(), agentsNumber);
-        	
-        	Set<String> elementsAgent1Set = new HashSet<>(Arrays.asList(elementsAgent1.split(DEFAULT_SEPARATOR)));
-        	Set<String> elementsAgent2Set = new HashSet<>(Arrays.asList(elementsAgent2.split(DEFAULT_SEPARATOR)));
-        	Set<String> elementsAgent3Set = new HashSet<>(Arrays.asList(elementsAgent3.split(DEFAULT_SEPARATOR)));
-        	
-        	for (String agentName : mapAgentConfigurationGroups.keySet()) {
-        		Map<String, String> groupsAgent = mapAgentConfigurationGroups.get(agentName);
-        		
-        		Assert.assertEquals("The groups configuration is not correct", groupsAgent.keySet().size(), groupsAgentNumber * elementsGroupNumber);
-        		
-        		if ("agent1".equals(agentName)) {
-        			Assert.assertTrue("The groups configuration is not correct",  groupsAgent.keySet().equals(elementsAgent1Set) );
-        		} else if ("agent2".equals(agentName)) {
-        			Assert.assertTrue("The groups configuration is not correct",  groupsAgent.keySet().equals(elementsAgent2Set) );
-        		} else if ("agent3".equals(agentName)) {
-        			Assert.assertTrue("The groups configuration is not correct",  groupsAgent.keySet().equals(elementsAgent3Set) );
-        		}
-        		
-        	}
-        	
-        	
+            Map<String,  Map<String, String>> mapAgentConfigurationGroups = FlumeConfiguratorUtils.getAgentConfigurationGroupsMapFromProperties(flumeConfigurationProperties, DEFAULT_SEPARATOR);
+
+            Assert.assertEquals("The groups configuration is not correct", mapAgentConfigurationGroups.keySet().size(), agentsNumber);
+
+            Set<String> elementsAgent1Set = new HashSet<>(Arrays.asList(elementsAgent1.split(DEFAULT_SEPARATOR)));
+            Set<String> elementsAgent2Set = new HashSet<>(Arrays.asList(elementsAgent2.split(DEFAULT_SEPARATOR)));
+            Set<String> elementsAgent3Set = new HashSet<>(Arrays.asList(elementsAgent3.split(DEFAULT_SEPARATOR)));
+
+            for (String agentName : mapAgentConfigurationGroups.keySet()) {
+                Map<String, String> groupsAgent = mapAgentConfigurationGroups.get(agentName);
+
+                Assert.assertEquals("The groups configuration is not correct", groupsAgent.keySet().size(), groupsAgentNumber * elementsGroupNumber);
+
+                if ("agent1".equals(agentName)) {
+                    Assert.assertTrue("The groups configuration is not correct",  groupsAgent.keySet().equals(elementsAgent1Set) );
+                } else if ("agent2".equals(agentName)) {
+                    Assert.assertTrue("The groups configuration is not correct",  groupsAgent.keySet().equals(elementsAgent2Set) );
+                } else if ("agent3".equals(agentName)) {
+                    Assert.assertTrue("The groups configuration is not correct",  groupsAgent.keySet().equals(elementsAgent3Set) );
+                }
+
+            }
+
+
         } catch (Exception e) {
             Assert.fail("An error has occurred [testGetAgentConfigurationGroupsMapFromProperties] method");
+            logger.error("An error has occurred [testGetAgentConfigurationGroupsMapFromProperties] method", e);
         }
 
     }
@@ -621,100 +635,102 @@ public class FlumeConfiguratorUtilsTest {
     
     @Test
     public void testSplitWithoutSpacesOptional() {
-    	
-    	String value = " cadena1  cadena1b  ; cadena2 ;   cadena3";
-    	
-    	String splittedValueWithRemoveSpacesItem1Expected = "cadena1cadena1b";
-    	String splittedValueWithRemoveSpacesItem2Expected = "cadena2";
-    	String splittedValueWithRemoveSpacesItem3Expected = "cadena3";
-    	
-    	String splittedValueWithoutRemoveSpacesItem1Expected = " cadena1  cadena1b  ";
-    	String splittedValueWithoutRemoveSpacesItem2Expected = " cadena2 ";
-    	String splittedValueWithoutRemoveSpacesItem3Expected = "   cadena3";
-    	
+
+        String value = " cadena1  cadena1b  ; cadena2 ;   cadena3";
+
+        String splittedValueWithRemoveSpacesItem1Expected = "cadena1cadena1b";
+        String splittedValueWithRemoveSpacesItem2Expected = "cadena2";
+        String splittedValueWithRemoveSpacesItem3Expected = "cadena3";
+
+        String splittedValueWithoutRemoveSpacesItem1Expected = " cadena1  cadena1b  ";
+        String splittedValueWithoutRemoveSpacesItem2Expected = " cadena2 ";
+        String splittedValueWithoutRemoveSpacesItem3Expected = "   cadena3";
+
         try { 
-        	Assert.assertNull("The generated text is not correct", FlumeConfiguratorUtils.splitWithoutSpacesOptional(null, true, DEFAULT_SEPARATOR));
-        	
-        	String[] splittedValueWithRemoveSpaces = FlumeConfiguratorUtils.splitWithoutSpacesOptional(value, true, DEFAULT_SEPARATOR);
-        	Assert.assertEquals("The generated text is not correct", splittedValueWithRemoveSpaces.length, 3);
-        	
-        	for (int i=0; i<splittedValueWithRemoveSpaces.length; i++) {
-        		if (i==0) {
-        			Assert.assertEquals("The generated text is not correct", splittedValueWithRemoveSpaces[i], splittedValueWithRemoveSpacesItem1Expected);
-        		} else if (i==1) {
-        			Assert.assertEquals("The generated text is not correct", splittedValueWithRemoveSpaces[i], splittedValueWithRemoveSpacesItem2Expected);
-        		} else if (i==2) {
-        			Assert.assertEquals("The generated text is not correct", splittedValueWithRemoveSpaces[i], splittedValueWithRemoveSpacesItem3Expected);
-        		}
-        	}
-        	
-        	
-        	String[] splittedValueWithoutRemoveSpaces = FlumeConfiguratorUtils.splitWithoutSpacesOptional(value, false, DEFAULT_SEPARATOR);
-        	Assert.assertEquals("The generated text is not correct", splittedValueWithRemoveSpaces.length, 3);
-        	
-        	for (int i=0; i<splittedValueWithRemoveSpaces.length; i++) {
-        		if (i==0) {
-        			Assert.assertEquals("The generated text is not correct", splittedValueWithoutRemoveSpaces[i], splittedValueWithoutRemoveSpacesItem1Expected);
-        		} else if (i==1) {
-        			Assert.assertEquals("The generated text is not correct", splittedValueWithoutRemoveSpaces[i], splittedValueWithoutRemoveSpacesItem2Expected);
-        		} else if (i==2) {
-        			Assert.assertEquals("The generated text is not correct", splittedValueWithoutRemoveSpaces[i], splittedValueWithoutRemoveSpacesItem3Expected);
-        		}
-        	}        	
-        	
-        	
+            Assert.assertTrue("The generated text is not correct", FlumeConfiguratorUtils.splitWithoutSpacesOptional(null, true, DEFAULT_SEPARATOR).length == 0);
+
+            String[] splittedValueWithRemoveSpaces = FlumeConfiguratorUtils.splitWithoutSpacesOptional(value, true, DEFAULT_SEPARATOR);
+            Assert.assertEquals("The generated text is not correct", splittedValueWithRemoveSpaces.length, 3);
+
+            for (int i=0; i<splittedValueWithRemoveSpaces.length; i++) {
+                if (i==0) {
+                    Assert.assertEquals("The generated text is not correct", splittedValueWithRemoveSpaces[i], splittedValueWithRemoveSpacesItem1Expected);
+                } else if (i==1) {
+                    Assert.assertEquals("The generated text is not correct", splittedValueWithRemoveSpaces[i], splittedValueWithRemoveSpacesItem2Expected);
+                } else if (i==2) {
+                    Assert.assertEquals("The generated text is not correct", splittedValueWithRemoveSpaces[i], splittedValueWithRemoveSpacesItem3Expected);
+                }
+            }
+
+
+            String[] splittedValueWithoutRemoveSpaces = FlumeConfiguratorUtils.splitWithoutSpacesOptional(value, false, DEFAULT_SEPARATOR);
+            Assert.assertEquals("The generated text is not correct", splittedValueWithRemoveSpaces.length, 3);
+
+            for (int i=0; i<splittedValueWithRemoveSpaces.length; i++) {
+                if (i==0) {
+                    Assert.assertEquals("The generated text is not correct", splittedValueWithoutRemoveSpaces[i], splittedValueWithoutRemoveSpacesItem1Expected);
+                } else if (i==1) {
+                    Assert.assertEquals("The generated text is not correct", splittedValueWithoutRemoveSpaces[i], splittedValueWithoutRemoveSpacesItem2Expected);
+                } else if (i==2) {
+                    Assert.assertEquals("The generated text is not correct", splittedValueWithoutRemoveSpaces[i], splittedValueWithoutRemoveSpacesItem3Expected);
+                }
+            }
+
+
         } catch (Exception e) {
             Assert.fail("An error has occurred [testSplitWithoutSpacesOptional] method");
+            logger.error("An error has occurred [testSplitWithoutSpacesOptional] method", e);
         }
     }
     
     
     @Test
     public void testSplitWithoutSpacesOptionalKeepInternalSpaces() {
-    	
-    	String value = " cadena1  cadena1b  ; cadena2 ;   cadena3";
-    	
-    	String splittedValueWithRemoveSpacesItem1Expected = "cadena1  cadena1b";
-    	String splittedValueWithRemoveSpacesItem2Expected = "cadena2";
-    	String splittedValueWithRemoveSpacesItem3Expected = "cadena3";
-    	
-    	String splittedValueWithoutRemoveSpacesItem1Expected = " cadena1  cadena1b  ";
-    	String splittedValueWithoutRemoveSpacesItem2Expected = " cadena2 ";
-    	String splittedValueWithoutRemoveSpacesItem3Expected = "   cadena3";
-    	
+
+        String value = " cadena1  cadena1b  ; cadena2 ;   cadena3";
+
+        String splittedValueWithRemoveSpacesItem1Expected = "cadena1  cadena1b";
+        String splittedValueWithRemoveSpacesItem2Expected = "cadena2";
+        String splittedValueWithRemoveSpacesItem3Expected = "cadena3";
+
+        String splittedValueWithoutRemoveSpacesItem1Expected = " cadena1  cadena1b  ";
+        String splittedValueWithoutRemoveSpacesItem2Expected = " cadena2 ";
+        String splittedValueWithoutRemoveSpacesItem3Expected = "   cadena3";
+
         try { 
-        	Assert.assertNull("The generated text is not correct", FlumeConfiguratorUtils.splitWithoutSpacesOptionalKeepInternalSpaces(null, true, DEFAULT_SEPARATOR));
-        	
-        	String[] splittedValueWithRemoveSpaces = FlumeConfiguratorUtils.splitWithoutSpacesOptionalKeepInternalSpaces(value, true, DEFAULT_SEPARATOR);
-        	Assert.assertEquals("The generated text is not correct", splittedValueWithRemoveSpaces.length, 3);
-        	
-        	for (int i=0; i<splittedValueWithRemoveSpaces.length; i++) {
-        		if (i==0) {
-        			Assert.assertEquals("The generated text is not correct", splittedValueWithRemoveSpaces[i], splittedValueWithRemoveSpacesItem1Expected);
-        		} else if (i==1) {
-        			Assert.assertEquals("The generated text is not correct", splittedValueWithRemoveSpaces[i], splittedValueWithRemoveSpacesItem2Expected);
-        		} else if (i==2) {
-        			Assert.assertEquals("The generated text is not correct", splittedValueWithRemoveSpaces[i], splittedValueWithRemoveSpacesItem3Expected);
-        		}
-        	}
-        	
-        	
-        	String[] splittedValueWithoutRemoveSpaces = FlumeConfiguratorUtils.splitWithoutSpacesOptionalKeepInternalSpaces(value, false, DEFAULT_SEPARATOR);
-        	Assert.assertEquals("The generated text is not correct", splittedValueWithRemoveSpaces.length, 3);
-        	
-        	for (int i=0; i<splittedValueWithRemoveSpaces.length; i++) {
-        		if (i==0) {
-        			Assert.assertEquals("The generated text is not correct", splittedValueWithoutRemoveSpaces[i], splittedValueWithoutRemoveSpacesItem1Expected);
-        		} else if (i==1) {
-        			Assert.assertEquals("The generated text is not correct", splittedValueWithoutRemoveSpaces[i], splittedValueWithoutRemoveSpacesItem2Expected);
-        		} else if (i==2) {
-        			Assert.assertEquals("The generated text is not correct", splittedValueWithoutRemoveSpaces[i], splittedValueWithoutRemoveSpacesItem3Expected);
-        		}
-        	}        	
-        	
-        	
+            Assert.assertTrue("The generated text is not correct", FlumeConfiguratorUtils.splitWithoutSpacesOptionalKeepInternalSpaces(null, true, DEFAULT_SEPARATOR).length == 0);
+
+            String[] splittedValueWithRemoveSpaces = FlumeConfiguratorUtils.splitWithoutSpacesOptionalKeepInternalSpaces(value, true, DEFAULT_SEPARATOR);
+            Assert.assertEquals("The generated text is not correct", splittedValueWithRemoveSpaces.length, 3);
+
+            for (int i=0; i<splittedValueWithRemoveSpaces.length; i++) {
+                if (i==0) {
+                    Assert.assertEquals("The generated text is not correct", splittedValueWithRemoveSpaces[i], splittedValueWithRemoveSpacesItem1Expected);
+                } else if (i==1) {
+                    Assert.assertEquals("The generated text is not correct", splittedValueWithRemoveSpaces[i], splittedValueWithRemoveSpacesItem2Expected);
+                } else if (i==2) {
+                    Assert.assertEquals("The generated text is not correct", splittedValueWithRemoveSpaces[i], splittedValueWithRemoveSpacesItem3Expected);
+                }
+            }
+
+
+            String[] splittedValueWithoutRemoveSpaces = FlumeConfiguratorUtils.splitWithoutSpacesOptionalKeepInternalSpaces(value, false, DEFAULT_SEPARATOR);
+            Assert.assertEquals("The generated text is not correct", splittedValueWithRemoveSpaces.length, 3);
+
+            for (int i=0; i<splittedValueWithRemoveSpaces.length; i++) {
+                if (i==0) {
+                    Assert.assertEquals("The generated text is not correct", splittedValueWithoutRemoveSpaces[i], splittedValueWithoutRemoveSpacesItem1Expected);
+                } else if (i==1) {
+                    Assert.assertEquals("The generated text is not correct", splittedValueWithoutRemoveSpaces[i], splittedValueWithoutRemoveSpacesItem2Expected);
+                } else if (i==2) {
+                    Assert.assertEquals("The generated text is not correct", splittedValueWithoutRemoveSpaces[i], splittedValueWithoutRemoveSpacesItem3Expected);
+                }
+            }
+
+
         } catch (Exception e) {
             Assert.fail("An error has occurred [testSplitWithoutSpacesOptionalKeepInternalSpaces] method");
+            logger.error("An error has occurred [testSplitWithoutSpacesOptionalKeepInternalSpaces] method", e);
         }
     }    
 }
