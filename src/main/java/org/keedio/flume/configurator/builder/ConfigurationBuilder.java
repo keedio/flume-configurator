@@ -1,11 +1,6 @@
 package org.keedio.flume.configurator.builder;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
 import java.nio.file.InvalidPathException;
 import java.util.ArrayList;
@@ -366,14 +361,14 @@ public class ConfigurationBuilder {
 
                             //Check if the interceptor property exists in agent configuration
                             if (configurationInitialMap.get(agentName).containsKey(fullInterceptorPropertyCommentName)) {
-                                logger.info("----MODIFY INTERCEPTOR comment property " + fullInterceptorPropertyCommentName + " to [Agent= " + agentName + " , Source= " + sourceName + ", Interceptor= " + appliedInterceptor + "]");
+                                logger.debug("----MODIFY INTERCEPTOR comment property " + fullInterceptorPropertyCommentName + " to [Agent= " + agentName + " , Source= " + sourceName + ", Interceptor= " + appliedInterceptor + "]");
 
                                 //Modify interceptor property comment to agent
                                 configurationInitialMap.get(agentName).put(fullInterceptorPropertyCommentName, interceptorPropertyComment);
 
 
                             } else {
-                                logger.info("----ADD INTERCEPTOR comment property " + fullInterceptorPropertyCommentName + " to [Agent= " + agentName + " , Source= " + sourceName + ", Interceptor= " + appliedInterceptor + "]");
+                                logger.debug("----ADD INTERCEPTOR comment property " + fullInterceptorPropertyCommentName + " to [Agent= " + agentName + " , Source= " + sourceName + ", Interceptor= " + appliedInterceptor + "]");
 
                                 //ADD interceptor property to agent
                                 configurationInitialMap.get(agentName).put(fullInterceptorPropertyCommentName, interceptorPropertyComment);
@@ -388,14 +383,14 @@ public class ConfigurationBuilder {
 
                         //Check if the interceptor property exists in agent configuration
                         if (configurationInitialMap.get(agentName).containsKey(fullInterceptorPropertyName)) {
-                            logger.info("----MODIFY INTERCEPTOR property " + fullInterceptorPropertyName + " to [Agent= " + agentName + " , Source= " + sourceName + ", Interceptor= " + appliedInterceptor + "]");
+                            logger.debug("----MODIFY INTERCEPTOR property " + fullInterceptorPropertyName + " to [Agent= " + agentName + " , Source= " + sourceName + ", Interceptor= " + appliedInterceptor + "]");
 
                             //Modify property to agent
                             configurationInitialMap.get(agentName).put(fullInterceptorPropertyName, interceptorPropertyValue);
 
 
                         } else {
-                            logger.info("----ADD INTERCEPTOR property " + fullInterceptorPropertyName + " to [Agent= " + agentName + " , Source= " + sourceName + ", Interceptor= " + appliedInterceptor + "]");
+                            logger.debug("----ADD INTERCEPTOR property " + fullInterceptorPropertyName + " to [Agent= " + agentName + " , Source= " + sourceName + ", Interceptor= " + appliedInterceptor + "]");
 
                             //ADD property to agent
                             configurationInitialMap.get(agentName).put(fullInterceptorPropertyName, interceptorPropertyValue);
@@ -501,13 +496,13 @@ public class ConfigurationBuilder {
 
                         //Check if the property exists in agent configuration
                         if (configurationInitialMap.get(agentName).containsKey(fullElementPropertyCommentName)) {
-                            logger.info("----MODIFY " + prefixProperty + " comment property [" + fullElementPropertyCommentName + "] to [Agent= " + agentName + " , " + prefixProperty + " = " + appliedElement + "]");
+                            logger.debug("----MODIFY " + prefixProperty + " comment property [" + fullElementPropertyCommentName + "] to [Agent= " + agentName + " , " + prefixProperty + " = " + appliedElement + "]");
 
                             //Modify property comment to agent
                             configurationInitialMap.get(agentName).put(fullElementPropertyCommentName, elementPropertyComment);
 
                         } else {
-                            logger.info("----ADD " + prefixProperty + " comment property [" + fullElementPropertyCommentName + "] to [Agent= " + agentName + " , " + prefixProperty + " = " + appliedElement + "]");
+                            logger.debug("----ADD " + prefixProperty + " comment property [" + fullElementPropertyCommentName + "] to [Agent= " + agentName + " , " + prefixProperty + " = " + appliedElement + "]");
 
                             //ADD property to agent
                             configurationInitialMap.get(agentName).put(fullElementPropertyCommentName, elementPropertyComment);
@@ -520,13 +515,13 @@ public class ConfigurationBuilder {
 
                     //Check if the property exists in agent configuration
                     if (configurationInitialMap.get(agentName).containsKey(fullElementPropertyName)) {
-                        logger.info("----MODIFY " + prefixProperty + " property [" + fullElementPropertyName + "] to [Agent= " + agentName + " , " + prefixProperty + " = " + appliedElement + "]");
+                        logger.debug("----MODIFY " + prefixProperty + " property [" + fullElementPropertyName + "] to [Agent= " + agentName + " , " + prefixProperty + " = " + appliedElement + "]");
 
                         //Modify property to agent
                         configurationInitialMap.get(agentName).put(fullElementPropertyName, elementPropertyValue);
 
                     } else {
-                        logger.info("----ADD " + prefixProperty + " property [" + fullElementPropertyName + "] to [Agent= " + agentName + " , " + prefixProperty + " = " + appliedElement + "]");
+                        logger.debug("----ADD " + prefixProperty + " property [" + fullElementPropertyName + "] to [Agent= " + agentName + " , " + prefixProperty + " = " + appliedElement + "]");
 
                         //ADD property to agent
                         configurationInitialMap.get(agentName).put(fullElementPropertyName, elementPropertyValue);
@@ -847,6 +842,125 @@ public class ConfigurationBuilder {
         } catch (IOException e) {
             logger.error("An error has occurred on the load of properties file", e);
             return false;
+        }
+
+    }
+
+
+    public String buildConfigurationMapFromStringProperties(String properties, String characterSeparator, boolean withComments, boolean writeFlumeConfigurationFiles,
+                                                            String pathFlumeConfigurationGeneratedFile, boolean multipleFlumeConfigurationFiles) {
+
+
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("BEGIN buildConfigurationMapFromStringProperties");
+        }
+
+        boolean isPropertiesFileOK;
+        ConfigurationValidator configurationValidator;
+        Map<String, List<String>> mapAgentChannels;
+        Map<String, List<String>> mapAgentSinks;
+
+        try {
+
+            elementsCharacterSeparator = characterSeparator;
+            addComments = withComments;
+
+            //Load the properties string
+            flumeConfigurationProperties.load(new StringReader(properties));
+
+            //Properties file validation
+            configurationValidator = new ConfigurationValidator(flumeConfigurationProperties,elementsCharacterSeparator);
+            configurationValidator.validateConfiguration();
+
+            isPropertiesFileOK = configurationValidator.isPropertiesFileOK();
+
+            if (isPropertiesFileOK) {
+                logger.info("checkPropertiesFile: The properties file is correct");
+
+                //Generate Agents List
+                generateAgentsList();
+
+                //Generate Agents Sources
+                mapAgentSources = generateAgentElements(FlumeConfiguratorConstants.SOURCES_LIST_PROPERTIES_PREFIX, FlumeConfiguratorConstants.SOURCES_PROPERTY);
+
+                //Generate Agents Channels
+                mapAgentChannels = generateAgentElements(FlumeConfiguratorConstants.CHANNELS_LIST_PROPERTIES_PREFIX, FlumeConfiguratorConstants.CHANNELS_PROPERTY);
+
+                //Generate Agents Sinks
+                mapAgentSinks = generateAgentElements(FlumeConfiguratorConstants.SINKS_LIST_PROPERTIES_PREFIX, FlumeConfiguratorConstants.SINKS_PROPERTY);
+
+                //Generate Sources Common Properties
+                generateElementsCommonProperties(FlumeConfiguratorConstants.SOURCES_COMMON_PROPERTY_PROPERTIES_PREFIX, FlumeConfiguratorConstants.SOURCES_PROPERTY, mapAgentSources);
+
+                //Generate Sources Partial Properties
+                generateElementsPartialProperties(FlumeConfiguratorConstants.SOURCES_PARTIAL_PROPERTY_PROPERTIES_PREFIX, FlumeConfiguratorConstants.SOURCES_PROPERTY, mapAgentSources);
+
+                //Generate Sources Interceptors
+                generateSourcesInterceptors();
+
+                //Generate Interceptors Common Properties
+                generateInterceptorsCommonProperties();
+
+                //Generate Interceptors Partial Properties
+                generateInterceptorsPartialProperties();
+
+                //Generate Channels Common Properties
+                generateElementsCommonProperties(FlumeConfiguratorConstants.CHANNELS_COMMON_PROPERTY_PROPERTIES_PREFIX, FlumeConfiguratorConstants.CHANNELS_PROPERTY, mapAgentChannels);
+
+                //Generate Channels Partial Properties
+                generateElementsPartialProperties(FlumeConfiguratorConstants.CHANNELS_PARTIAL_PROPERTY_PROPERTIES_PREFIX, FlumeConfiguratorConstants.CHANNELS_PROPERTY, mapAgentChannels);
+
+                //Generate Sinks Common Properties
+                generateElementsCommonProperties(FlumeConfiguratorConstants.SINKS_COMMON_PROPERTY_PROPERTIES_PREFIX, FlumeConfiguratorConstants.SINKS_PROPERTY, mapAgentSinks);
+
+                //Generate Sinks Partial Properties
+                generateElementsPartialProperties(FlumeConfiguratorConstants.SINKS_PARTIAL_PROPERTY_PROPERTIES_PREFIX, FlumeConfiguratorConstants.SINKS_PROPERTY, mapAgentSinks);
+
+                //Generate final structure
+                generateFinalStructureMap();
+
+
+                //Get the content
+                String agentConfiguration;
+                StringBuilder sbAgentConfiguration = new StringBuilder(10000);
+                boolean isFirstAgent = true;
+                for (String agentName : configurationFinalMap.keySet()) {
+
+                    AgentConfigurationProperties agentConfigurationProperties = configurationFinalMap.get(agentName);
+
+                    if (isFirstAgent) {
+                        agentConfiguration = FlumeConfiguratorUtils.getStringAgentConfiguration(agentConfigurationProperties, agentName, addComments, true);
+                        isFirstAgent = false;
+                    } else {
+                        agentConfiguration = FlumeConfiguratorUtils.getStringAgentConfiguration(agentConfigurationProperties, agentName, addComments, false);
+                    }
+                    //logger.info(agentConfiguration);
+
+                    sbAgentConfiguration.append(agentConfiguration);
+                }
+
+                if (writeFlumeConfigurationFiles) {
+                    pathConfigurationGeneratedFile = pathFlumeConfigurationGeneratedFile;
+                    multipleAgentConfigurationFiles = multipleFlumeConfigurationFiles;
+
+                    //Write Flume configuration files
+                    writeConfigurationFiles();
+                }
+
+                return sbAgentConfiguration.toString();
+
+
+            } else {
+                logger.error("[ERROR] The configuration file is not correct");
+                logger.error(configurationValidator.getSbCheckErrors().toString());
+                return null;
+            }
+
+
+        } catch (IOException e) {
+            logger.error("An error has occurred on the load of properties file", e);
+            return null;
         }
 
     }
