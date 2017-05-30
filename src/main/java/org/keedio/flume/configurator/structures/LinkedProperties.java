@@ -123,4 +123,16 @@ public class LinkedProperties extends Properties {
         return linkMap.values();
     }
 
+    /**
+     * Put the properties from another properties
+     * @param anotherProperties
+     */
+    public void populateFromProperties (Properties anotherProperties) {
+
+        for (Object key : anotherProperties.keySet()) {
+            String propertyName = (String) key;
+            String propertyValue = (String) anotherProperties.get(propertyName);
+            linkMap.put(propertyName, propertyValue);
+        }
+    }
 }

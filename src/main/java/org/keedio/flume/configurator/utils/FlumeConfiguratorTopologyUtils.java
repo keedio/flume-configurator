@@ -1,10 +1,16 @@
 package org.keedio.flume.configurator.utils;
 
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.map.HashedMap;
+import org.keedio.flume.configurator.builder.FlumeTopologyReversePropertiesGenerator;
 import org.keedio.flume.configurator.constants.FlumeConfiguratorConstants;
+import org.keedio.flume.configurator.exceptions.FlumeConfiguratorException;
 import org.keedio.flume.configurator.structures.FlumeTopology;
 import org.keedio.flume.configurator.structures.LinkedProperties;
 import org.keedio.flume.configurator.structures.TopologyPropertyBean;
+import org.keedio.flume.configurator.topology.GraphFactory;
 import org.keedio.flume.configurator.topology.IGraph;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.io.PrintWriter;
@@ -17,6 +23,8 @@ public class FlumeConfiguratorTopologyUtils {
     private FlumeConfiguratorTopologyUtils() {
         super();
     }
+
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(FlumeTopologyReversePropertiesGenerator.class);
 
     /**
      * Detect if the structure is a tree
@@ -974,5 +982,883 @@ public class FlumeConfiguratorTopologyUtils {
 
         return treeSet;
     }
+
+    /*****************************************************************/
+
+    /**
+     * Get the number of parts of the Flume property
+     * @param property
+     */
+    public static int getPropertyPartsNumber(String property) {
+
+        int partsNumber = 0;
+        if (property != null && !"".equals(property)) {
+            String[] parts = property.split(FlumeConfiguratorConstants.DOT_REGEX);
+            partsNumber = parts.length;
+        }
+
+        return partsNumber;
+    }
+
+
+    /**
+     * Get the part of the property on the indicated index
+     * @param property Name of the property
+     * @param partIndex index of part
+     * @return Part of the property on the indicated index
+     */
+    public static String getPropertyPart(String property, int partIndex) {
+
+        String part = "";
+        if (property != null && !"".equals(property) && partIndex > 0) {
+            int propertyPartsNumber = getPropertyPartsNumber(property);
+            if (partIndex <= propertyPartsNumber) {
+                String[] parts = property.split(FlumeConfiguratorConstants.DOT_REGEX);
+                part = parts[partIndex-1];
+            }
+        }
+
+        return part;
+    }
+
+    /**
+     * Get properties with the specified part
+     * @param properties properties
+     * @param part part to be searched
+     * @param partIndex index of the part
+     * @param isLastPart true if only properties with the last part is searched
+     * @return LinkedProperties with the searched properties
+     */
+    public static LinkedProperties getPropertiesWithPart(Properties properties, String part, int partIndex, boolean isLastPart) {
+
+        LinkedProperties result = new LinkedProperties();
+
+        String key;
+        for (Object keyObject : properties.keySet()) {
+
+            key = (String) keyObject;
+            int propertyPartsNumber = getPropertyPartsNumber(key);
+            String propertyPart = getPropertyPart(key, partIndex);
+
+            if (!"".equals(propertyPart) && propertyPart.equals(part)) {
+                if (isLastPart) {
+                    if (partIndex == propertyPartsNumber) {
+                        String value = properties.getProperty(key);
+                        if (value != null) {
+                            result.put(key,value);
+                        }
+                    }
+                } else {
+                    String value = properties.getProperty(key);
+                    if (value != null) {
+                        result.put(key,value);
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
+
+    /**
+     * Obtain set of string with the first part of the properties
+     * @param properties properties
+     * @return Set of string with the first part of the properties
+     */
+    public static Set<String> getSetFirstPartProperties(Properties properties) {
+
+        String key;
+        Set<String> setFirstPart = new HashSet<>();
+        for (Object keyObject : properties.keySet()) {
+
+            key = (String) keyObject;
+            String firstPart = getPropertyPart(key,1);
+            if (!"".equals(firstPart)) {
+                setFirstPart.add(firstPart);
+            }
+        }
+
+        return setFirstPart;
+    }
+
+
+    /**
+     * Get the rest of the name of the property from a specified part index
+     * @param propertyName property name
+     * @param partIndex index of the parte
+     * @return rest of the name of the property from a specified part index
+     */
+    public static String getTailPartProperty(String propertyName, int partIndex) {
+
+        StringBuilder sb = new StringBuilder();
+        if (propertyName != null && !"".equals(propertyName) && partIndex > 0) {
+            int propertyPartsNumber = getPropertyPartsNumber(propertyName);
+            String[] parts = propertyName.split(FlumeConfiguratorConstants.DOT_REGEX);
+
+            if (propertyPartsNumber > partIndex) {
+                for (int i=partIndex; i<propertyPartsNumber; i++) {
+                    sb.append(parts[i]);
+                    sb.append(FlumeConfiguratorConstants.DOT_SEPARATOR);
+
+                }
+            }
+
+            if (sb.length() > 0) {
+                sb.setLength(sb.length()-1);
+            }
+        }
+        return sb.toString();
+    }
+
+
+    /**
+     * Get the comment of the property if exists
+     * @param lines Content of the configuration files
+     * @param propertyName property name
+     * @return the comment of the property if exists, blank string otherwise
+     */
+    public static String getPropertyCommentFromText(List<String> lines, String propertyName) {
+
+        String propertyComment = "";
+
+        if (lines != null && propertyName != null && !"".equals(propertyName)) {
+            for (int i=1; i<lines.size(); i++) {
+                boolean isProperty = false;
+                String line = lines.get(i);
+
+                //Get property from line
+                line = line.trim();
+                int equalIndex = line.indexOf("=");
+
+                if (equalIndex != -1 && !line.startsWith(FlumeConfiguratorConstants.HASH)) {
+                    isProperty = true;
+                }
+
+                if (isProperty) {
+                    String property = line.substring(0, line.indexOf("=")).trim();
+                    if (property.equals(propertyName)) {
+                        //is the property line. Get the previous line
+                        String previousLine = lines.get(i-1);
+                        if (previousLine.trim().startsWith(FlumeConfiguratorConstants.HASH)
+                                && !previousLine.trim().startsWith("##")
+                                && !previousLine.contains("=")) {
+
+                            propertyComment = previousLine.trim().replaceFirst(FlumeConfiguratorConstants.HASH, "").trim();
+                        }
+                    }
+                }
+            }
+        }
+
+        return propertyComment;
+    }
+
+    /**
+     * Get id of a FlumeTopology element
+     * @param flumeTopologyList List of FlumeTopology elements
+     * @param elemName name of the element
+     * @return id of the element with the indicated name
+     */
+    public static String getFlumeTopologyId(List<FlumeTopology> flumeTopologyList, String elemName) {
+
+        String flumeTopologyID = "";
+
+        for (FlumeTopology flumeTopologyElement : flumeTopologyList) {
+
+            String type = flumeTopologyElement.getType();
+
+            if (!FlumeConfiguratorConstants.FLUME_TOPOLOGY_CONNECTION.equals(type)) {
+                String elementName = flumeTopologyElement.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
+
+                if (elementName != null && !"".equals(elementName) && elemName != null && !"".equals(elemName) && elementName.equals(elemName)) {
+                    if (flumeTopologyID.isEmpty()) {
+                        flumeTopologyID = flumeTopologyElement.getId();
+                    } else {
+                        throw new FlumeConfiguratorException("There are more than 1 Flume topology element with the same ID: " + flumeTopologyID);
+                    }
+
+                }
+            }
+        }
+
+        return flumeTopologyID;
+    }
+
+
+    /**
+     * Get Flume Topology element with the indicated ID
+     * @param flumeTopologyList Flume Topolology elements list
+     * @param flumeTopologyId ID of searched Flume Topology element
+     * @return Flume Topology element with the indicated ID
+     */
+    public static FlumeTopology getFlumeTopologyElement(List<FlumeTopology> flumeTopologyList, String flumeTopologyId) {
+
+        FlumeTopology flumeTopology = null;
+
+        for (FlumeTopology flumeTopologyElement : flumeTopologyList) {
+
+            String flumeTopologyElementID = flumeTopologyElement.getId();
+
+            if (flumeTopologyId != null && !"".equals(flumeTopologyId) && flumeTopologyElementID != null &&
+                    !"".equals(flumeTopologyElementID) && flumeTopologyId.equals(flumeTopologyElementID)) {
+
+                flumeTopology = flumeTopologyElement;
+            }
+        }
+
+        return flumeTopology;
+    }
+
+
+    /**
+     * Get the ordered list of interceptors from a source. The order is determinated by the connections
+     * @param sourceInterceptorsList List of interceptors of the source
+     * @param sourceId Od pf tje spurce
+     * @param listTopologyConnections List of Flume Topology connections
+     * @param flumeTopologyList List of Flume Topology elements
+     * @return The ordered list of interceptors
+     */
+    public static List<String> orderSourceInterceptorsFromConnections(List<String> sourceInterceptorsList, String sourceId,
+                                                                      List<FlumeTopology> listTopologyConnections,
+                                                                      List<FlumeTopology> flumeTopologyList) {
+
+        List<String> sourceInterceptorsOrderedList = new ArrayList<>();
+
+        if (sourceInterceptorsList == null || sourceInterceptorsList.size() == 1) {
+            sourceInterceptorsOrderedList = sourceInterceptorsList;
+        } else {
+            String interceptorConnectionID = getInterceptorConnection(sourceId, listTopologyConnections, flumeTopologyList);
+
+            while (interceptorConnectionID != null && !interceptorConnectionID.isEmpty()) {
+
+                FlumeTopology flumeTopologyElement = getFlumeTopologyElement(flumeTopologyList, interceptorConnectionID);
+
+                String interceptorName = flumeTopologyElement.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
+
+                sourceInterceptorsOrderedList.add(interceptorName);
+
+                interceptorConnectionID = getInterceptorConnection(interceptorConnectionID, listTopologyConnections, flumeTopologyList);
+            }
+
+            if (sourceInterceptorsOrderedList.size() != sourceInterceptorsList.size()) {
+                throw new FlumeConfiguratorException("The source interceptor ordered list of source: " + sourceId + "has a different size than unordered list");
+            }
+
+            for (String interceptorName : sourceInterceptorsOrderedList) {
+                if (!sourceInterceptorsList.contains(interceptorName)) {
+                    throw new FlumeConfiguratorException("The source interceptor ordered list of source: " + sourceId + "has different elements than unordered list");
+                }
+            }
+        }
+
+        return sourceInterceptorsOrderedList;
+    }
+
+
+    /**
+     * Get the list with all target connections from a source connection
+     * @param sourceConnectionId Source connection ID
+     * @param listTopologyConnections Flume Topology connections list
+     * @return List with all target connections from a source connection
+     */
+    public static List<String> getAllTargetConnections(String sourceConnectionId, List<FlumeTopology> listTopologyConnections) {
+
+        List<String> targetConnections = new ArrayList<>();
+
+        if (sourceConnectionId != null && !sourceConnectionId.isEmpty() ) {
+            for (FlumeTopology connection : listTopologyConnections) {
+
+                String sourceConnection = connection.getSourceConnection();
+                if (sourceConnection != null && !sourceConnection.isEmpty() && sourceConnection.equals(sourceConnectionId)) {
+                    String targetConnection = connection.getTargetConnection();
+                    targetConnections.add(targetConnection);
+                }
+            }
+        }
+
+        return targetConnections;
+    }
+
+
+    /**
+     * Get the connection to the first interceptor of a source (interceptor's ID)
+     * @param sourceConnectionId Source ID
+     * @param listTopologyConnections List of Flume Topology connections
+     * @param flumeTopologyList List of Flume Topology elements
+     * @return Get the connection to the first interceptor of a source (interceptor's ID)
+     */
+    public static String getInterceptorConnection(String sourceConnectionId, List<FlumeTopology> listTopologyConnections, List<FlumeTopology> flumeTopologyList) {
+
+        String interceptorConnectionID = "";
+
+        List<String> targetConnectionsList = getAllTargetConnections(sourceConnectionId, listTopologyConnections);
+
+        for (String targetConnection : targetConnectionsList) {
+
+            FlumeTopology flumeTopologyElement = getFlumeTopologyElement(flumeTopologyList, targetConnection);
+
+            if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR.equals(flumeTopologyElement.getType())) {
+                interceptorConnectionID = targetConnection;
+            }
+        }
+
+        return interceptorConnectionID;
+    }
+
+
+    /**
+     * Get the last interceptor of a specified source (if exists)
+     * @param properties properties
+     * @param sourceName name of the source
+     * @return the last interceptor from the source (if exists)
+     */
+    public static String getLastInterceptorNameFromSource(Properties properties, String sourceName) {
+
+        String key;
+        String lastInterceptorID = "";
+
+        if (properties != null && sourceName != null && !sourceName.isEmpty()) {
+            LinkedProperties interceptorsPart = FlumeConfiguratorTopologyUtils.getPropertiesWithPart(properties, FlumeConfiguratorConstants.INTERCEPTORS_PROPERTY, FlumeConfiguratorConstants.INTERCEPTORS_LIST_PROPERTY_PART_INDEX, true);
+
+
+            for (Object keyObject : interceptorsPart.keySet()) {
+                key = (String) keyObject;
+                String sourceInterceptorName = FlumeConfiguratorTopologyUtils.getPropertyPart(key, FlumeConfiguratorConstants.ELEMENT_PROPERTY_PART_INDEX);
+
+                if (sourceInterceptorName.equals(sourceName)) {
+                    //is the searched source. Get the interceptors
+                    String propertyValue = interceptorsPart.getProperty(key);
+
+                    if (propertyValue != null && !"".equals(propertyValue)) {
+                        String[] interceptors = propertyValue.split(FlumeConfiguratorConstants.WHITE_SPACE_REGEX);
+
+                        if (lastInterceptorID.isEmpty()) {
+                            lastInterceptorID = interceptors[interceptors.length - 1];
+                        } else {
+                            throw new FlumeConfiguratorException("There are sources with more than 1 interceptors property defined: " + sourceName);
+                        }
+                    }
+                }
+            }
+        }
+
+        return lastInterceptorID;
+    }
+
+
+    /**
+     * Get the number of slices to divide the canvas size
+     * @param flumeGraphTopology IGraph
+     * @param agentName IGraph with the topology
+     * @return number of slices to divide the canvas size
+     */
+    public static int calculateSlicesNumber(Map<String, IGraph> flumeGraphTopology, String agentName) {
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("BEGIN calculateSlicesNumber");
+        }
+
+        int maxSlicesNumber = 0;
+
+        if (flumeGraphTopology != null && agentName != null && !agentName.isEmpty()) {
+
+            IGraph agentGraph = flumeGraphTopology.get(agentName);
+
+            if (agentGraph != null) {
+                FlumeTopology agentVertex = FlumeConfiguratorTopologyUtils.getAgentVertexFromGraph(agentGraph);
+
+                List<FlumeTopology> sourcesList = agentGraph.successorListOf(agentVertex);
+
+                int interceptorsNumber = 0;
+                int maxInterceptorsNumber = 0;
+
+                //Get the descendants of the source
+                for (FlumeTopology source : sourcesList) {
+
+                    if (source.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE)) {
+
+                        //Get descendants of source
+                        Set<FlumeTopology> sourceChildren = agentGraph.getVertexDescendants(source);
+                        Iterator<FlumeTopology> itSourceChildren = sourceChildren.iterator();
+
+                        interceptorsNumber = 0;
+
+                        while (itSourceChildren.hasNext()) {
+                            FlumeTopology sourceChild = itSourceChildren.next();
+
+                            if (sourceChild.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR)) {
+                                interceptorsNumber ++;
+                            }
+                        }
+
+                        if (interceptorsNumber > maxInterceptorsNumber) {
+                            maxInterceptorsNumber = interceptorsNumber;
+                        }
+                    }
+                }
+
+                maxSlicesNumber = maxInterceptorsNumber + 4;
+
+                logger.debug("Max interceptors number agent: " + agentName + " = " + maxInterceptorsNumber);
+                logger.debug("Max slices number agent: " + agentName + " = " + maxSlicesNumber);
+
+            }
+        }
+
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("END calculateSlicesNumber");
+        }
+
+        return maxSlicesNumber;
+    }
+
+
+    /**
+     * Get the Y coordinate from the element with the maximum Y coordinate
+     * @param flumeTopologyList List of Flume Topology elements
+     * @return the Y coordinate from the element with the maximum Y coordinate
+     */
+    public static int getMaxYCoordinate(List<FlumeTopology> flumeTopologyList) {
+
+        int lastYCoordinate = FlumeConfiguratorConstants.CANVAS_ELEMENTS_HEIGHT_PX_SEPARATION;
+
+        if (flumeTopologyList != null) {
+            for (FlumeTopology flumeTopology : flumeTopologyList) {
+                if (flumeTopology.getY() != null && !flumeTopology.getY().isEmpty()) {
+                    int lastYCoordinateValue = Integer.valueOf(flumeTopology.getY());
+                    if (lastYCoordinateValue >  lastYCoordinate) {
+                        lastYCoordinate = lastYCoordinateValue;
+                    }
+                }
+            }
+        }
+
+        return lastYCoordinate;
+    }
+
+
+    /**
+     * Get next Y Coordinate in function of max Y coordinate and first element of slice
+     * @param maxYCoordinate
+     * @param isFirstElementSlice
+     * @return next Y Coordinate
+     */
+    public static int getNextYCoordinate(int maxYCoordinate, boolean isFirstElementSlice) {
+
+        int nextYCoordinate = maxYCoordinate;
+
+        if (!isFirstElementSlice) {
+            nextYCoordinate = maxYCoordinate + FlumeConfiguratorConstants.CANVAS_ELEMENT_PX_HEIGHT + FlumeConfiguratorConstants.CANVAS_ELEMENTS_HEIGHT_PX_SEPARATION;
+        }
+
+        return nextYCoordinate;
+    }
+
+
+    /**
+     * Detect if a list contains a sublist
+     * @param list
+     * @param searchedElementsSublist
+     * @return true if the list contains the sublist in identical order, false otherwise
+     */
+    public static boolean isCorrectOrderSublist(List<String> list, List<String> searchedElementsSublist) {
+
+        boolean hasOrderedSublist = false;
+
+        if (list != null && searchedElementsSublist != null && searchedElementsSublist.size() <= list.size()) {
+
+            int fromIndex = 0;
+            while (fromIndex + searchedElementsSublist.size() <= list.size() && !hasOrderedSublist) {
+
+                //Create sublist with the size of the list of searched elements
+                List<String> sublist = list.subList(fromIndex, fromIndex + searchedElementsSublist.size());
+
+                //Check all elements sublist are elements of searched list
+                hasOrderedSublist = sublist.containsAll(searchedElementsSublist) && searchedElementsSublist.containsAll(sublist);
+
+                fromIndex++;
+            }
+        }
+
+        return hasOrderedSublist;
+    }
+
+
+    /**
+     * Get relation between shared channels and sources
+     * @param sharedSources list of shared sources
+     * @param sourcesChannelsRelationsMap relation between sources and channels
+     * @param agentName Name of the agent
+     * @return Relation between shared channels and sources
+     */
+    public static Map<String, List<String>> getMapSharedChannelsSourcesRelation(List<String> sharedSources, Map<String, Map<String, List<String>>> sourcesChannelsRelationsMap, String agentName) {
+
+        Map<String, List<String>> mapSharedChannelsSourcesRelation = new HashMap<>();
+
+        if (sharedSources != null && sourcesChannelsRelationsMap != null && agentName != null) {
+            for(String sharedSourceName : sharedSources) {
+
+                //Get channels of the shared source
+                List<String> sharedChannelsList = sourcesChannelsRelationsMap.get(agentName).get(sharedSourceName);
+
+                for(String sharedChannelName : sharedChannelsList) {
+
+                    if (mapSharedChannelsSourcesRelation.get(sharedChannelName) == null) {
+                        mapSharedChannelsSourcesRelation.put(sharedChannelName, new ArrayList<>());
+                    }
+                    if (!mapSharedChannelsSourcesRelation.get(sharedChannelName).contains(sharedSourceName)) {
+                        mapSharedChannelsSourcesRelation.get(sharedChannelName).add(sharedSourceName);
+                    }
+                }
+            }
+        }
+
+        return mapSharedChannelsSourcesRelation;
+    }
+
+
+    /**
+     * Get complete list of shared sources from a subset of shared sources
+     * @param mapSharedChannelsSourcesRelation relation between shared channels and sources
+     * @return complete list of shared sources
+     */
+    public static List<String> getCompleteSharedSourcesList(Map<String, List<String>> mapSharedChannelsSourcesRelation) {
+
+        //Construct initial order or sources from the larger one
+        List<String> greaterSourceList = new ArrayList<>();
+        List<String> completeSourcesList = null;
+
+        if (mapSharedChannelsSourcesRelation != null) {
+            for (String channelName : mapSharedChannelsSourcesRelation.keySet()) {
+                List<String> sourcesList = mapSharedChannelsSourcesRelation.get(channelName);
+
+                if (sourcesList.size() > greaterSourceList.size()) {
+                    greaterSourceList = new ArrayList<>(sourcesList);
+                }
+            }
+
+            //Complete the rest of sources
+            completeSourcesList = new ArrayList<>(greaterSourceList);
+            for (String channelName : mapSharedChannelsSourcesRelation.keySet()) {
+                List<String> sourcesList = mapSharedChannelsSourcesRelation.get(channelName);
+                for (String sourceName : sourcesList) {
+                    if (!greaterSourceList.contains(sourceName)) {
+                        completeSourcesList.add(sourceName);
+                    }
+                }
+            }
+        }
+
+        return completeSourcesList;
+    }
+
+
+    /**
+     * Get permutatios that preserve a order determinated by shared channels
+     * @param completeSourcesList complete list of shared sources
+     * @param mapSharedChannelsSourcesRelation relation between shared channels and sources
+     * @return list of permutatios of shared sources that preserve a order determinated by shared channels
+     */
+    public static Collection<List<String>> getCorrectSourcesPermutations (List<String> completeSourcesList, Map<String, List<String>> mapSharedChannelsSourcesRelation) {
+
+        Collection<List<String>> correctSourcesPermutations = new ArrayList<>();
+        Collection<List<String>> sourcesPermutations = new ArrayList<>();
+
+        if (completeSourcesList != null && mapSharedChannelsSourcesRelation != null) {
+            //Get all permutations and correct permutations of the sources
+            boolean isCorrectSourcerOrder = false;
+
+            sourcesPermutations = CollectionUtils.permutations(completeSourcesList);
+
+            Iterator<List<String>> itSourcesPermutations = sourcesPermutations.iterator();
+            while (itSourcesPermutations.hasNext()) {
+                List<String> sourcePermutation = itSourcesPermutations.next();
+
+                isCorrectSourcerOrder = true;
+                for (String channelName : mapSharedChannelsSourcesRelation.keySet()) {
+                    List<String> channelSourcesList = mapSharedChannelsSourcesRelation.get(channelName);
+                    isCorrectSourcerOrder = isCorrectSourcerOrder && FlumeConfiguratorTopologyUtils.isCorrectOrderSublist(sourcePermutation, channelSourcesList);
+                }
+
+                if (isCorrectSourcerOrder) {
+                    correctSourcesPermutations.add(sourcePermutation);
+                }
+            }
+        }
+
+        return correctSourcesPermutations;
+    }
+
+
+    /**
+     * Get relation between shared channels and number of sources
+     * @param completeSourcesList complete list of shared sources
+     * @param agentGraph graph of the agent
+     * @param flumeTopologyList list of Flume Topology elements
+     * @return relation between shared channels and number of sources
+     */
+    public static Map<String,Integer> getMapChannelSourcesNumberRelation(List<String> completeSourcesList, IGraph agentGraph,  List<FlumeTopology> flumeTopologyList) {
+
+        Map<String,Integer> mapChannelSourcesNumberRelation = new HashMap<>();
+
+        if (completeSourcesList != null && agentGraph != null && flumeTopologyList != null) {
+            for (String sourceName : completeSourcesList) {
+
+                String sourceID = FlumeConfiguratorTopologyUtils.getFlumeTopologyId(flumeTopologyList, sourceName);
+                FlumeTopology flumeTopologySourceElement = agentGraph.getVertex(sourceID, true);
+
+                Set<FlumeTopology> sourceChildren = FlumeConfiguratorTopologyUtils.convetTreeSet(agentGraph.getVertexDescendants(flumeTopologySourceElement));
+                Iterator<FlumeTopology> itSourceChildren = sourceChildren.iterator();
+
+                while (itSourceChildren.hasNext()) {
+                    FlumeTopology sourceChild = itSourceChildren.next();
+
+                    if (sourceChild.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL)) {
+                        String channelName = sourceChild.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
+
+                        //Get all sources from channel
+                        Set<FlumeTopology> channelAncestorsList = agentGraph.getVertexAncestors(sourceChild);
+
+                        int sourcesChannelAncestorNumber = 0;
+                        for (FlumeTopology channelAncestor : channelAncestorsList) {
+
+                            if (channelAncestor.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE)) {
+                                sourcesChannelAncestorNumber++;
+                            }
+                        }
+
+                        mapChannelSourcesNumberRelation.put(channelName, sourcesChannelAncestorNumber);
+                    }
+                }
+            }
+        }
+
+        return mapChannelSourcesNumberRelation;
+    }
+
+
+    /**
+     * Get relation between shared sources and independent channels
+     * @param completeSourcesList complete list of shared sources
+     * @param agentGraph graph of the agent
+     * @param flumeTopologyList list of Flume Topology elements
+     * @param mapChannelSourcesNumberRelation relation between shared channels and number of sources
+     * @return relation between shared sources and independent channels
+     */
+    public static Map<String,List<String>> getMapSourcesIndependentChannelsRelation(List<String> completeSourcesList, IGraph agentGraph, List<FlumeTopology> flumeTopologyList,  Map<String,Integer> mapChannelSourcesNumberRelation) {
+
+        Map<String,List<String>> mapSourcesIndependentChannelsRelation = new HashMap<>();
+
+        if (completeSourcesList != null && agentGraph != null && flumeTopologyList != null && mapChannelSourcesNumberRelation != null) {
+            for (String sourceName : completeSourcesList) {
+
+                String xourceID = FlumeConfiguratorTopologyUtils.getFlumeTopologyId(flumeTopologyList, sourceName);
+                FlumeTopology flumeTopologySourceElement = agentGraph.getVertex(xourceID, true);
+
+                Set<FlumeTopology> sourceChildren = FlumeConfiguratorTopologyUtils.convetTreeSet(agentGraph.getVertexDescendants(flumeTopologySourceElement));
+                Iterator<FlumeTopology> itSourceChildren = sourceChildren.iterator();
+
+                List<String> sourceIndependentChannelsList = new ArrayList<>();
+                while (itSourceChildren.hasNext()) {
+                    FlumeTopology sourceChild = itSourceChildren.next();
+
+
+                    if (sourceChild.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL)) {
+                        String channelName = sourceChild.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
+
+                        //check if channel is idependent
+                        if (mapChannelSourcesNumberRelation.get(channelName) == 1) {
+                            //It's an independent channel
+                            sourceIndependentChannelsList.add(channelName);
+                        }
+                    }
+
+                }
+                //mapSourcesIndependentChannelsNumberRelation.put(sourceName, sourceIndependentChannelsNumber);
+                mapSourcesIndependentChannelsRelation.put(sourceName, sourceIndependentChannelsList);
+            }
+        }
+
+        return mapSourcesIndependentChannelsRelation;
+    }
+
+
+    /**
+     * Get list of interceptors of a source
+     * @param flumeTopologySourceElement Flume Topology element of the source
+     * @param agentGraph graph of agent of the source
+     * @return list of interceptors of the specified source
+     */
+    public static List<String> getSourceInterceptorsList(FlumeTopology flumeTopologySourceElement, IGraph agentGraph) {
+
+        List<String> sourceInterceptorsList = new ArrayList<>();
+
+        if (flumeTopologySourceElement != null && agentGraph != null ) {
+
+            Set<FlumeTopology> sourceChildren = FlumeConfiguratorTopologyUtils.convetTreeSet(agentGraph.getVertexDescendants(flumeTopologySourceElement));
+            Iterator<FlumeTopology> itSourceChildren = sourceChildren.iterator();
+
+            while (itSourceChildren.hasNext()) {
+                FlumeTopology sourceChild = itSourceChildren.next();
+
+                if (sourceChild.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR)) {
+                    String interceptorName = sourceChild.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
+                    sourceInterceptorsList.add(interceptorName);
+                }
+
+            }
+        }
+
+        return sourceInterceptorsList;
+
+    }
+
+
+    /**
+     * Get relation between sources and interceptors
+     * @param agentGraph graph of the agent
+     * @return relation between sources and interceptors
+     */
+    public static Map<String,List<String>> getMapSourcesInterceptorsRelation(IGraph agentGraph) {
+
+        Map<String,List<String>> mapSourcesInterceptorsRelation = new HashedMap<>();
+
+        if (agentGraph != null) {
+
+            FlumeTopology agentVertex = FlumeConfiguratorTopologyUtils.getAgentVertexFromGraph(agentGraph);
+            String agentName = agentVertex.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
+
+            List<FlumeTopology> sourcesList = agentGraph.successorListOf(agentVertex);
+
+            //Get the descendants of the source
+            for (FlumeTopology source : sourcesList) {
+
+                if (source.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE)) {
+
+                    String sourceName = source.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
+
+                    List<String> sourceInterceptorsList = getSourceInterceptorsList(source, agentGraph);
+                    mapSourcesInterceptorsRelation.put(sourceName, sourceInterceptorsList);
+                }
+            }
+        }
+
+        return mapSourcesInterceptorsRelation;
+    }
+
+
+    /**
+     * Get optimal sources permutation
+     * @param sourcesCorrectPermutations collection of allowed permutations
+     * @param mapSourcesIndependentChannelsRelation relation between shared sources and independent channels
+     * @param mapSourcesInterceptorsRelation relation between sources and interceptors
+     * @return the optimal sources permutation
+     */
+    public static List<String> getOptimalSourcesPermutation(Collection<List<String>> sourcesCorrectPermutations, Map<String,List<String>> mapSourcesIndependentChannelsRelation, Map<String,List<String>> mapSourcesInterceptorsRelation) {
+
+        List<String> optimalSourcesPermutation = null;
+
+        if (sourcesCorrectPermutations != null && mapSourcesIndependentChannelsRelation != null && mapSourcesInterceptorsRelation != null ) {
+
+            if (sourcesCorrectPermutations.size() == 1) {
+                optimalSourcesPermutation = CollectionUtils.get(sourcesCorrectPermutations, 0);
+
+            } else  if (sourcesCorrectPermutations.size() > 1) {
+
+                String firstSource = null;
+                String secondSource = null;
+                int firstSourceIndependentChannelsNumber = 0;
+                int secondSourceIndependentChannelsNumber = 0;
+                int firstSourceInterceptorsNumber = 0;
+                int secondSourceInterceptorsNumber = 0;
+
+                //boolean isFirstElement = true;
+                int elementNumber = 1;
+                for (String sourceName : mapSourcesIndependentChannelsRelation.keySet()) {
+
+                    int sourceIndependentChannelsNumber = mapSourcesIndependentChannelsRelation.get(sourceName).size();
+                    int sourceInterceptorsNumber = mapSourcesInterceptorsRelation.get(sourceName).size();
+
+                    if (elementNumber == 1) {
+                        firstSource = sourceName;
+                        firstSourceIndependentChannelsNumber = sourceIndependentChannelsNumber;
+                        firstSourceInterceptorsNumber = sourceInterceptorsNumber;
+                    } else if (elementNumber == 2) {
+                        secondSource = sourceName;
+                        secondSourceIndependentChannelsNumber = sourceIndependentChannelsNumber;
+                        secondSourceInterceptorsNumber = sourceInterceptorsNumber;
+                    }
+
+                    /*
+                    if (isFirstElement) {
+                        firstSource = sourceName;
+                        secondSource = sourceName;
+                        firstSourceIndependentChannelsNumber = sourceIndependentChannelsNumber;
+                        secondSourceIndependentChannelsNumber = sourceIndependentChannelsNumber;
+                        firstSourceInterceptorsNumber = sourceInterceptorsNumber;
+                        secondSourceInterceptorsNumber = sourceInterceptorsNumber;
+                        isFirstElement = false;
+                    }
+                    */
+
+                    if (sourceIndependentChannelsNumber > firstSourceIndependentChannelsNumber) {
+                        secondSource = firstSource;
+                        secondSourceIndependentChannelsNumber = firstSourceIndependentChannelsNumber;
+                        firstSource = sourceName;
+                        firstSourceIndependentChannelsNumber = sourceIndependentChannelsNumber;
+                    } else if (sourceIndependentChannelsNumber == firstSourceIndependentChannelsNumber) {
+                        if (sourceInterceptorsNumber >= firstSourceInterceptorsNumber) {
+                            secondSource = firstSource;
+                            secondSourceIndependentChannelsNumber = firstSourceIndependentChannelsNumber;
+                            secondSourceInterceptorsNumber = firstSourceInterceptorsNumber;
+                            firstSource = sourceName;
+                            firstSourceIndependentChannelsNumber = sourceIndependentChannelsNumber;
+                            firstSourceInterceptorsNumber = sourceInterceptorsNumber;
+
+                        } else if (sourceInterceptorsNumber >= secondSourceInterceptorsNumber) {
+                            secondSource = sourceName;
+                            secondSourceIndependentChannelsNumber = sourceIndependentChannelsNumber;
+                            secondSourceInterceptorsNumber = sourceInterceptorsNumber;
+                        }
+                    } else if (sourceIndependentChannelsNumber > secondSourceIndependentChannelsNumber) {
+                        secondSource = sourceName;
+                        secondSourceIndependentChannelsNumber = sourceIndependentChannelsNumber;
+                        secondSourceInterceptorsNumber = sourceInterceptorsNumber;
+                    } else if (sourceIndependentChannelsNumber == secondSourceIndependentChannelsNumber) {
+                        if (sourceInterceptorsNumber >= secondSourceInterceptorsNumber) {
+                            secondSource = sourceName;
+                            secondSourceIndependentChannelsNumber = sourceIndependentChannelsNumber;
+                            secondSourceInterceptorsNumber = sourceInterceptorsNumber;
+                        }
+                    }
+
+                    elementNumber++;
+
+                }
+
+                boolean foundPermutation = false;
+                Iterator<List<String>> itSourcesCorrectPermutations = sourcesCorrectPermutations.iterator();
+                while (itSourcesCorrectPermutations.hasNext() && !foundPermutation) {
+                    List<String> correctSourcesPermutation = itSourcesCorrectPermutations.next();
+
+                    //Check if permutation is correct
+
+                    if (correctSourcesPermutation.get(correctSourcesPermutation.size() -1).equals(firstSource) &&
+                            correctSourcesPermutation.get(0).equals(secondSource)) {
+
+                        optimalSourcesPermutation = correctSourcesPermutation;
+                        foundPermutation = true;
+                    }
+                }
+            }
+
+
+        }
+
+        return optimalSourcesPermutation;
+    }
+
 
 }

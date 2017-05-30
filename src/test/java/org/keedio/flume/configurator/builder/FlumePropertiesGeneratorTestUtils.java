@@ -5,9 +5,9 @@ import java.util.Map;
 import org.keedio.flume.configurator.constants.FlumeConfiguratorConstants;
 import org.keedio.flume.configurator.structures.LinkedProperties;
 
-class ConfigurationBuilderTestUtils {
+class FlumePropertiesGeneratorTestUtils {
 
-    private ConfigurationBuilderTestUtils() {
+    private FlumePropertiesGeneratorTestUtils() {
         super();
     }
 

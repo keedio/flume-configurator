@@ -1,5 +1,6 @@
 package org.keedio.flume.configurator.topology;
 
+import org.jgraph.graph.DefaultEdge;
 import org.keedio.flume.configurator.structures.FlumeTopology;
 
 import java.io.OutputStream;
@@ -84,6 +85,13 @@ public interface IGraph {
      * @return vertex set
      */
     Set<FlumeTopology> getVertexSet();
+
+
+    /**
+     * Get the edge set
+     * @return edge set
+     */
+    <T> Set<T> getEdgeSet();
 
     /**
      * Get List of succesors
