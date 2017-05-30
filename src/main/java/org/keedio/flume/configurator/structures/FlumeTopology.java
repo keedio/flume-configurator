@@ -1,22 +1,35 @@
 package org.keedio.flume.configurator.structures;
 
-import org.codehaus.jackson.annotate.JsonCreator;
-import org.codehaus.jackson.annotate.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.keedio.flume.configurator.constants.FlumeConfiguratorConstants;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class FlumeTopology implements Comparable {
 
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(FlumeTopology.class);
 
     private String type;
     private String id;
+    private String x;
+    private String y;
+    private String width;
+    private String height;
     private Map<String, String> data;
+    private String cssClass;
+    private String bgColor;
+    private String color;
+    private String stroke;
+    private String alpha;
+    private String radius;
     private String sourceConnection;
     private String targetConnection;
     private static ArrayList<String> orderTypeArrayList;
@@ -37,11 +50,23 @@ public class FlumeTopology implements Comparable {
     @JsonCreator
     public FlumeTopology(@JsonProperty("type") String type,
                          @JsonProperty("id") String id,
+                         @JsonProperty("x") String x,
+                         @JsonProperty("y") String y,
+                         @JsonProperty("width") String width,
+                         @JsonProperty("height") String height,
                          @JsonProperty("data") Map<String, String> data,
+                         @JsonProperty("cssClass") String cssClass,
+                         @JsonProperty("bgColor") String bgColor,
+                         @JsonProperty("color") String color,
+                         @JsonProperty("stroke") String stroke,
+                         @JsonProperty("alpha") String alpha,
+                         @JsonProperty("radius") String radius,
                          @JsonProperty("source") String sourceConnection,
                          @JsonProperty("target") String targetConnection) {
         this.type = type;
         this.id = id;
+        this.x = x;
+        this.y = y;
         if (data == null) {
             data = new LinkedHashMap<String, String>();
         } else {
@@ -90,6 +115,8 @@ public class FlumeTopology implements Comparable {
         this.data = data;
     }
 
+
+    @JsonProperty("source")
     public String getSourceConnection() {
         return sourceConnection;
     }
@@ -98,6 +125,7 @@ public class FlumeTopology implements Comparable {
         this.sourceConnection = sourceConnection;
     }
 
+    @JsonProperty("target")
     public String getTargetConnection() {
         return targetConnection;
     }
@@ -129,6 +157,7 @@ public class FlumeTopology implements Comparable {
     }
 
 
+    @JsonIgnore
     public String getAgentName() {
         String agentName = null;
 
@@ -137,7 +166,9 @@ public class FlumeTopology implements Comparable {
             if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE.equals(flumeTopologyElementType)) {
                 Map<String, String> data = this.getData();
                 if (data != null) {
-                    agentName = data.get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_AGENT_NAME).toLowerCase();
+                    if (data.containsKey(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_AGENT_NAME)) {
+                        agentName = data.get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_AGENT_NAME).toLowerCase();
+                    }
                 }
             } else if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_AGENT.equals(flumeTopologyElementType)) {
                 Map<String, String> data = this.getData();
@@ -168,5 +199,85 @@ public class FlumeTopology implements Comparable {
 
             return  indexTopologyType - indexAnotherTopolotyType;
         }
+    }
+
+    public String getX() {
+        return x;
+    }
+
+    public void setX(String x) {
+        this.x = x;
+    }
+
+    public String getY() {
+        return y;
+    }
+
+    public void setY(String y) {
+        this.y = y;
+    }
+
+    public String getWidth() {
+        return width;
+    }
+
+    public void setWidth(String width) {
+        this.width = width;
+    }
+
+    public String getHeight() {
+        return height;
+    }
+
+    public void setHeight(String height) {
+        this.height = height;
+    }
+
+    public String getCssClass() {
+        return cssClass;
+    }
+
+    public void setCssClass(String cssClass) {
+        this.cssClass = cssClass;
+    }
+
+    public String getBgColor() {
+        return bgColor;
+    }
+
+    public void setBgColor(String bgColor) {
+        this.bgColor = bgColor;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
+    }
+
+    public String getStroke() {
+        return stroke;
+    }
+
+    public void setStroke(String stroke) {
+        this.stroke = stroke;
+    }
+
+    public String getAlpha() {
+        return alpha;
+    }
+
+    public void setAlpha(String alpha) {
+        this.alpha = alpha;
+    }
+
+    public String getRadius() {
+        return radius;
+    }
+
+    public void setRadius(String radius) {
+        this.radius = radius;
     }
 }

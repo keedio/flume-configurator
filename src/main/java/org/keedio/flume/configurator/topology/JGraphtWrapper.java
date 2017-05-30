@@ -161,6 +161,10 @@ public class JGraphtWrapper implements IGraph{
 
 
     @Override
+    public Set<DefaultEdge> getEdgeSet() {return directedGraph.edgeSet();}
+
+
+    @Override
     public List<FlumeTopology> successorListOf (FlumeTopology vertex) {
         return Graphs.successorListOf(directedGraph, vertex);
     }
@@ -180,14 +184,6 @@ public class JGraphtWrapper implements IGraph{
     public Set<FlumeTopology> getVertexDescendants(FlumeTopology vertex) {
         return ((DirectedAcyclicGraph) directedGraph).getDescendants(((DirectedAcyclicGraph) directedGraph), vertex);
     }
-
-
-
-
-
-
-
-
 
 
 }

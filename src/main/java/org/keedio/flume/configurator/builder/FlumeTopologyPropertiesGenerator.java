@@ -195,6 +195,15 @@ public class FlumeTopologyPropertiesGenerator {
     }
 
     /**
+     * @param ratioCommonProperty the ratioCommonProperty to set
+     */
+    public static void setRatioCommonProperty(double ratioCommonProperty) {
+        FlumeTopologyPropertiesGenerator.ratioCommonProperty = ratioCommonProperty;
+    }
+
+
+
+    /**
      * Load the properties file
      * @throws IOException
      */
@@ -225,7 +234,6 @@ public class FlumeTopologyPropertiesGenerator {
 
     /**
      * Create the needed structures (tree or graph)
-     * @throws ClassNotFoundException
      */
     private void createInitialStructures() {
 
@@ -932,226 +940,7 @@ public class FlumeTopologyPropertiesGenerator {
 
     }
 
-/*
-    private void generateSourcesListProperties() {
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("BEGIN generateSourcesListProperties");
-        }
-
-        if (isTreeCompliant) {
-
-            for (String agentName : flumeTreeTopology.keySet()) {
-
-                DefaultMutableTreeNode agentRootNode = flumeTreeTopology.get(agentName);
-                Enumeration agentSources = agentRootNode.children();
-                List<String> agentSourcesList = new ArrayList<>();
-                while (agentSources.hasMoreElements()) {
-                    DefaultMutableTreeNode sourceNode = (DefaultMutableTreeNode) agentSources.nextElement();
-                    FlumeTopology flumeTopologySource = (FlumeTopology) sourceNode.getUserObject();
-                    String sourceName = flumeTopologySource.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
-                    agentSourcesList.add(sourceName);
-                }
-
-                String propertyKey = FlumeConfiguratorTopologyUtils.getKeyPropertyString(FlumeConfiguratorConstants.SOURCES_LIST_PROPERTIES_PREFIX, FlumeConfiguratorConstants.DOT_SEPARATOR, agentName);
-                flumeConfigurationProperties = FlumeConfiguratorTopologyUtils.addTopologyProperty(flumeConfigurationProperties, propertyKey, agentSourcesList,
-                        FlumeConfiguratorConstants.PROPERTY_SEPARATOR_DEFAULT);
-
-
-
-            }
-
-
-        } else {
-
-            for (String agentName : flumeGraphTopology.keySet()) {
-
-                IGraph agentGraph = flumeGraphTopology.get(agentName);
-
-                Set<FlumeTopology> vertexSet = agentGraph.getVertexSet();
-                FlumeTopology agentVertex = null;
-
-                //Get the agent vertex
-                for (FlumeTopology vertex : vertexSet) {
-                    if (vertex.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_AGENT)) {
-                        agentVertex = vertex;
-                    }
-                }
-
-                FlumeTopology agentVertex = FlumeConfiguratorTopologyUtils.getAgentVertexFromGraph(flumeGraphTopology, agentName);
-
-                //Get the sources of the agent vertex
-                List<FlumeTopology> sourcesList = agentGraph.successorListOf(agentVertex);
-                List<String> agentSourcesList = new ArrayList<>();
-
-                //Get the descendants of the source
-                for (FlumeTopology source : sourcesList) {
-                    String sourceName = source.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
-                    agentSourcesList.add(sourceName);
-                }
-
-                String propertyKey = FlumeConfiguratorTopologyUtils.getKeyPropertyString(FlumeConfiguratorConstants.SOURCES_LIST_PROPERTIES_PREFIX, FlumeConfiguratorConstants.DOT_SEPARATOR, agentName);
-                flumeConfigurationProperties = FlumeConfiguratorTopologyUtils.addTopologyProperty(flumeConfigurationProperties, propertyKey, agentSourcesList,
-                        FlumeConfiguratorConstants.PROPERTY_SEPARATOR_DEFAULT);
-
-            }
-
-        }
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("END generateSourcesListProperties");
-        }
-
-    }
-
-
-
-    private void generateChannelsListProperties() {
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("BEGIN generateChannelsListProperties");
-        }
-
-        if (isTreeCompliant) {
-
-            for (String agentName : flumeTreeTopology.keySet()) {
-
-                DefaultMutableTreeNode agentRootNode = flumeTreeTopology.get(agentName);
-                Enumeration agentTreeNodes = agentRootNode.preorderEnumeration();
-                List<String> agentChannelsList = new ArrayList<>();
-                while (agentTreeNodes.hasMoreElements()) {
-                    DefaultMutableTreeNode agentTreeNode = (DefaultMutableTreeNode) agentTreeNodes.nextElement();
-                    FlumeTopology flumeTopologyElement = (FlumeTopology) agentTreeNode.getUserObject();
-                    String channelName = flumeTopologyElement.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
-
-                    if (flumeTopologyElement.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL)) {
-                        agentChannelsList.add(channelName);
-                    }
-                }
-
-                String propertyKey = FlumeConfiguratorTopologyUtils.getKeyPropertyString(FlumeConfiguratorConstants.CHANNELS_LIST_PROPERTIES_PREFIX, FlumeConfiguratorConstants.DOT_SEPARATOR,
-                                    agentName);
-                flumeConfigurationProperties = FlumeConfiguratorTopologyUtils.addTopologyProperty(flumeConfigurationProperties, propertyKey, agentChannelsList,
-                        FlumeConfiguratorConstants.PROPERTY_SEPARATOR_DEFAULT);
-            }
-
-
-        } else {
-
-            for (String agentName : flumeGraphTopology.keySet()) {
-
-                IGraph agentGraph = flumeGraphTopology.get(agentName);
-                Set<FlumeTopology> vertexSet = agentGraph.getVertexSet();
-                FlumeTopology agentVertex = null;
-
-                //Get the agent vertex
-                for (FlumeTopology vertex : vertexSet) {
-                    if (vertex.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_AGENT)) {
-                        agentVertex = vertex;
-                    }
-                }
-
-                FlumeTopology agentVertex = FlumeConfiguratorTopologyUtils.getAgentVertexFromGraph(flumeGraphTopology, agentName);
-
-                //Get the descendants of the agent vertex
-                Set<FlumeTopology> agentVertexChildren = agentGraph.getVertexDescendants(agentVertex);
-                List<String> agentChannelsList = new ArrayList<>();
-
-                for (FlumeTopology agentVertexChild : agentVertexChildren) {
-
-                    if (agentVertexChild.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL)) {
-                        String channelName = agentVertexChild.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
-                        agentChannelsList.add(channelName);
-                    }
-                }
-
-                String propertyKey = FlumeConfiguratorTopologyUtils.getKeyPropertyString(FlumeConfiguratorConstants.CHANNELS_LIST_PROPERTIES_PREFIX, FlumeConfiguratorConstants.DOT_SEPARATOR,
-                        agentName);
-                flumeConfigurationProperties = FlumeConfiguratorTopologyUtils.addTopologyProperty(flumeConfigurationProperties, propertyKey, agentChannelsList,
-                        FlumeConfiguratorConstants.PROPERTY_SEPARATOR_DEFAULT);
-            }
-        }
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("END generateChannelsListProperties");
-        }
-
-    }
-
-
-    private void generateSinksListProperties() {
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("BEGIN generateSinksListProperties");
-        }
-
-        if (isTreeCompliant) {
-
-            for (String agentName : flumeTreeTopology.keySet()) {
-
-                DefaultMutableTreeNode agentRootNode = flumeTreeTopology.get(agentName);
-                Enumeration agentTreeNodes = agentRootNode.preorderEnumeration();
-                List<String> agentSinksList = new ArrayList<>();
-                while (agentTreeNodes.hasMoreElements()) {
-                    DefaultMutableTreeNode agentTreeNode = (DefaultMutableTreeNode) agentTreeNodes.nextElement();
-                    FlumeTopology flumeTopologyElement = (FlumeTopology) agentTreeNode.getUserObject();
-                    String sinkName = flumeTopologyElement.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
-
-                    if (flumeTopologyElement.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK)) {
-                        agentSinksList.add(sinkName);
-                    }
-                }
-
-                String propertyKey = FlumeConfiguratorTopologyUtils.getKeyPropertyString(FlumeConfiguratorConstants.SINKS_LIST_PROPERTIES_PREFIX, FlumeConfiguratorConstants.DOT_SEPARATOR,
-                                    agentName);
-                flumeConfigurationProperties = FlumeConfiguratorTopologyUtils.addTopologyProperty(flumeConfigurationProperties, propertyKey, agentSinksList,
-                        FlumeConfiguratorConstants.PROPERTY_SEPARATOR_DEFAULT);
-            }
-
-
-        } else {
-
-            for (String agentName : flumeGraphTopology.keySet()) {
-
-                IGraph agentGraph = flumeGraphTopology.get(agentName);
-                Set<FlumeTopology> vertexSet = agentGraph.getVertexSet();
-                FlumeTopology agentVertex = null;
-
-                //Get the agent vertex
-                for (FlumeTopology vertex : vertexSet) {
-                    if (vertex.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_AGENT)) {
-                        agentVertex = vertex;
-                    }
-                }
-
-                FlumeTopology agentVertex = FlumeConfiguratorTopologyUtils.getAgentVertexFromGraph(flumeGraphTopology, agentName);
-
-                //Get the descendants of the agent vertex
-                Set<FlumeTopology> agentVertexChildren = agentGraph.getVertexDescendants(agentVertex);
-                List<String> agentSinksList = new ArrayList<>();
-
-                for (FlumeTopology agentVertexChild : agentVertexChildren) {
-
-                    if (agentVertexChild.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL)) {
-                        String sinkName = agentVertexChild.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
-                        agentSinksList.add(sinkName);
-                    }
-                }
-
-                String propertyKey = FlumeConfiguratorTopologyUtils.getKeyPropertyString(FlumeConfiguratorConstants.SINKS_LIST_PROPERTIES_PREFIX, FlumeConfiguratorConstants.DOT_SEPARATOR,
-                        agentName);
-                flumeConfigurationProperties = FlumeConfiguratorTopologyUtils.addTopologyProperty(flumeConfigurationProperties, propertyKey, agentSinksList,
-                        FlumeConfiguratorConstants.PROPERTY_SEPARATOR_DEFAULT);
-            }
-        }
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("END generateSinksListProperties");
-        }
-
-    }
-
-*/
 
     /**
      * Generate properties for different kinds of elements
@@ -1490,8 +1279,14 @@ public class FlumeTopologyPropertiesGenerator {
 
                         }
 
+                        //Get the interceptors chain ordered
+                        List<String> sourceInterceptorsOrderedList = FlumeConfiguratorTopologyUtils.orderSourceInterceptorsFromConnections(sourceInterceptorsList, source.getId(), listTopologyConnections, flumeTopologyList);
+
                         String propertyKey = FlumeConfiguratorConstants.INTERCEPTORS_LIST_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + sourceName;
-                        flumeConfigurationProperties = FlumeConfiguratorTopologyUtils.addTopologyProperty(flumeConfigurationProperties, propertyKey, sourceInterceptorsList,
+
+                        //flumeConfigurationProperties = FlumeConfiguratorTopologyUtils.addTopologyProperty(flumeConfigurationProperties, propertyKey, sourceInterceptorsList,
+                        //        FlumeConfiguratorConstants.PROPERTY_SEPARATOR_DEFAULT);
+                        flumeConfigurationProperties = FlumeConfiguratorTopologyUtils.addTopologyProperty(flumeConfigurationProperties, propertyKey, sourceInterceptorsOrderedList,
                                 FlumeConfiguratorConstants.PROPERTY_SEPARATOR_DEFAULT);
 
                     }
@@ -1509,344 +1304,7 @@ public class FlumeTopologyPropertiesGenerator {
 
     }
 
-/*
-    private void generateSourcesProperties() {
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("BEGIN generateSourcesProperties");
-        }
-
-        if (isTreeCompliant) {
-
-            for (String agentName : flumeTreeTopology.keySet()) {
-
-                DefaultMutableTreeNode agentRootNode = flumeTreeTopology.get(agentName);
-                Enumeration agentSources = agentRootNode.children();
-
-                while (agentSources.hasMoreElements()) {
-                    DefaultMutableTreeNode agentSourceNode = (DefaultMutableTreeNode) agentSources.nextElement();
-                    FlumeTopology flumeTopologyElement = (FlumeTopology) agentSourceNode.getUserObject();
-                    String sourceName = flumeTopologyElement.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
-
-                    Map<String, String> originalTopologySourceProperties = flumeTopologyElement.getData();
-                    Map<String, String> topologySourceProperties = FlumeConfiguratorTopologyUtils.getValidTopologyProperties(originalTopologySourceProperties);
-
-                    for (String propertyKey : topologySourceProperties.keySet()) {
-
-                        if (!FlumeConfiguratorTopologyUtils.isCommentProperty(propertyKey)) {
-                            String propertyValue = topologySourceProperties.get(propertyKey);
-
-                            //Get the property Comment.
-                            String propertyCommentKey = FlumeConfiguratorTopologyUtils.getCommentPropertyName(propertyKey);
-                            String propertyCommentValue = topologySourceProperties.get(propertyCommentKey);
-
-
-                            sourcesPropertiesMap = FlumeConfiguratorTopologyUtils.addPropertyBean(sourcesPropertiesMap, propertyKey, propertyCommentValue, sourceName, propertyValue);
-                        }
-
-                    }
-
-                }
-            }
-
-
-            //Detect common properties
-            for (String propertyKey : sourcesPropertiesMap.keySet()) {
-                List<TopologyPropertyBean> listPropertyBeans = sourcesPropertiesMap.get(propertyKey);
-
-                String valueCommonProperty = FlumeConfiguratorTopologyUtils.getValueCommonProperty(listPropertyBeans, sourcesNumber, FlumeConfiguratorConstants.FLUME_TOPOLOGY_COMMON_PROPERTY_RATIO);
-
-                if (valueCommonProperty != null) {
-                    //Get the comment from the any member of the list.
-                    String propertyComment = listPropertyBeans.get(0).getPropertyComment();
-                    TopologyPropertyBean commonProperty = new TopologyPropertyBean(propertyComment, null, valueCommonProperty);
-
-                    sourcesCommonPropertiesMap.put(propertyKey, commonProperty);
-                }
-
-            }
-
-            //Write common properties
-            for (String sourceCommonPropertyKey : sourcesCommonPropertiesMap.keySet()) {
-
-                TopologyPropertyBean sourceCommonProperty = sourcesCommonPropertiesMap.get(sourceCommonPropertyKey);
-                String commentPropertyValue = sourceCommonProperty.getPropertyComment();
-                String propertyValue = sourceCommonProperty.getPropertyValue();
-
-                String propertyKey = FlumeConfiguratorConstants.SOURCES_COMMON_PROPERTY_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + sourceCommonPropertyKey;
-                String commentPropertyKey = FlumeConfiguratorConstants.SOURCES_COMMON_PROPERTY_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR +
-                        FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + sourceCommonPropertyKey;
-                flumeConfigurationProperties = FlumeConfiguratorTopologyUtils.addTopologyProperty(flumeConfigurationProperties, commentPropertyKey, commentPropertyValue);
-                flumeConfigurationProperties = FlumeConfiguratorTopologyUtils.addTopologyProperty(flumeConfigurationProperties, propertyKey, propertyValue);
-
-            }
-
-
-
-        } else {
-
-        }
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("END generateSourcesProperties");
-        }
-
-
-    }
-*/
-/*
-    private void generateInterceptorsProperties() {
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("BEGIN generateInterceptorsProperties");
-        }
-
-        if (isTreeCompliant) {
-
-            for (String agentName : flumeTreeTopology.keySet()) {
-
-                DefaultMutableTreeNode agentRootNode = flumeTreeTopology.get(agentName);
-                Enumeration agentElements = agentRootNode.preorderEnumeration();
-
-                while (agentElements.hasMoreElements()) {
-                    DefaultMutableTreeNode agentElementNode = (DefaultMutableTreeNode) agentElements.nextElement();
-                    FlumeTopology flumeTopologyElement = (FlumeTopology) agentElementNode.getUserObject();
-                    String elementName = flumeTopologyElement.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
-
-                    if (flumeTopologyElement.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR)) {
-                        Map<String, String> originalTopologyInterceptorProperties = flumeTopologyElement.getData();
-                        Map<String, String> topologyInterceptorProperties = FlumeConfiguratorTopologyUtils.getValidTopologyProperties(originalTopologyInterceptorProperties);
-
-                        for (String propertyKey : topologyInterceptorProperties.keySet()) {
-
-                            if (!FlumeConfiguratorTopologyUtils.isCommentProperty(propertyKey)) {
-                                String propertyValue = topologyInterceptorProperties.get(propertyKey);
-
-                                //Get the property Comment.
-                                String propertyCommentKey = FlumeConfiguratorTopologyUtils.getCommentPropertyName(propertyKey);
-                                String propertyCommentValue = topologyInterceptorProperties.get(propertyCommentKey);
-
-
-                                interceptorsPropertiesMap = FlumeConfiguratorTopologyUtils.addPropertyBean(interceptorsPropertiesMap, propertyKey, propertyCommentValue, elementName, propertyValue);
-
-                            }
-                        }
-                    }
-
-                }
-            }
-
-            //Detect common properties
-            for (String propertyKey : interceptorsPropertiesMap.keySet()) {
-                List<TopologyPropertyBean> listPropertyBeans = interceptorsPropertiesMap.get(propertyKey);
-
-                String valueCommonProperty = FlumeConfiguratorTopologyUtils.getValueCommonProperty(listPropertyBeans, interceptorsNumber, FlumeConfiguratorConstants.FLUME_TOPOLOGY_COMMON_PROPERTY_RATIO);
-
-                if (valueCommonProperty != null) {
-                    //Get the comment from the any member of the list.
-                    String propertyComment = listPropertyBeans.get(0).getPropertyComment();
-                    TopologyPropertyBean commonProperty = new TopologyPropertyBean(propertyComment, null, valueCommonProperty);
-
-                    interceptorsCommonPropertiesMap.put(propertyKey, commonProperty);
-                }
-
-            }
-
-            //Write common properties
-            for (String interceptorCommonPropertyKey : interceptorsCommonPropertiesMap.keySet()) {
-
-                TopologyPropertyBean interceptorCommonProperty = interceptorsCommonPropertiesMap.get(interceptorCommonPropertyKey);
-                String commentPropertyValue = interceptorCommonProperty.getPropertyComment();
-                String propertyValue = interceptorCommonProperty.getPropertyValue();
-
-                String propertyKey = FlumeConfiguratorConstants.INTERCEPTORS_COMMON_PROPERTY_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + interceptorCommonPropertyKey;
-                String commentPropertyKey = FlumeConfiguratorConstants.INTERCEPTORS_COMMON_PROPERTY_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR +
-                        FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + interceptorCommonPropertyKey;
-                flumeConfigurationProperties = FlumeConfiguratorTopologyUtils.addTopologyProperty(flumeConfigurationProperties, commentPropertyKey, commentPropertyValue);
-                flumeConfigurationProperties = FlumeConfiguratorTopologyUtils.addTopologyProperty(flumeConfigurationProperties, propertyKey, propertyValue);
-
-            }
-
-        } else {
-
-        }
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("END generateInterceptorsProperties");
-        }
-
-
-    }
-*/
-/*
-    private void generateChannelsProperties() {
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("BEGIN generateChannelsProperties");
-        }
-
-        if (isTreeCompliant) {
-
-            for (String agentName : flumeTreeTopology.keySet()) {
-
-                DefaultMutableTreeNode agentRootNode = flumeTreeTopology.get(agentName);
-                Enumeration agentElements = agentRootNode.preorderEnumeration();
-
-                while (agentElements.hasMoreElements()) {
-                    DefaultMutableTreeNode agentElementNode = (DefaultMutableTreeNode) agentElements.nextElement();
-                    FlumeTopology flumeTopologyElement = (FlumeTopology) agentElementNode.getUserObject();
-                    String elementName = flumeTopologyElement.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
-
-                    if (flumeTopologyElement.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL)) {
-                        Map<String, String> originalTopologyChannelProperties = flumeTopologyElement.getData();
-                        Map<String, String> topologyChannelProperties = FlumeConfiguratorTopologyUtils.getValidTopologyProperties(originalTopologyChannelProperties);
-
-                        for (String propertyKey : topologyChannelProperties.keySet()) {
-
-                            if (!FlumeConfiguratorTopologyUtils.isCommentProperty(propertyKey)) {
-                                String propertyValue = topologyChannelProperties.get(propertyKey);
-
-                                //Get the property Comment.
-                                String propertyCommentKey = FlumeConfiguratorTopologyUtils.getCommentPropertyName(propertyKey);
-                                String propertyCommentValue = topologyChannelProperties.get(propertyCommentKey);
-
-
-                                channelsPropertiesMap = FlumeConfiguratorTopologyUtils.addPropertyBean(channelsPropertiesMap, propertyKey, propertyCommentValue, elementName, propertyValue);
-                            }
-
-                        }
-                    }
-
-                }
-            }
-
-            //Detect common properties
-            for (String propertyKey : channelsPropertiesMap.keySet()) {
-                List<TopologyPropertyBean> listPropertyBeans = channelsPropertiesMap.get(propertyKey);
-
-                String valueCommonProperty = FlumeConfiguratorTopologyUtils.getValueCommonProperty(listPropertyBeans, channelsNumber, FlumeConfiguratorConstants.FLUME_TOPOLOGY_COMMON_PROPERTY_RATIO);
-
-                if (valueCommonProperty != null) {
-                    //Get the comment from the any member of the list.
-                    String propertyComment = listPropertyBeans.get(0).getPropertyComment();
-                    TopologyPropertyBean commonProperty = new TopologyPropertyBean(propertyComment, null, valueCommonProperty);
-
-                    channelsCommonPropertiesMap.put(propertyKey, commonProperty);
-                }
-
-            }
-
-            //Write common properties
-            for (String channelCommonPropertyKey : channelsCommonPropertiesMap.keySet()) {
-
-                TopologyPropertyBean channelCommonProperty = channelsCommonPropertiesMap.get(channelCommonPropertyKey);
-                String commentPropertyValue = channelCommonProperty.getPropertyComment();
-                String propertyValue = channelCommonProperty.getPropertyValue();
-
-                String propertyKey = FlumeConfiguratorConstants.CHANNELS_COMMON_PROPERTY_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + channelCommonPropertyKey;
-                String commentPropertyKey = FlumeConfiguratorConstants.CHANNELS_COMMON_PROPERTY_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR +
-                        FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + channelCommonPropertyKey;
-                flumeConfigurationProperties = FlumeConfiguratorTopologyUtils.addTopologyProperty(flumeConfigurationProperties, commentPropertyKey, commentPropertyValue);
-                flumeConfigurationProperties = FlumeConfiguratorTopologyUtils.addTopologyProperty(flumeConfigurationProperties, propertyKey, propertyValue);
-
-            }
-
-        } else {
-
-        }
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("END generateChannelsProperties");
-        }
-
-
-    }
-*/
-/*
-    private void generateSinksProperties() {
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("BEGIN generateSinksProperties");
-        }
-
-        if (isTreeCompliant) {
-
-            for (String agentName : flumeTreeTopology.keySet()) {
-
-                DefaultMutableTreeNode agentRootNode = flumeTreeTopology.get(agentName);
-                Enumeration agentElements = agentRootNode.preorderEnumeration();
-
-                while (agentElements.hasMoreElements()) {
-                    DefaultMutableTreeNode agentElementNode = (DefaultMutableTreeNode) agentElements.nextElement();
-                    FlumeTopology flumeTopologyElement = (FlumeTopology) agentElementNode.getUserObject();
-                    String elementName = flumeTopologyElement.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
-
-                    if (flumeTopologyElement.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK)) {
-                        Map<String, String> originalTopologySinkProperties = flumeTopologyElement.getData();
-                        Map<String, String> topologySinkProperties = FlumeConfiguratorTopologyUtils.getValidTopologyProperties(originalTopologySinkProperties);
-
-                        for (String propertyKey : topologySinkProperties.keySet()) {
-
-                            if (!FlumeConfiguratorTopologyUtils.isCommentProperty(propertyKey)) {
-                                String propertyValue = topologySinkProperties.get(propertyKey);
-
-                                //Get the property Comment.
-                                String propertyCommentKey = FlumeConfiguratorTopologyUtils.getCommentPropertyName(propertyKey);
-                                String propertyCommentValue = topologySinkProperties.get(propertyCommentKey);
-
-
-                                sinksPropertiesMap = FlumeConfiguratorTopologyUtils.addPropertyBean(sinksPropertiesMap, propertyKey, propertyCommentValue, elementName, propertyValue);
-
-                            }
-                        }
-                    }
-
-                }
-            }
-
-            //Detect common properties
-            for (String propertyKey : sinksPropertiesMap.keySet()) {
-                List<TopologyPropertyBean> listPropertyBeans = sinksPropertiesMap.get(propertyKey);
-
-                String valueCommonProperty = FlumeConfiguratorTopologyUtils.getValueCommonProperty(listPropertyBeans, sinksNumber, FlumeConfiguratorConstants.FLUME_TOPOLOGY_COMMON_PROPERTY_RATIO);
-
-                if (valueCommonProperty != null) {
-                    //Get the comment from the any member of the list.
-                    String propertyComment = listPropertyBeans.get(0).getPropertyComment();
-                    TopologyPropertyBean commonProperty = new TopologyPropertyBean(propertyComment, null, valueCommonProperty);
-
-                    sinksCommonPropertiesMap.put(propertyKey, commonProperty);
-                }
-
-            }
-
-            //Write common properties
-            for (String sinkCommonPropertyKey : sinksCommonPropertiesMap.keySet()) {
-
-                TopologyPropertyBean sinkCommonProperty = sinksCommonPropertiesMap.get(sinkCommonPropertyKey);
-                String commentPropertyValue = sinkCommonProperty.getPropertyComment();
-                String propertyValue = sinkCommonProperty.getPropertyValue();
-
-                String propertyKey = FlumeConfiguratorConstants.SINKS_COMMON_PROPERTY_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + sinkCommonPropertyKey;
-                String commentPropertyKey = FlumeConfiguratorConstants.SINKS_COMMON_PROPERTY_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR +
-                        FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + sinkCommonPropertyKey;
-                flumeConfigurationProperties = FlumeConfiguratorTopologyUtils.addTopologyProperty(flumeConfigurationProperties, commentPropertyKey, commentPropertyValue);
-                flumeConfigurationProperties = FlumeConfiguratorTopologyUtils.addTopologyProperty(flumeConfigurationProperties, propertyKey, propertyValue);
-
-            }
-
-
-        } else {
-
-        }
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("END generateSinksProperties");
-        }
-
-
-    }
-*/
 
     /**
      * Generate properties for different kinds of elements
@@ -2037,26 +1495,6 @@ public class FlumeTopologyPropertiesGenerator {
     }
 
 
-    /**
-     * Show generated configuration
-     */
-    private void printConfiguration() {
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("BEGIN printConfiguration");
-        }
-
-        logger.debug(FlumeConfiguratorTopologyUtils.getPropertyAsString(flumeConfigurationProperties));
-        String flumeConfigurationPropertiesString = FlumeConfiguratorTopologyUtils.getFlumePropertiesAsString(flumeConfigurationProperties);
-        logger.debug(flumeConfigurationPropertiesString);
-        ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
-        logger.debug(configurationBuilder.buildConfigurationMapFromStringProperties(flumeConfigurationPropertiesString,FlumeConfiguratorConstants.PROPERTY_SEPARATOR_DEFAULT,true, false, null, false));
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("END printConfiguration");
-        }
-    }
-
 
     /**
      * Generate the Flume Configuration properties file and optionally the base configuration properties file
@@ -2077,12 +1515,13 @@ public class FlumeTopologyPropertiesGenerator {
         }
 
         //Get the base configuration properties
-        String flumeConfigurationPropertiesString = FlumeConfiguratorTopologyUtils.getFlumePropertiesAsString(flumeConfigurationProperties);
-        logger.info(flumeConfigurationPropertiesString);
+        String baseConfigurationPropertiesString = FlumeConfiguratorTopologyUtils.getFlumePropertiesAsString(flumeConfigurationProperties);
+
+        logger.info(baseConfigurationPropertiesString);
 
         //Write Flume configuration properties file
-        ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
-        configurationBuilder.buildConfigurationMapFromStringProperties(flumeConfigurationPropertiesString,FlumeConfiguratorConstants.PROPERTY_SEPARATOR_DEFAULT, addComments, true, pathConfigurationGeneratedFile, multipleAgentConfigurationFiles);
+        FlumePropertiesGenerator flumePropertiesGenerator = new FlumePropertiesGenerator();
+        flumePropertiesGenerator.buildConfigurationMapFromStringProperties(baseConfigurationPropertiesString,FlumeConfiguratorConstants.PROPERTY_SEPARATOR_DEFAULT, addComments, true, pathConfigurationGeneratedFile, multipleAgentConfigurationFiles);
 
         if (generateBaseConfigurationFiles) {
 
@@ -2105,8 +1544,7 @@ public class FlumeTopologyPropertiesGenerator {
             bw = new BufferedWriter(new FileWriter(fileName));
 
             //Write the content
-
-            bw.write(flumeConfigurationPropertiesString);
+            bw.write(baseConfigurationPropertiesString);
 
             bw.flush();
             bw.close();
@@ -2121,23 +1559,25 @@ public class FlumeTopologyPropertiesGenerator {
 
 
     /**
-     * Generate flume properties from a json file
+     * Generate a Flume configuration from a Draw2D Flume topology (json format)
      * @param jsonTopology String with JSON topology
-     * @param generateBaseConfigurationProperties true:  the base configuration properties is generates, false otherwise
-     * @param generateFlumeConfigurationProperties true: the flume configuration properties is generated, false otherwise
-     * @return String with the content of properties generated
+     * @param generateBaseConfigurationProperties true -> the base configuration properties is generated
+     *                                            false -> otherwise
+     * @param generateFlumeConfigurationProperties true -> the flume configuration properties is generated,
+     *                                             false -> otherwise
+     * @return Map with the content of properties generated (base configuration properties and flume configuration properties)
      */
-    public String generateInputPropertiesFromJSONTopology(String jsonTopology, boolean generateBaseConfigurationProperties, boolean generateFlumeConfigurationProperties) {
+    public Map<String, String> generateInputPropertiesFromDraw2DFlumeTopology(String jsonTopology, boolean generateBaseConfigurationProperties, boolean generateFlumeConfigurationProperties) {
 
         if (logger.isDebugEnabled()) {
-            logger.debug("BEGIN generateInputPropertiesFromJSONTopology");
+            logger.debug("BEGIN generateInputPropertiesFromDraw2DFlumeTopology");
         }
 
-        String newline = System.getProperty("line.separator");
         String baseConfigurationPropertiesString = null;
         String flumeConfigurationPropertiesString = null;
 
-        StringBuilder sbConfigurationProperties = new StringBuilder(10000);
+        List<String> listConfigurationProperties = new ArrayList<>();
+        Map<String, String> mapConfigurationProperties = new HashMap<>();
 
         try {
 
@@ -2191,40 +1631,44 @@ public class FlumeTopologyPropertiesGenerator {
             generateElementsProperties(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK, FlumeConfiguratorConstants.SINKS_COMMON_PROPERTY_PROPERTIES_PREFIX,
                     FlumeConfiguratorConstants.SINKS_PARTIAL_PROPERTY_PROPERTIES_PREFIX);
 
+            if (logger.isDebugEnabled()) {
+                logger.debug(FlumeConfiguratorTopologyUtils.getPropertyAsString(flumeConfigurationProperties));
+            }
 
-            printConfiguration();
 
+            //Generation of base configuration properties
             if (generateBaseConfigurationProperties) {
                 baseConfigurationPropertiesString = FlumeConfiguratorTopologyUtils.getFlumePropertiesAsString(flumeConfigurationProperties);
 
-                //logger.debug(flumeConfigurationPropertiesString);
+                if (logger.isDebugEnabled()) {
+                    logger.debug(baseConfigurationPropertiesString);
+                }
 
-                sbConfigurationProperties.append(baseConfigurationPropertiesString);
-
-                sbConfigurationProperties.append(newline).append(newline);
-
-
+                //listConfigurationProperties.add(baseConfigurationPropertiesString);
+                mapConfigurationProperties.put(FlumeConfiguratorConstants.BASE_CONFIGURATION_KEY, baseConfigurationPropertiesString);
             }
 
-
+            //Generation of flume configuration properties
             if (generateFlumeConfigurationProperties) {
-                ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
+                FlumePropertiesGenerator flumePropertiesGenerator = new FlumePropertiesGenerator();
 
                 baseConfigurationPropertiesString = FlumeConfiguratorTopologyUtils.getFlumePropertiesAsString(flumeConfigurationProperties);
 
-                //logger.debug(baseConfigurationPropertiesString);
+                flumeConfigurationPropertiesString = flumePropertiesGenerator.buildConfigurationMapFromStringProperties(baseConfigurationPropertiesString,FlumeConfiguratorConstants.PROPERTY_SEPARATOR_DEFAULT,true, false, null, false);
 
-                flumeConfigurationPropertiesString = configurationBuilder.buildConfigurationMapFromStringProperties(baseConfigurationPropertiesString,FlumeConfiguratorConstants.PROPERTY_SEPARATOR_DEFAULT,true, false, null, false);
+                if (logger.isDebugEnabled()) {
+                    logger.debug(flumeConfigurationPropertiesString);
+                }
 
-                sbConfigurationProperties.append(flumeConfigurationPropertiesString);
-
+                //listConfigurationProperties.add(flumeConfigurationPropertiesString);
+                mapConfigurationProperties.put(FlumeConfiguratorConstants.FLUME_CONFIGURATION_KEY, flumeConfigurationPropertiesString);
             }
 
             if (logger.isDebugEnabled()) {
-                logger.debug("END generateInputPropertiesFromJSONTopology");
+                logger.debug("END generateInputPropertiesFromDraw2DFlumeTopology");
             }
 
-            return sbConfigurationProperties.toString();
+            return mapConfigurationProperties;
 
         } catch (IOException e) {
             logger.error("An error has occurred on the load of JSON topology file", e);
@@ -2295,7 +1739,11 @@ public class FlumeTopologyPropertiesGenerator {
             generateElementsProperties(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK, FlumeConfiguratorConstants.SINKS_COMMON_PROPERTY_PROPERTIES_PREFIX,
                     FlumeConfiguratorConstants.SINKS_PARTIAL_PROPERTY_PROPERTIES_PREFIX);
 
-            //printConfiguration();
+
+            if (logger.isDebugEnabled()) {
+                logger.debug(FlumeConfiguratorTopologyUtils.getPropertyAsString(flumeConfigurationProperties));
+            }
+
 
             //Write properties file
             writeConfigurationPropertiesFile();
@@ -2325,10 +1773,60 @@ public class FlumeTopologyPropertiesGenerator {
             return false;
         }
 
-
-
     }
 
+    /**
+     * Get associated message to an error code
+     * @param errorCode error code
+     * @return associated message to an error code
+     */
+    public static String getErrorMessage(int errorCode) {
+
+        String error = "";
+        StringBuilder sb = new StringBuilder(10000);
+
+        if (errorCode == 1) {
+            sb.append("An error has occurred in Flume Topology properties generator. Check the properties configuration file and generated logs");
+        } else if (errorCode == 2) {
+
+            sb.append("Incorrect parameter number");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            sb.append("Usage: java -cp jarFile org.keedio.flume.configurator.builder.FlumeTopologyPropertiesGenerator <parameters>");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            sb.append("The parameters are:");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            sb.append("pathJSONTopology => Path of the Draw2D Flume Topology configuration file");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            sb.append("multipleAgentConfigurationFiles => (boolean)");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            sb.append("                                     true -> Every agent has an own configuration file");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            sb.append("                                     false -> All agents configuration in one single file");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            sb.append("addComments => (boolean)");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            sb.append("                 true -> Property comments are added to Flume configuration file");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            sb.append("                 false -> Property comments are not added to Flume configuration file");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            sb.append("computeTreeAsGraph => (boolean)");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            sb.append("                         true -> The tree topology is processed with a graph library");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            sb.append("                         false -> The tree topology is processed without any graph library");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            sb.append("ratioCommonProperty => Ratio used for determinate if a property is considered as a common property or not (generation of template configuration file)");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            sb.append("pathPropertiesGeneratedFile => Path of the created flume configuration file(s).May be a directory if several");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            sb.append("                               configuration files are created (the directory must be exist)");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            sb.append("pathBasePropertiesGeneratedFile => (Optional parameter) Path of the created base (template) configuration file.May be a directory (the directory must be exist)");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+        }
+
+        return sb.toString();
+    }
 
     /**
      * Main method.
@@ -2340,62 +1838,71 @@ public class FlumeTopologyPropertiesGenerator {
         URL url = loader.getResource("log4j.properties");
         PropertyConfigurator.configure(url);
 
-
-        logger.info("******* BEGIN FLUME TOPOLOGY PROPERTIES GENERATOR PROCESS *****************");
-
+        if (logger.isDebugEnabled()) {
+            logger.debug("******* BEGIN FLUME TOPOLOGY PROPERTIES GENERATOR PROCESS *****************");
+        }
 
         try {
 
-
             if (args.length == 6) {
+
                 pathJSONTopology = args[0];
                 multipleAgentConfigurationFiles = Boolean.valueOf(args[1]);
                 addComments = Boolean.valueOf(args[2]);
                 computeTreeAsGraph = Boolean.valueOf(args[3]);
-                pathConfigurationGeneratedFile = args[4];
-                ratioCommonProperty = Double.valueOf(args[5]);
+                ratioCommonProperty = Double.valueOf(args[4]);
+                pathConfigurationGeneratedFile = args[5];
 
-
-                logger.info("Parameter pathJSONTopology: " + pathJSONTopology);
-                logger.info("Parameter multipleAgentConfigurationFiles: " + multipleAgentConfigurationFiles);
-                logger.info("Parameter addComments: " + addComments);
-                logger.info("Parameter computeTreeAsGraph: " + computeTreeAsGraph);
-                logger.info("Parameter pathPropertiesGeneratedFile: " + pathConfigurationGeneratedFile);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Parameter pathJSONTopology: " + pathJSONTopology);
+                    logger.debug("Parameter multipleAgentConfigurationFiles: " + multipleAgentConfigurationFiles);
+                    logger.debug("Parameter addComments: " + addComments);
+                    logger.debug("Parameter computeTreeAsGraph: " + computeTreeAsGraph);
+                    logger.debug("Parameter ratioCommonProperty: " + ratioCommonProperty);
+                    logger.debug("Parameter pathPropertiesGeneratedFile: " + pathConfigurationGeneratedFile);
+                }
 
                 FlumeTopologyPropertiesGenerator flumeTopologyPropertiesGenerator = new FlumeTopologyPropertiesGenerator();
 
                 flumeTopologyPropertiesGenerator.generateInputProperties();
 
             } else if (args.length == 7) {
+
                 pathJSONTopology = args[0];
                 multipleAgentConfigurationFiles = Boolean.valueOf(args[1]);
                 addComments = Boolean.valueOf(args[2]);
                 computeTreeAsGraph = Boolean.valueOf(args[3]);
-                pathConfigurationGeneratedFile = args[4];
+                ratioCommonProperty = Double.valueOf(args[4]);
+                pathConfigurationGeneratedFile = args[5];
                 generateBaseConfigurationFiles = true;
-                pathBasePropertiesGeneratedFile = args[5];
-                ratioCommonProperty = Double.valueOf(args[6]);
+                pathBasePropertiesGeneratedFile = args[6];
 
-                logger.info("Parameter pathJSONTopology: " + pathJSONTopology);
-                logger.info("Parameter multipleAgentConfigurationFiles: " + multipleAgentConfigurationFiles);
-                logger.info("Parameter addComments: " + addComments);
-                logger.info("Parameter computeTreeAsGraph: " + computeTreeAsGraph);
-                logger.info("Parameter pathPropertiesGeneratedFile: " + pathConfigurationGeneratedFile);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Parameter pathJSONTopology: " + pathJSONTopology);
+                    logger.debug("Parameter multipleAgentConfigurationFiles: " + multipleAgentConfigurationFiles);
+                    logger.debug("Parameter addComments: " + addComments);
+                    logger.debug("Parameter computeTreeAsGraph: " + computeTreeAsGraph);
+                    logger.debug("Parameter ratioCommonProperty: " + ratioCommonProperty);
+                    logger.debug("Parameter pathPropertiesGeneratedFile: " + pathConfigurationGeneratedFile);
+                    logger.debug("Parameter pathBasePropertiesGeneratedFile: " + pathBasePropertiesGeneratedFile);
+                }
 
                 FlumeTopologyPropertiesGenerator flumeTopologyPropertiesGenerator = new FlumeTopologyPropertiesGenerator();
 
                 flumeTopologyPropertiesGenerator.generateInputProperties();
 
             } else {
-                logger.error("Incorrect parameters number. Parameters are: pathJSONTopology multipleAgentConfigurationFiles addComments pathConfigurationGeneratedFile pathBasePropertiesGeneratedFile (optional)");
-                logger.info("******* END FLUME TOPOLOGY PROPERTIES GENERATOR PROCESS *****************");
-
+                logger.error(getErrorMessage(2));
+                if (logger.isDebugEnabled()) {
+                    logger.debug("******* END FLUME TOPOLOGY PROPERTIES GENERATOR PROCESS *****************");
+                }
             }
 
         } catch (Exception e) {
-            logger.error("An error has occurred in Flume configurator. Check the properties configuration file and the generated logs", e);
-            logger.info("******* END FLUME TOPOLOGY PROPERTIES GENERATOR PROCESS *****************");
-
+            logger.error(getErrorMessage(1), e);
+            if (logger.isDebugEnabled()) {
+                logger.debug("******* END FLUME TOPOLOGY PROPERTIES GENERATOR PROCESS *****************");
+            }
         }
     }
 

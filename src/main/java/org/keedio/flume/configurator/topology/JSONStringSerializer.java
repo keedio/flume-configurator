@@ -1,9 +1,10 @@
 package org.keedio.flume.configurator.topology;
 
-import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.type.JavaType;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 
@@ -12,8 +13,8 @@ public class JSONStringSerializer {
     private static ObjectMapper mapper = new ObjectMapper();
 
     static {
-        mapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY);
-        mapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL);
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         mapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
         mapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
         mapper.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
@@ -24,7 +25,7 @@ public class JSONStringSerializer {
     }
 
     public static String toJSONString(Object object) throws IOException {
-        return mapper.writeValueAsString(object);
+        return mapper. writerWithDefaultPrettyPrinter().writeValueAsString(object);
     }
 
     public static <T> T fromJSONString(String string, Class<T> clazz) throws IOException {
