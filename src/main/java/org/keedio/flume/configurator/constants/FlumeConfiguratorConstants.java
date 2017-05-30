@@ -24,6 +24,7 @@ public class FlumeConfiguratorConstants {
     public static final String CHANNEL_PROPERTY = "channel";
     public static final String SINKS_PROPERTY = "sinks";
     public static final String INTERCEPTORS_PROPERTY = "interceptors";
+    public static final String TYPE_PROPERTY = "type";
     public static final String COMMENT_PROPERTY_PREFIX = "comment";
     public static final String COMMENT_PREFIX = "# ";
 
@@ -68,6 +69,65 @@ public class FlumeConfiguratorConstants {
 
     //public static final double FLUME_TOPOLOGY_COMMON_PROPERTY_RATIO = 0.75d;
     public static final String CONFIGURATION_BASE_PROPERTIES_FILE = "flume_configuration_base.properties";
+    public static final String DRAW2D_FLUME_TOPOLOGY_FILE = "flume_topology.json";
+
+
+    public static final int AGENTS_PROPERTY_PART_INDEX = 1;
+    public static final int SOURCES_LIST_PROPERTY_PART_INDEX = 2;
+    public static final int CHANNELS_LIST_PROPERTY_PART_INDEX = 2;
+    public static final int SINKS_LIST_PROPERTY_PART_INDEX = 2;
+    public static final int INTERCEPTORS_LIST_PROPERTY_PART_INDEX = 4;
+
+    public static final int ELEMENT_PROPERTY_PART_INDEX = 3;
+    public static final int INTERCEPTOR_PROPERTY_PART_INDEX = 5;
+    public static final int SOURCE_INTERCEPTORS_PART_INDEX = 4;
+    public static final int SOURCE_CHANNELS_PART_INDEX = 4;
+    public static final int SINK_CHANNEL_PART_INDEX = 4;
+
+    public static final String FLUME_TYPE_PROPERTY = "flumeType";
+    public static final String DRAW2D_START_TYPE = "draw2d.shape.node.Start";
+    public static final String DRAW2D_BETWEEN_TYPE = "draw2d.shape.node.Between";
+    public static final String DRAW2D_END_TYPE = "draw2d.shape.node.End";
+    public static final String DRAW2D_CONNECTION_TYPE = "draw2d.Connection";
+
+
+    public static final String DRAW2D_START_CSS_CLASS = "draw2d_shape_node_Start";
+    public static final String DRAW2D_BETWEEN_CSS_CLASS = "draw2d_shape_node_Between";
+    public static final String DRAW2D_END_CSS_CLASS = "draw2d_shape_node_End";
+    public static final String DRAW2D_CONNECTION_CSS_CLASS = "draw2d_Connection";
+
+    public static final String OUTPUT_PORT = "output0";
+    public static final String INTPUT_PORT = "input0";
+
+    public static final int CANVAS_PX_WIDTH = 2000;
+    public static final int CANVAS_PX_HEIGHT = 2000;
+    public static final int CANVAS_ELEMENT_PX_WIDTH = 50;
+    public static final int CANVAS_ELEMENT_PX_HEIGHT= 50;
+    //public static final String CANVAS_ELEMENT_BGCOLOR = "#4D90FE";
+
+    public static final String CANVAS_AGENT_BGCOLOR = "#0000FF";
+    public static final String CANVAS_SOURCE_BGCOLOR = "#FFB266";
+    public static final String CANVAS_INTERCEPTOR_BGCOLOR = "#99FFFF";
+    public static final String CANVAS_CHANNEL_BGCOLOR = "#99FF99";
+    public static final String CANVAS_SINK_BGCOLOR = "#FF99FF";
+
+    public static final String CANVAS_ELEMENT_COLOR = "#000000";
+    public static final String CANVAS_ELEMENT_STROKE= "1";
+    public static final String CANVAS_ELEMENT_ALPHA = "1";
+    public static final String CANVAS_ELEMENT_RADIUS = "2";
+
+    public static final int CANVAS_ELEMENTS_HEIGHT_PX_SEPARATION = 50;
+    public static final int CANVAS_AGENTS_HEIGHT_PX_SEPARATION = 200;
+    public static final int CANVAS_HORIZONTAL_MARGIN_PX = 100;
+
+    public static final String AGENT_GROUP_PROPERTY = "agentGroup";
+
+    public static final String BASE_TO_FLUME_CONFIGURATION_MODE = "baseToFlume";
+    public static final String DRAW2D_TO_FLUME_CONFIGURATION_MODE = "draw2DToFlume";
+    public static final String FLUME_TO_DRAW2D_CONFIGURATION_MODE = "flumeToDraw2D";
+
+    public static final String BASE_CONFIGURATION_KEY = "baseConfiguration";
+    public static final String FLUME_CONFIGURATION_KEY = "FLUMEConfiguration";
 
 
     private FlumeConfiguratorConstants() {

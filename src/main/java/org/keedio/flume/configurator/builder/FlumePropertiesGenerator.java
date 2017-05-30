@@ -3,12 +3,7 @@ package org.keedio.flume.configurator.builder;
 import java.io.*;
 import java.net.URL;
 import java.nio.file.InvalidPathException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.log4j.PropertyConfigurator;
 import org.keedio.flume.configurator.constants.FlumeConfiguratorConstants;
@@ -20,11 +15,11 @@ import org.keedio.flume.configurator.utils.FlumeConfiguratorUtils;
 import org.keedio.flume.configurator.validator.ConfigurationValidator;
 import org.slf4j.LoggerFactory;
 
-public class ConfigurationBuilder {
+public class FlumePropertiesGenerator {
 
-    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(ConfigurationBuilder.class);
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(FlumePropertiesGenerator.class);
 
-    private static String  pathConfigurationProperties;
+    private static String  pathBaseConfigurationProperties;
     private static String elementsCharacterSeparator;
     private static boolean multipleAgentConfigurationFiles = false;
     private static boolean addComments = true;
@@ -40,11 +35,11 @@ public class ConfigurationBuilder {
 
 
     /**
-     * @param pathConfigurationProperties the pathConfigurationProperties to set
+     * @param pathBaseConfigurationProperties the pathBaseConfigurationProperties to set
      */
-    static void setPathConfigurationProperties(
-            String pathConfigurationProperties) {
-        ConfigurationBuilder.pathConfigurationProperties = pathConfigurationProperties;
+    static void setPathBaseConfigurationProperties(
+            String pathBaseConfigurationProperties) {
+        FlumePropertiesGenerator.pathBaseConfigurationProperties = pathBaseConfigurationProperties;
     }
 
 
@@ -54,7 +49,7 @@ public class ConfigurationBuilder {
      */
     static void setElementsCharacterSeparator(
             String elementsCharacterSeparator) {
-        ConfigurationBuilder.elementsCharacterSeparator = elementsCharacterSeparator;
+        FlumePropertiesGenerator.elementsCharacterSeparator = elementsCharacterSeparator;
     }
 
 
@@ -65,7 +60,7 @@ public class ConfigurationBuilder {
      */
     static void setMultipleAgentConfigurationFiles(
             boolean multipleAgentConfigurationFiles) {
-        ConfigurationBuilder.multipleAgentConfigurationFiles = multipleAgentConfigurationFiles;
+        FlumePropertiesGenerator.multipleAgentConfigurationFiles = multipleAgentConfigurationFiles;
     }
 
 
@@ -74,7 +69,7 @@ public class ConfigurationBuilder {
      * @param addComments the addComments to set
      */
     static void setAddComments(boolean addComments) {
-        ConfigurationBuilder.addComments = addComments;
+        FlumePropertiesGenerator.addComments = addComments;
     }
 
 
@@ -84,7 +79,7 @@ public class ConfigurationBuilder {
      */
     static void setPathConfigurationGeneratedFile(
             String pathConfigurationGeneratedFile) {
-        ConfigurationBuilder.pathConfigurationGeneratedFile = pathConfigurationGeneratedFile;
+        FlumePropertiesGenerator.pathConfigurationGeneratedFile = pathConfigurationGeneratedFile;
     }
 
 
@@ -133,6 +128,12 @@ public class ConfigurationBuilder {
     }
 
 
+    /**
+     * @return the mapAgentSources
+     */
+    public Map<String, List<String>> getMapAgentSources() {
+        return mapAgentSources;
+    }
 
     /**
      * @return the mapSourcesInterceptors
@@ -141,6 +142,27 @@ public class ConfigurationBuilder {
         return mapSourcesInterceptors;
     }
 
+
+    /**
+     * Create initial structures
+     */
+    private void createInitialStructures() {
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("BEGIN createInitialStructures");
+        }
+
+        flumeConfigurationProperties = new LinkedProperties();
+        configurationInitialMap = new LinkedHashMap<>();
+        configurationFinalMap = new LinkedHashMap<>();
+        agentsList = new ArrayList<>();
+        mapAgentSources = new HashMap<>();
+        mapSourcesInterceptors = new HashMap<>();
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("END createInitialStructures");
+        }
+    }
 
 
     /**
@@ -153,9 +175,13 @@ public class ConfigurationBuilder {
             logger.debug("BEGIN loadPropertiesFile");
         }
 
-        FileInputStream fis = new FileInputStream(pathConfigurationProperties);
+        FileInputStream fis = new FileInputStream(pathBaseConfigurationProperties);
         flumeConfigurationProperties.clear();
         flumeConfigurationProperties.load(fis);
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("END loadPropertiesFile");
+        }
 
     }
 
@@ -176,7 +202,10 @@ public class ConfigurationBuilder {
         //Set agents to mapConfiguration
         for (String agentName : agentsList) {
             configurationInitialMap.put(agentName, new LinkedProperties());
+        }
 
+        if (logger.isDebugEnabled()) {
+            logger.debug("END generateAgentsList");
         }
     }
 
@@ -213,6 +242,10 @@ public class ConfigurationBuilder {
 
             String propertyName = agentName + FlumeConfiguratorConstants.DOT_SEPARATOR + prefixElement;
             configurationInitialMap.get(agentName).put(propertyName, sb.toString());
+        }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("END generateAgentElements");
         }
 
         return mapAgentElements;
@@ -252,11 +285,12 @@ public class ConfigurationBuilder {
 
                     configurationInitialMap.get(agentName).put(fullInterceptorsPropertyName, sbListInterceptors.toString());
                 }
-
             }
-
         }
 
+        if (logger.isDebugEnabled()) {
+            logger.debug("END generateSourcesInterceptors");
+        }
     }
 
 
@@ -303,6 +337,10 @@ public class ConfigurationBuilder {
                     }
                 }
             }
+        }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("END generateInterceptorsCommonProperties");
         }
     }
 
@@ -403,6 +441,9 @@ public class ConfigurationBuilder {
             }
         }
 
+        if (logger.isDebugEnabled()) {
+            logger.debug("END generateInterceptorsPartialProperties");
+        }
     }
 
 
@@ -439,6 +480,10 @@ public class ConfigurationBuilder {
                     configurationInitialMap.get(agentName).put(fullElementPropertyName, elementPropertyValue);
                 }
             }
+        }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("END generateElementsCommonProperties");
         }
     }
 
@@ -531,6 +576,10 @@ public class ConfigurationBuilder {
 
                 }
             }
+        }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("END generateElementsPartialProperties");
         }
     }
 
@@ -654,6 +703,10 @@ public class ConfigurationBuilder {
 
             }
         }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("END generateFinalStructureMap");
+        }
     }
 
 
@@ -744,6 +797,10 @@ public class ConfigurationBuilder {
                 bw.close();
             }
         }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("END writeConfigurationFiles");
+        }
     }
 
 
@@ -752,7 +809,7 @@ public class ConfigurationBuilder {
      * Validate the initial properties file information and generate the Flume configuration file(s)
      * @return true if the process is correct, false otherwise
      */
-    private boolean buildConfigurationMap() {
+    public boolean buildConfigurationMap() {
 
         if (logger.isDebugEnabled()) {
             logger.debug("BEGIN buildConfigurationMap");
@@ -764,6 +821,9 @@ public class ConfigurationBuilder {
         Map<String, List<String>> mapAgentSinks;
 
         try {
+
+            //Create initial structures
+            createInitialStructures();
 
             //Load the properties file
             loadPropertiesFile();
@@ -846,11 +906,21 @@ public class ConfigurationBuilder {
 
     }
 
-
+    /**
+     * Generate a Flume configuration string from a base (template) configuration properties
+     * @param properties Base (template) properties
+     * @param characterSeparator Separator character used in base (template) configuration file
+     * @param withComments  true -> Property comments are added to Flume configuration file");
+                            false -> Property comments are not added to Flume configuration file");
+     * @param writeFlumeConfigurationFiles boolean  true -> The Flume configuration file(s) are generated
+     *                                              false -> The Flume configuration file(s) aren't generated
+     * @param pathFlumeConfigurationGeneratedFile Path of the Flume configuration file(s) (if the file(s) are generated)
+     * @param multipleFlumeConfigurationFiles   true -> Every agent has an own configuration file
+                                                false -> All agents configuration in one single file
+     * @return String with the Flume configuration generated
+     */
     public String buildConfigurationMapFromStringProperties(String properties, String characterSeparator, boolean withComments, boolean writeFlumeConfigurationFiles,
                                                             String pathFlumeConfigurationGeneratedFile, boolean multipleFlumeConfigurationFiles) {
-
-
 
         if (logger.isDebugEnabled()) {
             logger.debug("BEGIN buildConfigurationMapFromStringProperties");
@@ -862,6 +932,9 @@ public class ConfigurationBuilder {
         Map<String, List<String>> mapAgentSinks;
 
         try {
+
+            //Create initial structures
+            createInitialStructures();
 
             elementsCharacterSeparator = characterSeparator;
             addComments = withComments;
@@ -877,6 +950,7 @@ public class ConfigurationBuilder {
 
             if (isPropertiesFileOK) {
                 logger.info("checkPropertiesFile: The properties file is correct");
+
 
                 //Generate Agents List
                 generateAgentsList();
@@ -948,6 +1022,10 @@ public class ConfigurationBuilder {
                     writeConfigurationFiles();
                 }
 
+                if (logger.isDebugEnabled()) {
+                    logger.debug("END buildConfigurationMapFromStringProperties");
+                }
+
                 return sbAgentConfiguration.toString();
 
 
@@ -965,7 +1043,50 @@ public class ConfigurationBuilder {
 
     }
 
+    /**
+     * Get associated message to an error code
+     * @param errorCode error code
+     * @return associated message to an error code
+     */
+    public static String getErrorMessage(int errorCode) {
 
+        String error = "";
+        StringBuilder sb = new StringBuilder(10000);
+
+        if (errorCode == 1) {
+            sb.append("An error has occurred in Flume configurator. Check the properties configuration file and generated logs");
+        } else if (errorCode == 2) {
+            sb.append("Incorrect parameters number");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            sb.append("Usage: java -cp jarFile org.keedio.flume.configurator.builder.FlumePropertiesGenerator <parameters>");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            sb.append("The parameters are:");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            sb.append("pathBaseConfigurationProperties => Path of the base (template) configuration file");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            sb.append("elementsCharacterSeparator => Separator character used in base (template) configuration file");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            sb.append("multipleAgentConfigurationFiles => (boolean)");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            sb.append("                                     true -> Every agent has an own configuration file");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            sb.append("                                     false -> All agents configuration in one single file");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            sb.append("addComments => (boolean)");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            sb.append("                 true -> Property comments are added to Flume configuration file");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            sb.append("                 false -> Property comments are not added to Flume configuration file");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            sb.append("pathConfigurationGeneratedFile => Path of the created flume configuration file(s).May be a directory if several");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            sb.append("                                  configuration files are created (the directory must be exist)");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+
+        }
+
+        return sb.toString();
+    }
 
     /**
      * Main method.
@@ -977,41 +1098,42 @@ public class ConfigurationBuilder {
         URL url = loader.getResource("log4j.properties");
         PropertyConfigurator.configure(url);
 
-
-        logger.info("******* BEGIN FLUME CONFIGURATOR PROCESS *****************");
-
+        if (logger.isDebugEnabled()) {
+            logger.debug("******* BEGIN FLUME PROPERTIES GENERATOR PROCESS *****************");
+        }
 
         try {
 
-
             if (args.length == 5) {
-                pathConfigurationProperties = args[0];
+                pathBaseConfigurationProperties = args[0];
                 elementsCharacterSeparator = args[1];
                 multipleAgentConfigurationFiles = Boolean.valueOf(args[2]);
                 addComments = Boolean.valueOf(args[3]);
                 pathConfigurationGeneratedFile = args[4];
 
-                logger.info("Parameter pathConfigurationProperties: " + pathConfigurationProperties);
-                logger.info("Parameter elementsCharacterSeparator: " + elementsCharacterSeparator);
-                logger.info("Parameter multipleAgentConfigurationFiles: " + multipleAgentConfigurationFiles);
-                logger.info("Parameter addComments: " + addComments);
-                logger.info("Parameter patConfigurationGeneratedFile: " + pathConfigurationGeneratedFile);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Parameter pathBaseConfigurationProperties: " + pathBaseConfigurationProperties);
+                    logger.debug("Parameter elementsCharacterSeparator: " + elementsCharacterSeparator);
+                    logger.debug("Parameter multipleAgentConfigurationFiles: " + multipleAgentConfigurationFiles);
+                    logger.debug("Parameter addComments: " + addComments);
+                    logger.debug("Parameter patConfigurationGeneratedFile: " + pathConfigurationGeneratedFile);
+                }
+                FlumePropertiesGenerator flumePropertiesGenerator = new FlumePropertiesGenerator();
 
-                ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
-
-                configurationBuilder.buildConfigurationMap();
-
+                flumePropertiesGenerator.buildConfigurationMap();
 
             } else {
-                logger.error("Incorrect parameters number. Parameters are: pathConfigurationProperties elementsCharacterSeparator multipleAgentConfigurationFiles addComments pathConfigurationGeneratedFile");
-                logger.info("******* END FLUME CONFIGURATOR PROCESS *****************");
-
+                logger.error(getErrorMessage(2));
+                if (logger.isDebugEnabled()) {
+                    logger.debug("******* END FLUME PROPERTIES GENERATOR PROCESS *****************");
+                }
             }
 
-
         } catch (Exception e) {
-            logger.error("An error has occurred in Flume configurator. Check the properties configuration file and the generated logs", e);
-            logger.info("******* END FLUME CONFIGURATOR PROCESS *****************");
+            logger.error(getErrorMessage(1), e);
+            if (logger.isDebugEnabled()) {
+                logger.debug("******* END FLUME PROPERTIES GENERATOR PROCESS *****************");
+            }
 
         }
     }

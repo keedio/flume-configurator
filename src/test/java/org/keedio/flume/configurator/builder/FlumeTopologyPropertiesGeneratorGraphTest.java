@@ -11,12 +11,14 @@ import org.keedio.flume.configurator.topology.IGraph;
 import org.keedio.flume.configurator.utils.FlumeConfiguratorUtils;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.tree.DefaultMutableTreeNode;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.NoSuchFileException;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -44,6 +46,7 @@ public class FlumeTopologyPropertiesGeneratorGraphTest {
     private static Method generateElementsPropertiesMethod;
     private static Method writeConfigurationPropertiesFileMethod;
     private static Method generateInputPropertiesMethod;
+    private static Method generateInputPropertiesFromDraw2DFlumeTopologyMethod;
 
 
     @BeforeClass
@@ -64,30 +67,31 @@ public class FlumeTopologyPropertiesGeneratorGraphTest {
             generateAgentListPropertyMethod.setAccessible(true);
 
             //generateElementsListProperties is a private method. Access by reflection
-            Class<?>[] argsGenerateElementsListProperties = new Class[2];
-            argsGenerateElementsListProperties[0] = String.class;
-            argsGenerateElementsListProperties[1] = String.class;
+            Class<?>[] argsGenerateElementsListPropertiesMethod = new Class[2];
+            argsGenerateElementsListPropertiesMethod[0] = String.class;
+            argsGenerateElementsListPropertiesMethod[1] = String.class;
 
-            generateElementsListPropertiesMethod = FlumeTopologyPropertiesGenerator.class.getDeclaredMethod("generateElementsListProperties", argsGenerateElementsListProperties);
+            generateElementsListPropertiesMethod = FlumeTopologyPropertiesGenerator.class.getDeclaredMethod("generateElementsListProperties", argsGenerateElementsListPropertiesMethod);
             generateElementsListPropertiesMethod.setAccessible(true);
 
             //generateGroupsListProperties is a private method. Access by reflection
-            Class<?>[] argsGenerateGroupsListProperties = new Class[1];
-            argsGenerateGroupsListProperties[0] = boolean.class;
+            Class<?>[] argsGenerateGroupsListPropertiesMethod = new Class[1];
+            argsGenerateGroupsListPropertiesMethod[0] = boolean.class;
 
-            generateGroupsListPropertiesMethod = FlumeTopologyPropertiesGenerator.class.getDeclaredMethod("generateGroupsListProperties", argsGenerateGroupsListProperties);
+            generateGroupsListPropertiesMethod = FlumeTopologyPropertiesGenerator.class.getDeclaredMethod("generateGroupsListProperties", argsGenerateGroupsListPropertiesMethod);
             generateGroupsListPropertiesMethod.setAccessible(true);
 
+            //generateInterceptorsListProperties is a private method. Access by reflection
             generateInterceptorsListPropertiesMethod = FlumeTopologyPropertiesGenerator.class.getDeclaredMethod("generateInterceptorsListProperties", classNull);
             generateInterceptorsListPropertiesMethod.setAccessible(true);
 
             //generateElementsProperties is a private method. Access by reflection
-            Class<?>[] argsGenerateElementsProperties = new Class[3];
-            argsGenerateElementsProperties[0] = String.class;
-            argsGenerateElementsProperties[1] = String.class;
-            argsGenerateElementsProperties[2] = String.class;
+            Class<?>[] argsGenerateElementsPropertiesMethod = new Class[3];
+            argsGenerateElementsPropertiesMethod[0] = String.class;
+            argsGenerateElementsPropertiesMethod[1] = String.class;
+            argsGenerateElementsPropertiesMethod[2] = String.class;
 
-            generateElementsPropertiesMethod = FlumeTopologyPropertiesGenerator.class.getDeclaredMethod("generateElementsProperties", argsGenerateElementsProperties);
+            generateElementsPropertiesMethod = FlumeTopologyPropertiesGenerator.class.getDeclaredMethod("generateElementsProperties", argsGenerateElementsPropertiesMethod);
             generateElementsPropertiesMethod.setAccessible(true);
 
             //writeConfigurationPropertiesFile is a private method. Access by reflection
@@ -97,6 +101,15 @@ public class FlumeTopologyPropertiesGeneratorGraphTest {
             //generateInputProperties is a private method. Access by reflection
             generateInputPropertiesMethod = FlumeTopologyPropertiesGenerator.class.getDeclaredMethod("generateInputProperties", classNull);
             generateInputPropertiesMethod.setAccessible(true);
+
+            //generateInputPropertiesFromDraw2DFlumeTopology is a private method. Access by reflection
+            Class<?>[] argsGenerateInputPropertiesFromDraw2DFlumeTopologyMethod = new Class[3];
+            argsGenerateInputPropertiesFromDraw2DFlumeTopologyMethod[0] = String.class;
+            argsGenerateInputPropertiesFromDraw2DFlumeTopologyMethod[1] = boolean.class;
+            argsGenerateInputPropertiesFromDraw2DFlumeTopologyMethod[2] = boolean.class;
+
+            generateInputPropertiesFromDraw2DFlumeTopologyMethod = FlumeTopologyPropertiesGenerator.class.getDeclaredMethod("generateInputPropertiesFromDraw2DFlumeTopology", argsGenerateInputPropertiesFromDraw2DFlumeTopologyMethod);
+            generateInputPropertiesFromDraw2DFlumeTopologyMethod.setAccessible(true);
 
         } catch (Exception e) {
             Assert.fail("An error has occurred [@BeforeClass makePrivateMethodsAccesibleByReflection] method");
@@ -524,5 +537,62 @@ public class FlumeTopologyPropertiesGeneratorGraphTest {
     }
 
 
+    @Test
+    public void test13GenerateInputPropertiesFromDraw2DFlumeTopology() {
+
+        try {
+
+            flumeTopologyPropertiesGenerator = new FlumeTopologyPropertiesGenerator();
+
+            //Check output directory & several configuration files
+            FlumeTopologyPropertiesGenerator.setPathJSONTopology(TOPOLOGY_FILE_PATH_ERROR);
+            FlumeTopologyPropertiesGenerator.setPathConfigurationGeneratedFile(OUTPUT_GENERATED_FILE_PATH_DIRECTORY);
+
+            byte[] encodedFile = Files.readAllBytes(Paths.get(TOPOLOGY_FILE_PATH_ERROR));
+            String flumeJSONTopologyString = new String(encodedFile, Charset.defaultCharset());
+
+            //Invoke method
+            Map<String, String> configurationPropertiesMap = (Map<String, String>) generateInputPropertiesFromDraw2DFlumeTopologyMethod.invoke(flumeTopologyPropertiesGenerator, flumeJSONTopologyString, true, true);
+            Assert.assertNull("The Flume configuration file has not been built correctly", configurationPropertiesMap);
+
+            flumeTopologyPropertiesGenerator = new FlumeTopologyPropertiesGenerator();
+
+            //Check output base configuration directory
+            FlumeTopologyPropertiesGenerator.setPathJSONTopology(GRAPH_TOPOLOGY_FILE_PATH);
+
+            encodedFile = Files.readAllBytes(Paths.get(GRAPH_TOPOLOGY_FILE_PATH));
+            flumeJSONTopologyString = new String(encodedFile, Charset.defaultCharset());
+
+            //Invoke method (no configuration properties are requested)
+            configurationPropertiesMap = (Map<String, String>) generateInputPropertiesFromDraw2DFlumeTopologyMethod.invoke(flumeTopologyPropertiesGenerator, flumeJSONTopologyString, false, false);
+            Assert.assertNotNull("The Flume configuration file has not been built correctly", configurationPropertiesMap);
+            Assert.assertTrue("The Flume configuration file has not been built correctly", configurationPropertiesMap.isEmpty());
+
+            //Invoke method (only base configuration properties is requested)
+            configurationPropertiesMap = (Map<String, String>) generateInputPropertiesFromDraw2DFlumeTopologyMethod.invoke(flumeTopologyPropertiesGenerator, flumeJSONTopologyString, true, false);
+            Assert.assertNotNull("The Flume configuration file has not been built correctly", configurationPropertiesMap);
+            Assert.assertEquals("The Flume configuration file has not been built correctly", configurationPropertiesMap.size(), 1);
+            Assert.assertNull("The Flume configuration file has not been built correctly", configurationPropertiesMap.get(FlumeConfiguratorConstants.FLUME_CONFIGURATION_KEY));
+            Assert.assertFalse("The Flume configuration file has not been built correctly", configurationPropertiesMap.get(FlumeConfiguratorConstants.BASE_CONFIGURATION_KEY).isEmpty());
+
+            //Invoke method (only flume configuration properties is requested)
+            configurationPropertiesMap = (Map<String, String>) generateInputPropertiesFromDraw2DFlumeTopologyMethod.invoke(flumeTopologyPropertiesGenerator, flumeJSONTopologyString, false, true);
+            Assert.assertNotNull("The Flume configuration file has not been built correctly", configurationPropertiesMap);
+            Assert.assertEquals("The Flume configuration file has not been built correctly", configurationPropertiesMap.size(), 1);
+            Assert.assertNull("The Flume configuration file has not been built correctly", configurationPropertiesMap.get(FlumeConfiguratorConstants.BASE_CONFIGURATION_KEY));
+            Assert.assertFalse("The Flume configuration file has not been built correctly", configurationPropertiesMap.get(FlumeConfiguratorConstants.FLUME_CONFIGURATION_KEY).isEmpty());
+
+            //Invoke method (base configuration properties and flume configuration properties are requested)
+            configurationPropertiesMap = (Map<String, String>) generateInputPropertiesFromDraw2DFlumeTopologyMethod.invoke(flumeTopologyPropertiesGenerator, flumeJSONTopologyString, true, true);
+            Assert.assertNotNull("The Flume configuration file has not been built correctly", configurationPropertiesMap);
+            Assert.assertEquals("The Flume configuration file has not been built correctly", configurationPropertiesMap.size(), 2);
+            Assert.assertFalse("The Flume configuration file has not been built correctly", configurationPropertiesMap.get(FlumeConfiguratorConstants.BASE_CONFIGURATION_KEY).isEmpty());
+            Assert.assertFalse("The Flume configuration file has not been built correctly", configurationPropertiesMap.get(FlumeConfiguratorConstants.FLUME_CONFIGURATION_KEY).isEmpty());
+
+        } catch (Exception e) {
+            Assert.fail("An error has occurred [test13GenerateInputPropertiesFromDraw2DFlumeTopology] method");
+            logger.error("An error has occurred [test13GenerateInputPropertiesFromDraw2DFlumeTopology] method", e);
+        }
+    }
 
 }
