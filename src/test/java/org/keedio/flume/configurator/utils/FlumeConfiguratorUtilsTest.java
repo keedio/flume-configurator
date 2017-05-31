@@ -151,7 +151,7 @@ public class FlumeConfiguratorUtilsTest {
     public void testGetAgentGroupsSet() {
 
         String elementName = "agent2";
-        String agentGroupsSetExpected = "GROUP_2_1;GROUP_2_2;GROUP_2_3";
+        String agentGroupsSetExpected = "GROUP_2_1;GROUP_2_2;GROUP_2_3;SINKGROUP_G2";
         
         try {
 
@@ -591,11 +591,9 @@ public class FlumeConfiguratorUtilsTest {
     public void testGetAgentConfigurationGroupsMapFromProperties() {
 
         int agentsNumber = 3;
-        int groupsAgentNumber = 3;
-        int elementsGroupNumber = 3;
 
-        String elementsAgent1 = "source1_1;channel1_1;sink1_1;source1_2;channel1_2;sink1_2;source1_3;channel1_3;sink1_3";
-        String elementsAgent2 = "source2_1;channel2_1;sink2_1;source2_2;channel2_2;sink2_2;source2_3;channel2_3;sink2_3";
+        String elementsAgent1 = "source1_1;channel1_1;sink1_1;source1_2;channel1_2;sink1_2;source1_3;channel1_3;sink1_3;g1";
+        String elementsAgent2 = "source2_1;channel2_1;sink2_1;source2_2;channel2_2;sink2_2;source2_3;channel2_3;sink2_3;g2";
         String elementsAgent3 = "source3_1;channel3_1;sink3_1;source3_2;channel3_2;sink3_2;source3_3;channel3_3;sink3_3";
 
         try {   
@@ -612,13 +610,14 @@ public class FlumeConfiguratorUtilsTest {
             for (String agentName : mapAgentConfigurationGroups.keySet()) {
                 Map<String, String> groupsAgent = mapAgentConfigurationGroups.get(agentName);
 
-                Assert.assertEquals("The groups configuration is not correct", groupsAgent.keySet().size(), groupsAgentNumber * elementsGroupNumber);
-
                 if ("agent1".equals(agentName)) {
+                    Assert.assertEquals("The groups configuration is not correct", groupsAgent.keySet().size(), elementsAgent1Set.size());
                     Assert.assertTrue("The groups configuration is not correct",  groupsAgent.keySet().equals(elementsAgent1Set) );
                 } else if ("agent2".equals(agentName)) {
+                    Assert.assertEquals("The groups configuration is not correct", groupsAgent.keySet().size(), elementsAgent2Set.size());
                     Assert.assertTrue("The groups configuration is not correct",  groupsAgent.keySet().equals(elementsAgent2Set) );
                 } else if ("agent3".equals(agentName)) {
+                    Assert.assertEquals("The groups configuration is not correct", groupsAgent.keySet().size(), elementsAgent3Set.size());
                     Assert.assertTrue("The groups configuration is not correct",  groupsAgent.keySet().equals(elementsAgent3Set) );
                 }
 
