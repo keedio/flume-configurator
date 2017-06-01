@@ -28,7 +28,8 @@ public class FlumeTopologyPropertiesGeneratorGraphTest {
 
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(FlumeTopologyPropertiesGeneratorGraphTest.class);
 
-    private static final String GRAPH_TOPOLOGY_FILE_PATH = "src/test/resources/FlumeTopologyGraphWithComments_with2Agent.json";
+    //private static final String GRAPH_TOPOLOGY_FILE_PATH = "src/test/resources/FlumeTopologyGraphWithComments_with2Agent.json";
+    private static final String GRAPH_TOPOLOGY_FILE_PATH = "src/test/resources/FlumeTopologyGraphSinkGroups_with2Agent.json";
     private static final String TOPOLOGY_FILE_PATH_ERROR = "src/test/resources/FlumeTopologyError.json";
     private static final String OUTPUT_GENERATED_FILE_PATH_DIRECTORY = ".";
     private static final String OUTPUT_GENERATED_FILE_PATH_FILE = "." + File.separator + "outputFile.conf";

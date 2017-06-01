@@ -445,7 +445,8 @@ public class FlumeConfiguratorTopologyUtils {
             boolean commonPropertyNotComment = ((keyPropertyStr.contains(FlumeConfiguratorConstants.SOURCES_COMMON_PROPERTY_PROPERTIES_PREFIX))
                     || (keyPropertyStr.contains(FlumeConfiguratorConstants.INTERCEPTORS_COMMON_PROPERTY_PROPERTIES_PREFIX))
                     || (keyPropertyStr.contains(FlumeConfiguratorConstants.CHANNELS_COMMON_PROPERTY_PROPERTIES_PREFIX))
-                    || (keyPropertyStr.contains(FlumeConfiguratorConstants.SINKS_COMMON_PROPERTY_PROPERTIES_PREFIX)))
+                    || (keyPropertyStr.contains(FlumeConfiguratorConstants.SINKS_COMMON_PROPERTY_PROPERTIES_PREFIX))
+                    || (keyPropertyStr.contains(FlumeConfiguratorConstants.SINKGROUPS_COMMON_PROPERTY_PROPERTIES_PREFIX)))
                     && (!keyPropertyStr.contains(FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX));
 
             if (commonPropertyNotComment) {
@@ -483,6 +484,9 @@ public class FlumeConfiguratorTopologyUtils {
 
         //Sinks list
         getPartialFlumePropertiesAsString(printWriter, "Sinks per agent list", properties, FlumeConfiguratorConstants.SINKS_LIST_PROPERTIES_PREFIX);
+
+        //Sink groups list
+        getPartialFlumePropertiesAsString(printWriter, "Sink groups per agent list", properties, FlumeConfiguratorConstants.SINKGROUPS_LIST_PROPERTIES_PREFIX);
 
         //Groups list
         getPartialFlumePropertiesAsString(printWriter, "Groups list", properties, FlumeConfiguratorConstants.GROUPS_LIST_PROPERTIES_PREFIX);
@@ -522,6 +526,13 @@ public class FlumeConfiguratorTopologyUtils {
         getPartialFlumePropertiesAsString(printWriter, "Sinks partial properties list", properties,
                 FlumeConfiguratorConstants.SINKS_PARTIAL_PROPERTY_PROPERTIES_PREFIX);
 
+        //Sinkgroups common properties
+        getPartialFlumePropertiesAsString(printWriter, "Sinkgroups common common properties list (Common to all sinkgroups from all agents)", properties,
+                FlumeConfiguratorConstants.SINKGROUPS_COMMON_PROPERTY_PROPERTIES_PREFIX);
+
+        //Sinkgroups partial properties
+        getPartialFlumePropertiesAsString(printWriter, "Sinkgroups partial properties list", properties,
+                FlumeConfiguratorConstants.SINKGROUPS_PARTIAL_PROPERTY_PROPERTIES_PREFIX);
 
         return writer.getBuffer().toString();
 

@@ -379,6 +379,8 @@ public class FlumeConfiguratorUtils {
                 }
             }
 
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+
             //Sink groups properties
             List listSinkGroupsProperties = agentConfigurationGroupProperties.getListSinkGroupProperties();
 

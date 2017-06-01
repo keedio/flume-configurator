@@ -63,6 +63,7 @@ public class FlumeConfiguratorConstants {
     public static final String FLUME_TOPOLOGY_SOURCE = "Source";
     public static final String FLUME_TOPOLOGY_CHANNEL = "Channel";
     public static final String FLUME_TOPOLOGY_SINK = "Sink";
+    public static final String FLUME_TOPOLOGY_SINKGROUP = "SinkGroup";
     public static final String FLUME_TOPOLOGY_INTERCEPTOR = "Interceptor";
     public static final String FLUME_TOPOLOGY_CONNECTION = "Connection";
 
