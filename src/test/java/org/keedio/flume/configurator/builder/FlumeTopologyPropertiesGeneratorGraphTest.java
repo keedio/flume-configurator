@@ -28,7 +28,8 @@ public class FlumeTopologyPropertiesGeneratorGraphTest {
 
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(FlumeTopologyPropertiesGeneratorGraphTest.class);
 
-    private static final String GRAPH_TOPOLOGY_FILE_PATH = "src/test/resources/FlumeTopologyGraphWithComments_with2Agent.json";
+    //private static final String GRAPH_TOPOLOGY_FILE_PATH = "src/test/resources/FlumeTopologyGraphWithComments_with2Agent.json";
+    private static final String GRAPH_TOPOLOGY_FILE_PATH = "src/test/resources/FlumeTopologyGraphSinkGroups_with2Agent.json";
     private static final String TOPOLOGY_FILE_PATH_ERROR = "src/test/resources/FlumeTopologyError.json";
     private static final String OUTPUT_GENERATED_FILE_PATH_DIRECTORY = ".";
     private static final String OUTPUT_GENERATED_FILE_PATH_FILE = "." + File.separator + "outputFile.conf";
@@ -294,6 +295,16 @@ public class FlumeTopologyPropertiesGeneratorGraphTest {
             int afterGenerateSinksListPropertiesNumber =  FlumeConfiguratorUtils.matchingSubset(flumeConfigurationProperties,  FlumeConfiguratorConstants.SINKS_LIST_PROPERTIES_PREFIX, true).size();
             Assert.assertTrue("The creation of the sinks list property is not correct", afterGenerateSinksListPropertiesNumber > beforeGenerateSinksListPropertiesNumber);
 
+            //SINKGROUPS
+            int beforeGenerateSinkGroupsListPropertiesNumber =  FlumeConfiguratorUtils.matchingSubset(flumeConfigurationProperties,  FlumeConfiguratorConstants.SINKGROUPS_LIST_PROPERTIES_PREFIX, true).size();
+            Assert.assertEquals("The creation of the sinkgroups list property is not correct", beforeGenerateSinkGroupsListPropertiesNumber, 0);
+
+            //Invoke method
+            generateElementsListPropertiesMethod.invoke(flumeTopologyPropertiesGenerator, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP, FlumeConfiguratorConstants.SINKGROUPS_LIST_PROPERTIES_PREFIX);
+
+            int afterGenerateSinkGroupsListPropertiesNumber =  FlumeConfiguratorUtils.matchingSubset(flumeConfigurationProperties,  FlumeConfiguratorConstants.SINKGROUPS_LIST_PROPERTIES_PREFIX, true).size();
+            Assert.assertTrue("The creation of the sinkgroups list property is not correct", afterGenerateSinkGroupsListPropertiesNumber > beforeGenerateSinkGroupsListPropertiesNumber);
+
         } catch (Exception e) {
             Assert.fail("An error has occurred [test05GenerateElementsListProperties] method");
             logger.error("An error has occurred [test05GenerateElementsListProperties] method", e);
@@ -382,7 +393,7 @@ public class FlumeTopologyPropertiesGeneratorGraphTest {
             int afterGenerateInterceptorsCommonPropertiesNumber =  FlumeConfiguratorUtils.matchingSubset(flumeConfigurationProperties,  FlumeConfiguratorConstants.INTERCEPTORS_COMMON_PROPERTY_PROPERTIES_PREFIX, true).size();
             Assert.assertTrue("The creation of the interceptors common properties is not correct", afterGenerateInterceptorsCommonPropertiesNumber >= beforeGenerateInterceptorsCommonPropertiesNumber);
             int afterGenerateInterceptorsPartialPropertiesNumber =  FlumeConfiguratorUtils.matchingSubset(flumeConfigurationProperties,  FlumeConfiguratorConstants.INTERCEPTORS_PARTIAL_PROPERTY_PROPERTIES_PREFIX, true).size();
-            Assert.assertTrue("The creation of the interceptors common properties is not correct", afterGenerateInterceptorsPartialPropertiesNumber > beforeGenerateInterceptorsPartialPropertiesNumber);
+            Assert.assertTrue("The creation of the interceptors partial properties is not correct", afterGenerateInterceptorsPartialPropertiesNumber > beforeGenerateInterceptorsPartialPropertiesNumber);
 
 
             //CHANNELS
@@ -398,7 +409,7 @@ public class FlumeTopologyPropertiesGeneratorGraphTest {
             int afterGenerateChannelsCommonPropertiesNumber =  FlumeConfiguratorUtils.matchingSubset(flumeConfigurationProperties,  FlumeConfiguratorConstants.CHANNELS_COMMON_PROPERTY_PROPERTIES_PREFIX, true).size();
             Assert.assertTrue("The creation of the channels common properties is not correct", afterGenerateChannelsCommonPropertiesNumber >= beforeGenerateChannelsCommonPropertiesNumber);
             int afterGenerateChannelsPartialPropertiesNumber =  FlumeConfiguratorUtils.matchingSubset(flumeConfigurationProperties,  FlumeConfiguratorConstants.CHANNELS_PARTIAL_PROPERTY_PROPERTIES_PREFIX, true).size();
-            Assert.assertTrue("The creation of the channels common properties is not correct", afterGenerateChannelsPartialPropertiesNumber > beforeGenerateIChannelsPartialPropertiesNumber);
+            Assert.assertTrue("The creation of the channels partial properties is not correct", afterGenerateChannelsPartialPropertiesNumber > beforeGenerateIChannelsPartialPropertiesNumber);
 
 
             //SINKS
@@ -414,7 +425,23 @@ public class FlumeTopologyPropertiesGeneratorGraphTest {
             int afterGenerateSinksCommonPropertiesNumber =  FlumeConfiguratorUtils.matchingSubset(flumeConfigurationProperties,  FlumeConfiguratorConstants.SINKS_COMMON_PROPERTY_PROPERTIES_PREFIX, true).size();
             Assert.assertTrue("The creation of the sinks common properties is not correct", afterGenerateSinksCommonPropertiesNumber >= beforeGenerateSinksCommonPropertiesNumber);
             int afterGenerateSinksPartialPropertiesNumber =  FlumeConfiguratorUtils.matchingSubset(flumeConfigurationProperties,  FlumeConfiguratorConstants.SINKS_PARTIAL_PROPERTY_PROPERTIES_PREFIX, true).size();
-            Assert.assertTrue("The creation of the sinks common properties is not correct", afterGenerateSinksPartialPropertiesNumber > beforeGenerateISinksPartialPropertiesNumber);
+            Assert.assertTrue("The creation of the sinks partial properties is not correct", afterGenerateSinksPartialPropertiesNumber > beforeGenerateISinksPartialPropertiesNumber);
+
+
+            //SINKGROUPS
+            int beforeGenerateSinkGroupsCommonPropertiesNumber =  FlumeConfiguratorUtils.matchingSubset(flumeConfigurationProperties,  FlumeConfiguratorConstants.SINKGROUPS_COMMON_PROPERTY_PROPERTIES_PREFIX, true).size();
+            Assert.assertEquals("The creation of the sinkgroups common properties is not correct", beforeGenerateSinkGroupsCommonPropertiesNumber, 0);
+            int beforeGenerateSinkGroupsPartialPropertiesNumber =  FlumeConfiguratorUtils.matchingSubset(flumeConfigurationProperties,  FlumeConfiguratorConstants.SINKGROUPS_PARTIAL_PROPERTY_PROPERTIES_PREFIX, true).size();
+            Assert.assertEquals("The creation of the sinkgroups partial properties is not correct", beforeGenerateSinkGroupsPartialPropertiesNumber, 0);
+
+            //Invoke method
+            generateElementsPropertiesMethod.invoke(flumeTopologyPropertiesGenerator, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP, FlumeConfiguratorConstants.SINKGROUPS_COMMON_PROPERTY_PROPERTIES_PREFIX, FlumeConfiguratorConstants.SINKGROUPS_PARTIAL_PROPERTY_PROPERTIES_PREFIX);
+
+            flumeConfigurationProperties = flumeTopologyPropertiesGenerator.getFlumeConfigurationProperties();
+            int afterGenerateSinkGroupsCommonPropertiesNumber =  FlumeConfiguratorUtils.matchingSubset(flumeConfigurationProperties,  FlumeConfiguratorConstants.SINKGROUPS_COMMON_PROPERTY_PROPERTIES_PREFIX, true).size();
+            Assert.assertTrue("The creation of the sinkgroups common properties is not correct", afterGenerateSinkGroupsCommonPropertiesNumber >= beforeGenerateSinkGroupsCommonPropertiesNumber);
+            int afterGenerateSinkGroupsPartialPropertiesNumber =  FlumeConfiguratorUtils.matchingSubset(flumeConfigurationProperties,  FlumeConfiguratorConstants.SINKGROUPS_PARTIAL_PROPERTY_PROPERTIES_PREFIX, true).size();
+            Assert.assertTrue("The creation of the sinkgroups partial properties is not correct", afterGenerateSinkGroupsPartialPropertiesNumber > beforeGenerateSinkGroupsPartialPropertiesNumber);
 
         } catch (Exception e) {
             Assert.fail("An error has occurred [test08GenerateElementsProperties] method");

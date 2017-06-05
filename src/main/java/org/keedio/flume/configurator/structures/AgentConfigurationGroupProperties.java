@@ -12,6 +12,7 @@ public class AgentConfigurationGroupProperties {
     private List listSourceProperties;
     private List listChannelProperties;
     private List listSinkProperties;
+    private List listSinkGroupProperties;
     private Map<String,List<String>> mapSourceInterceptorProperties;
 
 
@@ -22,6 +23,7 @@ public class AgentConfigurationGroupProperties {
         listSourceProperties = new ArrayList();
         listChannelProperties = new ArrayList();
         listSinkProperties = new ArrayList();
+        listSinkGroupProperties = new ArrayList();
         mapSourceInterceptorProperties = new LinkedHashMap<>();
 
     }
@@ -56,6 +58,13 @@ public class AgentConfigurationGroupProperties {
         this.listSinkProperties = listSinkProperties;
     }
 
+
+    public List getListSinkGroupProperties() { return listSinkGroupProperties; }
+
+
+    public void setListSinkGroupProperties(List listSinkGroupProperties) {
+        this.listSinkGroupProperties = listSinkGroupProperties;
+    }
 
     public Map<String, List<String>> getMapSourceInterceptorProperties() {
         return mapSourceInterceptorProperties;
