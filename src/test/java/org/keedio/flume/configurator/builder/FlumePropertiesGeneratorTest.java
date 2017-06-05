@@ -40,6 +40,7 @@ public class FlumePropertiesGeneratorTest {
     private static Map<String, List<String>> mapAgentSources;
     private static Map<String, List<String>> mapAgentChannels;
     private static Map<String, List<String>> mapAgentSinks;
+    private static Map<String, List<String>> mapAgentSinkGroups;
 
     private static Method createInitialStructuresMethod;
     private static Method loadPropertiesFileMethod;
@@ -311,6 +312,22 @@ public class FlumePropertiesGeneratorTest {
             containsAgentElementsSinks = FlumePropertiesGeneratorTestUtils.containsAgentElements(flumePropertiesGenerator.getConfigurationInitialMap(), FlumeConfiguratorConstants.SINKS_PROPERTY);
             Assert.assertTrue("The generation of the list of sinks is not correct", containsAgentElementsSinks);
 
+
+            //SINK GROUPS
+            int beforeGenerateSinkGroupsElementsPropertiesNumber = FlumePropertiesGeneratorTestUtils.calculatePropertiesTotalNumber(flumePropertiesGenerator.getConfigurationInitialMap());
+            boolean containsAgentElementsSinkGroups = FlumePropertiesGeneratorTestUtils.containsAgentElements(flumePropertiesGenerator.getConfigurationInitialMap(), FlumeConfiguratorConstants.SINKGROUPS_PROPERTY);
+            Assert.assertFalse("The generation of the list of sinkgroups is not correct", containsAgentElementsSinkGroups);
+
+            //Invoke method
+            mapAgentSinkGroups = (Map<String, List<String>>) generateAgentElementsMethod.invoke(flumePropertiesGenerator, FlumeConfiguratorConstants.SINKGROUPS_LIST_PROPERTIES_PREFIX, FlumeConfiguratorConstants.SINKGROUPS_PROPERTY);
+            Assert.assertTrue("The generation of the list of sinkgroups is not correct", mapAgentSinkGroups.size() > 0);
+
+            int afterGenerateSinkGroupsElementsPropertiesNumber = FlumePropertiesGeneratorTestUtils.calculatePropertiesTotalNumber(flumePropertiesGenerator.getConfigurationInitialMap());
+            Assert.assertTrue("The generation of the list of sinkgroups is not correct", afterGenerateSinkGroupsElementsPropertiesNumber > beforeGenerateSinkGroupsElementsPropertiesNumber);
+            containsAgentElementsSinkGroups = FlumePropertiesGeneratorTestUtils.containsAgentElements(flumePropertiesGenerator.getConfigurationInitialMap(), FlumeConfiguratorConstants.SINKGROUPS_PROPERTY);
+            Assert.assertTrue("The generation of the list of sinkgroups is not correct", containsAgentElementsSinkGroups);
+
+
         } catch (Exception e) {
             Assert.fail("An error has occurred [test05GenerateAgentElements] method");
             logger.error("An error has occurred [test05GenerateAgentElements] method", e);
@@ -441,6 +458,20 @@ public class FlumePropertiesGeneratorTest {
             containsSinksProperties = FlumePropertiesGeneratorTestUtils.containsElementsProperties(flumePropertiesGenerator.getConfigurationInitialMap(), FlumeConfiguratorConstants.SINKS_PROPERTY);
             Assert.assertTrue("The generation of the list of sinks common properties is not correct", containsSinksProperties);
 
+
+            //SINKGROUPS
+            boolean containsSinkGroupsProperties = FlumePropertiesGeneratorTestUtils.containsElementsProperties(flumePropertiesGenerator.getConfigurationInitialMap(), FlumeConfiguratorConstants.SINKGROUPS_PROPERTY);
+            Assert.assertFalse("The generation of the list of sinkgroups common properties is not correct", containsSinkGroupsProperties);
+
+            //Invoke method
+            generateElementsCommonPropertiesMethod.invoke(flumePropertiesGenerator, FlumeConfiguratorConstants.SINKGROUPS_COMMON_PROPERTY_PROPERTIES_PREFIX, FlumeConfiguratorConstants.SINKGROUPS_PROPERTY, mapAgentSinkGroups);
+
+            int afterGenerateSinkGroupsElementsCommonPropertiesNumber = FlumePropertiesGeneratorTestUtils.calculatePropertiesTotalNumber(flumePropertiesGenerator.getConfigurationInitialMap());
+            Assert.assertTrue("The generation of the list of sinkgroups common properties is not correct", afterGenerateSinkGroupsElementsCommonPropertiesNumber > afterGenerateSinksElementsCommonPropertiesNumber);
+            containsSinkGroupsProperties = FlumePropertiesGeneratorTestUtils.containsElementsProperties(flumePropertiesGenerator.getConfigurationInitialMap(), FlumeConfiguratorConstants.SINKGROUPS_PROPERTY);
+            Assert.assertTrue("The generation of the list of sinkgroups common properties is not correct", containsSinkGroupsProperties);
+
+
         } catch (Exception e) {
             Assert.fail("An error has occurred [test09GenerateElementsCommonProperties] method");
             logger.error("An error has occurred [test09GenerateElementsCommonProperties] method", e);
@@ -494,6 +525,20 @@ public class FlumePropertiesGeneratorTest {
             Assert.assertTrue("The generation of the list of sinks partial properties is not correct", afterGenerateSinksElementsPartialPropertiesNumber > beforeGenerateSinksElementsPartialPropertiesNumber);
             containsSinksProperties = FlumePropertiesGeneratorTestUtils.containsElementsProperties(flumePropertiesGenerator.getConfigurationInitialMap(), FlumeConfiguratorConstants.SINKS_PROPERTY);
             Assert.assertTrue("The generation of the list of sinks partial properties is not correct", containsSinksProperties);
+
+
+            //SINKGROUPS
+            int beforeGenerateSinkGroupsElementsPartialPropertiesNumber = FlumePropertiesGeneratorTestUtils.calculatePropertiesTotalNumber(flumePropertiesGenerator.getConfigurationInitialMap());
+            boolean containsSinkGroupsProperties = FlumePropertiesGeneratorTestUtils.containsElementsProperties(flumePropertiesGenerator.getConfigurationInitialMap(), FlumeConfiguratorConstants.SINKGROUPS_PROPERTY);
+            Assert.assertTrue("The generation of the list of sinkgroups partial properties is not correct", containsSinkGroupsProperties);
+
+            //Invoke method
+            generateElementsPartialPropertiesMethod.invoke(flumePropertiesGenerator, FlumeConfiguratorConstants.SINKGROUPS_PARTIAL_PROPERTY_PROPERTIES_PREFIX, FlumeConfiguratorConstants.SINKGROUPS_PROPERTY, mapAgentSinkGroups);
+
+            int afterGenerateSinkGroupsElementsPartialPropertiesNumber = FlumePropertiesGeneratorTestUtils.calculatePropertiesTotalNumber(flumePropertiesGenerator.getConfigurationInitialMap());
+            Assert.assertTrue("The generation of the list of sinkgroups partial properties is not correct", afterGenerateSinkGroupsElementsPartialPropertiesNumber > beforeGenerateSinkGroupsElementsPartialPropertiesNumber);
+            containsSinkGroupsProperties = FlumePropertiesGeneratorTestUtils.containsElementsProperties(flumePropertiesGenerator.getConfigurationInitialMap(), FlumeConfiguratorConstants.SINKGROUPS_PROPERTY);
+            Assert.assertTrue("The generation of the list of sinkgroups partial properties is not correct", containsSinkGroupsProperties);
 
         } catch (Exception e) {
             Assert.fail("An error has occurred [test10GenerateElementsPartialProperties] method");

@@ -431,26 +431,26 @@ public class FlumeTopologyReversePropertiesGeneratorTest {
             Assert.assertEquals("The generation of flume topology elements is no correct", generateElementsFlumeTopologyChannelsElementsNumber, afterGenerateElementsFlumeTopologyChannelsElementsNumber);
 
 
-            //INTERCEPTORS
-            int beforeGenerateElementsFlumeTopologyInterceptorsElementsNumber =
-                    FlumeTopologyReversePropertiesGeneratorTestUtils.getFlumeElementTypeElementsNumber(flumeTopologyList, FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR);
-            Assert.assertEquals("The generation of flume topology elements is no correct", beforeGenerateElementsFlumeTopologyInterceptorsElementsNumber, 0);
+            //SINKGROUPS
+            int beforeGenerateElementsFlumeTopologySinkGroupsElementsNumber =
+                    FlumeTopologyReversePropertiesGeneratorTestUtils.getFlumeElementTypeElementsNumber(flumeTopologyList, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP);
+            Assert.assertEquals("The generation of flume topology elements is no correct", beforeGenerateElementsFlumeTopologySinkGroupsElementsNumber, 0);
 
             //Invoke method
-            generateFlumeTopologyElementsMethod.invoke(flumeTopologyReversePropertiesGenerator, FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR, FlumeConfiguratorConstants.INTERCEPTORS_PROPERTY, FlumeConfiguratorConstants.INTERCEPTORS_LIST_PROPERTY_PART_INDEX);
+            generateFlumeTopologyElementsMethod.invoke(flumeTopologyReversePropertiesGenerator, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP, FlumeConfiguratorConstants.SINKGROUPS_PROPERTY, FlumeConfiguratorConstants.SINKGROUPS_LIST_PROPERTY_PART_INDEX);
 
-            int afterGenerateElementsFlumeTopologyInterceptorsElementsNumber =
-                    FlumeTopologyReversePropertiesGeneratorTestUtils.getFlumeElementTypeElementsNumber(flumeTopologyList, FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR);
-            Assert.assertTrue("The generation of flume topology elements is no correct", afterGenerateElementsFlumeTopologyInterceptorsElementsNumber > 0);
+            int afterGenerateElementsFlumeTopologySinkGroupsElementsNumber =
+                    FlumeTopologyReversePropertiesGeneratorTestUtils.getFlumeElementTypeElementsNumber(flumeTopologyList, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP);
+            Assert.assertTrue("The generation of flume topology elements is no correct", afterGenerateElementsFlumeTopologySinkGroupsElementsNumber > 0);
 
-            //Only agents, sources, channels, sinks and interceptors elements are present
+            //Only agents, sources, channels ,sinks and sinkgroups elements are present
             for (FlumeTopology flumeTopologyElement : flumeTopologyList) {
                 String flumeTopologyElementType = flumeTopologyElement.getType();
                 boolean allowedType = flumeTopologyElementType.equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_AGENT) ||
                         flumeTopologyElementType.equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE) ||
                         flumeTopologyElementType.equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL) ||
                         flumeTopologyElementType.equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK) ||
-                        flumeTopologyElementType.equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR);
+                        flumeTopologyElementType.equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP);
                 Assert.assertTrue("The generation of flume topology elements are no correct", allowedType);
                 Assert.assertNotNull("The generation of flume topology elements is no correct", flumeTopologyElement.getId());
                 Assert.assertFalse("The generation of flume topology elements is no correct", flumeTopologyElement.getId().isEmpty());
@@ -470,6 +470,50 @@ public class FlumeTopologyReversePropertiesGeneratorTest {
             Assert.assertEquals("The generation of flume topology elements is no correct", generateElementsFlumeTopologyChannelsElementsNumber, afterGenerateElementsFlumeTopologyChannelsElementsNumber);
             Assert.assertEquals("The generation of flume topology elements is no correct", generateElementsFlumeTopologySinksElementsNumber, afterGenerateElementsFlumeTopologySinksElementsNumber);
 
+
+
+            //INTERCEPTORS
+            int beforeGenerateElementsFlumeTopologyInterceptorsElementsNumber =
+                    FlumeTopologyReversePropertiesGeneratorTestUtils.getFlumeElementTypeElementsNumber(flumeTopologyList, FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR);
+            Assert.assertEquals("The generation of flume topology elements is no correct", beforeGenerateElementsFlumeTopologyInterceptorsElementsNumber, 0);
+
+            //Invoke method
+            generateFlumeTopologyElementsMethod.invoke(flumeTopologyReversePropertiesGenerator, FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR, FlumeConfiguratorConstants.INTERCEPTORS_PROPERTY, FlumeConfiguratorConstants.INTERCEPTORS_LIST_PROPERTY_PART_INDEX);
+
+            int afterGenerateElementsFlumeTopologyInterceptorsElementsNumber =
+                    FlumeTopologyReversePropertiesGeneratorTestUtils.getFlumeElementTypeElementsNumber(flumeTopologyList, FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR);
+            Assert.assertTrue("The generation of flume topology elements is no correct", afterGenerateElementsFlumeTopologyInterceptorsElementsNumber > 0);
+
+            //Only agents, sources, channels, sinks and interceptors elements are present
+            for (FlumeTopology flumeTopologyElement : flumeTopologyList) {
+                String flumeTopologyElementType = flumeTopologyElement.getType();
+                boolean allowedType = flumeTopologyElementType.equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_AGENT) ||
+                        flumeTopologyElementType.equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE) ||
+                        flumeTopologyElementType.equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL) ||
+                        flumeTopologyElementType.equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK) ||
+                        flumeTopologyElementType.equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP) ||
+                        flumeTopologyElementType.equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR);
+                Assert.assertTrue("The generation of flume topology elements are no correct", allowedType);
+                Assert.assertNotNull("The generation of flume topology elements is no correct", flumeTopologyElement.getId());
+                Assert.assertFalse("The generation of flume topology elements is no correct", flumeTopologyElement.getId().isEmpty());
+            }
+
+            //Number of another elements types remain equal
+            generateElementsFlumeTopologyAgentsElementsNumber =
+                    FlumeTopologyReversePropertiesGeneratorTestUtils.getFlumeElementTypeElementsNumber(flumeTopologyList, FlumeConfiguratorConstants.FLUME_TOPOLOGY_AGENT);
+            generateElementsFlumeTopologySourcesElementsNumber =
+                    FlumeTopologyReversePropertiesGeneratorTestUtils.getFlumeElementTypeElementsNumber(flumeTopologyList, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE);
+            generateElementsFlumeTopologyChannelsElementsNumber =
+                    FlumeTopologyReversePropertiesGeneratorTestUtils.getFlumeElementTypeElementsNumber(flumeTopologyList, FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL);
+            generateElementsFlumeTopologySinksElementsNumber =
+                    FlumeTopologyReversePropertiesGeneratorTestUtils.getFlumeElementTypeElementsNumber(flumeTopologyList, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK);
+            int generateElementsFlumeTopologySinkGroupsElementsNumber =
+                    FlumeTopologyReversePropertiesGeneratorTestUtils.getFlumeElementTypeElementsNumber(flumeTopologyList, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP);
+            Assert.assertEquals("The generation of flume topology elements is no correct", generateElementsFlumeTopologyAgentsElementsNumber, initialGenerateElementsFlumeTopologyAgentsElementsNumber);
+            Assert.assertEquals("The generation of flume topology elements is no correct", generateElementsFlumeTopologySourcesElementsNumber, afterGenerateElementsFlumeTopologySourcesElementsNumber);
+            Assert.assertEquals("The generation of flume topology elements is no correct", generateElementsFlumeTopologyChannelsElementsNumber, afterGenerateElementsFlumeTopologyChannelsElementsNumber);
+            Assert.assertEquals("The generation of flume topology elements is no correct", generateElementsFlumeTopologySinksElementsNumber, afterGenerateElementsFlumeTopologySinksElementsNumber);
+            Assert.assertEquals("The generation of flume topology elements is no correct", generateElementsFlumeTopologySinkGroupsElementsNumber, afterGenerateElementsFlumeTopologySinkGroupsElementsNumber);
 
         } catch (Exception e) {
             Assert.fail("An error has occurred [test07GenerateElementsFlumeTopology] method");
@@ -628,6 +672,7 @@ public class FlumeTopologyReversePropertiesGeneratorTest {
                         flumeTopologyElementType.equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE) ||
                         flumeTopologyElementType.equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL) ||
                         flumeTopologyElementType.equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK) ||
+                        flumeTopologyElementType.equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP) ||
                         flumeTopologyElementType.equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR) ||
                         flumeTopologyElementType.equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_CONNECTION);
                 Assert.assertTrue("The generation of Draw2D properties are no correct", allowedType);

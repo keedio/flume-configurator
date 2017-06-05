@@ -380,6 +380,29 @@ public class FlumeConfiguratorUtils {
             }
 
             sb.append(FlumeConfiguratorConstants.NEW_LINE);
+
+            //Sink groups properties
+            List listSinkGroupsProperties = agentConfigurationGroupProperties.getListSinkGroupProperties();
+
+            for (Object sinkGroupProperty : listSinkGroupsProperties) {
+
+                Map.Entry sinkGroupPropertyEntry = (Map.Entry) sinkGroupProperty;
+
+                if (!sinkGroupPropertyEntry.getKey().toString().contains(FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX)) {
+                    sb.append(sinkGroupPropertyEntry).append(FlumeConfiguratorConstants.NEW_LINE);
+                } else {
+                    if (addComments) {
+                        String sinkGroupPropertyEntryString = (String) sinkGroupPropertyEntry.getValue();
+                        if (!"".equals(sinkGroupPropertyEntryString.trim())) {
+                            sb.append(FlumeConfiguratorConstants.COMMENT_PREFIX).append(sinkGroupPropertyEntry.getValue()).append(FlumeConfiguratorConstants.NEW_LINE);
+                        }
+                    }
+                }
+
+            }
+
+
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
             sb.append(FlumeConfiguratorConstants.NEW_LINE);
 
         }
@@ -740,7 +763,7 @@ public class FlumeConfiguratorUtils {
 
 
     /**
-     * Indicate if a property is the channes property of sinks
+     * Indicate if a property is the channel property of sinks
      * @param propertyName String with the name of the property
      * @return boolean true if the property is the channel property of sinks, false otherwise
      */
@@ -751,6 +774,18 @@ public class FlumeConfiguratorUtils {
                 propertyName.endsWith(FlumeConfiguratorConstants.CHANNEL_PROPERTY);
     }
 
+
+    /**
+     * Indicate if a property is the sinks property of sinkgroups
+     * @param propertyName String with the name of the property
+     * @return boolean true if the property is the sinks property of sinkgroups, false otherwise
+     */
+    public static boolean isSinkGroupsSinksProperty(String propertyName) {
+
+        return (propertyName.startsWith(FlumeConfiguratorConstants.SINKGROUPS_COMMON_PROPERTY_PROPERTIES_PREFIX) ||
+                propertyName.startsWith(FlumeConfiguratorConstants.SINKGROUPS_PARTIAL_PROPERTY_PROPERTIES_PREFIX)) &&
+                propertyName.endsWith(FlumeConfiguratorConstants.SINKS_PROPERTY);
+    }
 
     /**
      * Split the value of a property

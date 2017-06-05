@@ -12,7 +12,7 @@ import org.keedio.flume.configurator.structures.AgentConfigurationProperties;
 import org.keedio.flume.configurator.structures.LinkedProperties;
 import org.keedio.flume.configurator.structures.PartialProperties;
 import org.keedio.flume.configurator.utils.FlumeConfiguratorUtils;
-import org.keedio.flume.configurator.validator.ConfigurationValidator;
+import org.keedio.flume.configurator.validator.BaseConfigurationValidator;
 import org.slf4j.LoggerFactory;
 
 public class FlumePropertiesGenerator {
@@ -633,6 +633,11 @@ public class FlumePropertiesGenerator {
                     configurationFinalMap.get(agentName).getListGeneralProperties().add(agentPropertyEntry);
                     logger.debug("ADD GENERAL SINKS PROPERTY");
 
+                } else if ((propertyKeyPartsArray.length == 2) && (propertyKeyPartsArray[1].equals(FlumeConfiguratorConstants.SINKGROUPS_PROPERTY))) {
+                    //Sink groups general property
+                    configurationFinalMap.get(agentName).getListGeneralProperties().add(agentPropertyEntry);
+                    logger.debug("ADD GENERAL SINK GROUPS PROPERTY");
+
                 } else if ((propertyKeyPartsArray.length > 2) && (propertyKeyPartsArray[1].equals(FlumeConfiguratorConstants.SOURCES_PROPERTY)) && (!propertyKeyPartsArray[3].equals(FlumeConfiguratorConstants.INTERCEPTORS_PROPERTY))) {
                     //Sources properties (no interceptors properties)
                     String sourceName = propertyKeyPartsArray[2];
@@ -659,6 +664,15 @@ public class FlumePropertiesGenerator {
 
                     configurationFinalMap.get(agentName).getMapGroupProperties().get(groupName).getListSinkProperties().add(agentPropertyEntry);
                     logger.debug("ADD SINK PROPERTY FOR GROUP " + groupName);
+
+                } else if ((propertyKeyPartsArray.length > 2) && (propertyKeyPartsArray[1].equals(FlumeConfiguratorConstants.SINKGROUPS_PROPERTY))) {
+                    //Sink groups properties
+                    String sinkGroupName = propertyKeyPartsArray[2];
+                    String groupName = FlumeConfiguratorUtils.getGroupFromElement(agentGroupsConfiguration, sinkGroupName);
+                    logger.debug("Group of Property " + sinkGroupName + " = " + groupName);
+
+                    configurationFinalMap.get(agentName).getMapGroupProperties().get(groupName).getListSinkGroupProperties().add(agentPropertyEntry);
+                    logger.debug("ADD SINKGROUP PROPERTY FOR GROUP " + groupName);
 
                 } else if ((propertyKeyPartsArray.length == 4) && (propertyKeyPartsArray[3].equals(FlumeConfiguratorConstants.INTERCEPTORS_PROPERTY))) {
                     //Sources Interceptors
@@ -816,9 +830,10 @@ public class FlumePropertiesGenerator {
         }
 
         boolean isPropertiesFileOK;
-        ConfigurationValidator configurationValidator;
+        BaseConfigurationValidator configurationValidator;
         Map<String, List<String>> mapAgentChannels;
         Map<String, List<String>> mapAgentSinks;
+        Map<String, List<String>> mapAgentSinkGroups;
 
         try {
 
@@ -829,7 +844,7 @@ public class FlumePropertiesGenerator {
             loadPropertiesFile();
 
             //Properties file validation
-            configurationValidator = new ConfigurationValidator(flumeConfigurationProperties,elementsCharacterSeparator);
+            configurationValidator = new BaseConfigurationValidator(flumeConfigurationProperties,elementsCharacterSeparator);
             configurationValidator.validateConfiguration();
 
             isPropertiesFileOK = configurationValidator.isPropertiesFileOK();
@@ -848,6 +863,9 @@ public class FlumePropertiesGenerator {
 
                 //Generate Agents Sinks
                 mapAgentSinks = generateAgentElements(FlumeConfiguratorConstants.SINKS_LIST_PROPERTIES_PREFIX, FlumeConfiguratorConstants.SINKS_PROPERTY);
+
+                //Generate Agents Sink Groups
+                mapAgentSinkGroups = generateAgentElements(FlumeConfiguratorConstants.SINKGROUPS_LIST_PROPERTIES_PREFIX, FlumeConfiguratorConstants.SINKGROUPS_PROPERTY);
 
                 //Generate Sources Common Properties
                 generateElementsCommonProperties(FlumeConfiguratorConstants.SOURCES_COMMON_PROPERTY_PROPERTIES_PREFIX, FlumeConfiguratorConstants.SOURCES_PROPERTY, mapAgentSources);
@@ -875,6 +893,12 @@ public class FlumePropertiesGenerator {
 
                 //Generate Sinks Partial Properties
                 generateElementsPartialProperties(FlumeConfiguratorConstants.SINKS_PARTIAL_PROPERTY_PROPERTIES_PREFIX, FlumeConfiguratorConstants.SINKS_PROPERTY, mapAgentSinks);
+
+                //Generate SinkGroups Common Properties
+                generateElementsCommonProperties(FlumeConfiguratorConstants.SINKGROUPS_COMMON_PROPERTY_PROPERTIES_PREFIX, FlumeConfiguratorConstants.SINKGROUPS_PROPERTY, mapAgentSinkGroups);
+
+                //Generate SinkGroups Partial Properties
+                generateElementsPartialProperties(FlumeConfiguratorConstants.SINKGROUPS_PARTIAL_PROPERTY_PROPERTIES_PREFIX, FlumeConfiguratorConstants.SINKGROUPS_PROPERTY, mapAgentSinkGroups);
 
                 //Generate final structure
                 generateFinalStructureMap();
@@ -927,9 +951,10 @@ public class FlumePropertiesGenerator {
         }
 
         boolean isPropertiesFileOK;
-        ConfigurationValidator configurationValidator;
+        BaseConfigurationValidator configurationValidator;
         Map<String, List<String>> mapAgentChannels;
         Map<String, List<String>> mapAgentSinks;
+        Map<String, List<String>> mapAgentSinkGroups;
 
         try {
 
@@ -943,7 +968,7 @@ public class FlumePropertiesGenerator {
             flumeConfigurationProperties.load(new StringReader(properties));
 
             //Properties file validation
-            configurationValidator = new ConfigurationValidator(flumeConfigurationProperties,elementsCharacterSeparator);
+            configurationValidator = new BaseConfigurationValidator(flumeConfigurationProperties,elementsCharacterSeparator);
             configurationValidator.validateConfiguration();
 
             isPropertiesFileOK = configurationValidator.isPropertiesFileOK();
@@ -963,6 +988,9 @@ public class FlumePropertiesGenerator {
 
                 //Generate Agents Sinks
                 mapAgentSinks = generateAgentElements(FlumeConfiguratorConstants.SINKS_LIST_PROPERTIES_PREFIX, FlumeConfiguratorConstants.SINKS_PROPERTY);
+
+                //Generate Agents Sink Groups
+                mapAgentSinkGroups = generateAgentElements(FlumeConfiguratorConstants.SINKGROUPS_LIST_PROPERTIES_PREFIX, FlumeConfiguratorConstants.SINKGROUPS_PROPERTY);
 
                 //Generate Sources Common Properties
                 generateElementsCommonProperties(FlumeConfiguratorConstants.SOURCES_COMMON_PROPERTY_PROPERTIES_PREFIX, FlumeConfiguratorConstants.SOURCES_PROPERTY, mapAgentSources);
@@ -990,6 +1018,12 @@ public class FlumePropertiesGenerator {
 
                 //Generate Sinks Partial Properties
                 generateElementsPartialProperties(FlumeConfiguratorConstants.SINKS_PARTIAL_PROPERTY_PROPERTIES_PREFIX, FlumeConfiguratorConstants.SINKS_PROPERTY, mapAgentSinks);
+
+                //Generate SinkGroups Common Properties
+                generateElementsCommonProperties(FlumeConfiguratorConstants.SINKGROUPS_COMMON_PROPERTY_PROPERTIES_PREFIX, FlumeConfiguratorConstants.SINKGROUPS_PROPERTY, mapAgentSinkGroups);
+
+                //Generate SinkGroups Partial Properties
+                generateElementsPartialProperties(FlumeConfiguratorConstants.SINKGROUPS_PARTIAL_PROPERTY_PROPERTIES_PREFIX, FlumeConfiguratorConstants.SINKGROUPS_PROPERTY, mapAgentSinkGroups);
 
                 //Generate final structure
                 generateFinalStructureMap();
