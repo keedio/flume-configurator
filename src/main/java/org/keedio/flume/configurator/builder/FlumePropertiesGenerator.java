@@ -12,7 +12,7 @@ import org.keedio.flume.configurator.structures.AgentConfigurationProperties;
 import org.keedio.flume.configurator.structures.LinkedProperties;
 import org.keedio.flume.configurator.structures.PartialProperties;
 import org.keedio.flume.configurator.utils.FlumeConfiguratorUtils;
-import org.keedio.flume.configurator.validator.ConfigurationValidator;
+import org.keedio.flume.configurator.validator.BaseConfigurationValidator;
 import org.slf4j.LoggerFactory;
 
 public class FlumePropertiesGenerator {
@@ -830,7 +830,7 @@ public class FlumePropertiesGenerator {
         }
 
         boolean isPropertiesFileOK;
-        ConfigurationValidator configurationValidator;
+        BaseConfigurationValidator configurationValidator;
         Map<String, List<String>> mapAgentChannels;
         Map<String, List<String>> mapAgentSinks;
         Map<String, List<String>> mapAgentSinkGroups;
@@ -844,7 +844,7 @@ public class FlumePropertiesGenerator {
             loadPropertiesFile();
 
             //Properties file validation
-            configurationValidator = new ConfigurationValidator(flumeConfigurationProperties,elementsCharacterSeparator);
+            configurationValidator = new BaseConfigurationValidator(flumeConfigurationProperties,elementsCharacterSeparator);
             configurationValidator.validateConfiguration();
 
             isPropertiesFileOK = configurationValidator.isPropertiesFileOK();
@@ -951,7 +951,7 @@ public class FlumePropertiesGenerator {
         }
 
         boolean isPropertiesFileOK;
-        ConfigurationValidator configurationValidator;
+        BaseConfigurationValidator configurationValidator;
         Map<String, List<String>> mapAgentChannels;
         Map<String, List<String>> mapAgentSinks;
         Map<String, List<String>> mapAgentSinkGroups;
@@ -968,7 +968,7 @@ public class FlumePropertiesGenerator {
             flumeConfigurationProperties.load(new StringReader(properties));
 
             //Properties file validation
-            configurationValidator = new ConfigurationValidator(flumeConfigurationProperties,elementsCharacterSeparator);
+            configurationValidator = new BaseConfigurationValidator(flumeConfigurationProperties,elementsCharacterSeparator);
             configurationValidator.validateConfiguration();
 
             isPropertiesFileOK = configurationValidator.isPropertiesFileOK();

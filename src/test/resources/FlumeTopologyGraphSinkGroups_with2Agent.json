@@ -458,7 +458,7 @@
   { type: 'SinkGroup',
     id: '70c8433e-ab52-44c3-9894-72fa4fef53f6',
     data:
-    { 'elementTopologyName':'g1',
+    { 'elementTopologyName':'sinkgroup1',
       'elementTopologyName_comment': 'comment elementTopologyName property',
       'processor.type':'failover',
       'processor.type_comment':'comment processor.type property',
@@ -472,7 +472,7 @@
   { type: 'SinkGroup',
     id: 'bef668c5-baa1-47d7-a83b-9f2ff450fe2f',
     data:
-    { 'elementTopologyName':'g2',
+    { 'elementTopologyName':'sinkgroup2',
       'elementTopologyName_comment': 'comment elementTopologyName property',
       'processor.type':'load_balance',
       'processor.type_comment':'comment processor.type property',

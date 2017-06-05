@@ -26,6 +26,7 @@ public class FlumeConfiguratorConstants {
     public static final String SINKGROUPS_PROPERTY = "sinkgroups";
     public static final String INTERCEPTORS_PROPERTY = "interceptors";
     public static final String TYPE_PROPERTY = "type";
+    public static final String PROCESSOR_PROPERTY = "processor";
     public static final String COMMENT_PROPERTY_PREFIX = "comment";
     public static final String COMMENT_PREFIX = "# ";
 
@@ -81,6 +82,7 @@ public class FlumeConfiguratorConstants {
     public static final int SOURCES_LIST_PROPERTY_PART_INDEX = 2;
     public static final int CHANNELS_LIST_PROPERTY_PART_INDEX = 2;
     public static final int SINKS_LIST_PROPERTY_PART_INDEX = 2;
+    public static final int SINKGROUPS_LIST_PROPERTY_PART_INDEX = 2;
     public static final int INTERCEPTORS_LIST_PROPERTY_PART_INDEX = 4;
 
     public static final int ELEMENT_PROPERTY_PART_INDEX = 3;
@@ -88,6 +90,8 @@ public class FlumeConfiguratorConstants {
     public static final int SOURCE_INTERCEPTORS_PART_INDEX = 4;
     public static final int SOURCE_CHANNELS_PART_INDEX = 4;
     public static final int SINK_CHANNEL_PART_INDEX = 4;
+    public static final int SINKGROUP_PROCESSOR_PART_INDEX = 4;
+    public static final int SINKGROUP_SINKS_PART_INDEX = 4;
 
     public static final String FLUME_TYPE_PROPERTY = "flumeType";
     public static final String DRAW2D_START_TYPE = "draw2d.shape.node.Start";
@@ -115,6 +119,7 @@ public class FlumeConfiguratorConstants {
     public static final String CANVAS_INTERCEPTOR_BGCOLOR = "#99FFFF";
     public static final String CANVAS_CHANNEL_BGCOLOR = "#99FF99";
     public static final String CANVAS_SINK_BGCOLOR = "#FF99FF";
+    public static final String CANVAS_SINKGROUP_BGCOLOR = "#f44242";
 
     public static final String CANVAS_ELEMENT_COLOR = "#000000";
     public static final String CANVAS_ELEMENT_STROKE= "1";
@@ -133,6 +138,8 @@ public class FlumeConfiguratorConstants {
 
     public static final String BASE_CONFIGURATION_KEY = "baseConfiguration";
     public static final String FLUME_CONFIGURATION_KEY = "FLUMEConfiguration";
+
+    public static final int FIXED_SLICES_NUMBER = 4;
 
 
     private FlumeConfiguratorConstants() {

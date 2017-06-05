@@ -1360,8 +1360,8 @@ public class FlumeConfiguratorTopologyUtils {
 
     /**
      * Get the number of slices to divide the canvas size
-     * @param flumeGraphTopology IGraph
-     * @param agentName IGraph with the topology
+     * @param flumeGraphTopology map with the graph topology of agents
+     * @param agentName name of the agent
      * @return number of slices to divide the canvas size
      */
     public static int calculateSlicesNumber(Map<String, IGraph> flumeGraphTopology, String agentName) {
@@ -1383,6 +1383,7 @@ public class FlumeConfiguratorTopologyUtils {
 
                 int interceptorsNumber = 0;
                 int maxInterceptorsNumber = 0;
+                boolean withSinkGroup = false;
 
                 //Get the descendants of the source
                 for (FlumeTopology source : sourcesList) {
@@ -1401,6 +1402,10 @@ public class FlumeConfiguratorTopologyUtils {
                             if (sourceChild.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR)) {
                                 interceptorsNumber ++;
                             }
+
+                            if (sourceChild.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP)) {
+                                withSinkGroup = true;
+                            }
                         }
 
                         if (interceptorsNumber > maxInterceptorsNumber) {
@@ -1409,7 +1414,11 @@ public class FlumeConfiguratorTopologyUtils {
                     }
                 }
 
-                maxSlicesNumber = maxInterceptorsNumber + 4;
+                int fixedSlicesNumber = FlumeConfiguratorConstants.FIXED_SLICES_NUMBER;
+                if (withSinkGroup) {
+                    fixedSlicesNumber++;
+                }
+                maxSlicesNumber = maxInterceptorsNumber + fixedSlicesNumber;
 
                 logger.debug("Max interceptors number agent: " + agentName + " = " + maxInterceptorsNumber);
                 logger.debug("Max slices number agent: " + agentName + " = " + maxSlicesNumber);
@@ -1424,6 +1433,7 @@ public class FlumeConfiguratorTopologyUtils {
 
         return maxSlicesNumber;
     }
+
 
 
     /**
@@ -1871,5 +1881,110 @@ public class FlumeConfiguratorTopologyUtils {
         return optimalSourcesPermutation;
     }
 
+    /**
+     * Detect existence of a sinkgroup slice
+     * @param flumeGraphTopology map with the graph topology of agents
+     * @param agentName name of the agent
+     * @return true if the agent has a sinkgroup element, false otherwise
+     */
+    public static boolean existSinkGroupSlice(Map<String, IGraph> flumeGraphTopology, String agentName) {
 
+        boolean existSinkGroupSlice = false;
+
+        if (flumeGraphTopology != null && agentName != null && !agentName.isEmpty()) {
+
+            IGraph agentGraph = flumeGraphTopology.get(agentName);
+
+            if (agentGraph != null) {
+                FlumeTopology agentVertex = FlumeConfiguratorTopologyUtils.getAgentVertexFromGraph(agentGraph);
+
+                Set<FlumeTopology> agentChildren = agentGraph.getVertexDescendants(agentVertex);
+                Iterator<FlumeTopology> itAgentChildren = agentChildren.iterator();
+
+                while (itAgentChildren.hasNext()) {
+                    FlumeTopology agentChild = itAgentChildren.next();
+
+                    if (agentChild.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP)) {
+                        existSinkGroupSlice = true;
+                    }
+                }
+            }
+        }
+
+        return existSinkGroupSlice;
+    }
+
+
+    /**
+     * Get a list with the Flume topology elements of the searched type for an agent
+     * @param flumeGraphTopology map with the graph topology of agents
+     * @param agentName name of the agent
+     * @param elementType Type of the searched elements
+     * @return a list with the Flume topology elements of the searched type for an agent
+     */
+    public static List<FlumeTopology> getListFlumeTopologyByType(Map<String, IGraph> flumeGraphTopology, String agentName, String elementType) {
+
+
+        List<FlumeTopology> listFlumeTopologyByType = new ArrayList<>();
+
+        if (flumeGraphTopology != null && agentName != null && !agentName.isEmpty() && elementType != null && !elementType.isEmpty()) {
+
+            IGraph agentGraph = flumeGraphTopology.get(agentName);
+
+            if (agentGraph != null) {
+
+                FlumeTopology agentVertex = FlumeConfiguratorTopologyUtils.getAgentVertexFromGraph(agentGraph);
+
+                if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_AGENT.equals(elementType)) {
+                    listFlumeTopologyByType.add(agentVertex);
+                } else {
+
+                    Set<FlumeTopology> agentChildren = agentGraph.getVertexDescendants(agentVertex);
+                    Iterator<FlumeTopology> itAgentChildren = agentChildren.iterator();
+
+                    while (itAgentChildren.hasNext()) {
+                        FlumeTopology agentChild = itAgentChildren.next();
+
+                        if (agentChild.getType().equals(elementType)) {
+                            listFlumeTopologyByType.add(agentChild);
+                        }
+                    }
+                }
+            }
+        }
+
+        return listFlumeTopologyByType;
+    }
+
+
+    /**
+     * Get relation between shared sinkgroups and sources
+     * @param sharedSources list of shared sources
+     * @param sourcesSinkGroupsRelationsMap relation between sources and sinkgroups
+     * @return Relation between shared sinkgroups and sources
+     */
+    public static Map<String, List<String>> getMapSharedSinkGroupsSourcesRelation(List<String> sharedSources, Map<String, List<String>> sourcesSinkGroupsRelationsMap) {
+
+        Map<String, List<String>> mapSharedSinkGroupsSourcesRelation = new HashMap<>();
+
+        if (sharedSources != null && sourcesSinkGroupsRelationsMap != null) {
+            for(String sharedSourceName : sharedSources) {
+
+                //Get sinkgroups of the shared source
+                List<String> sharedSinkGroupsList = sourcesSinkGroupsRelationsMap.get(sharedSourceName);
+
+                for(String sharedSinkGroupName : sharedSinkGroupsList) {
+
+                    if (mapSharedSinkGroupsSourcesRelation.get(sharedSinkGroupName) == null) {
+                        mapSharedSinkGroupsSourcesRelation.put(sharedSinkGroupName, new ArrayList<>());
+                    }
+                    if (!mapSharedSinkGroupsSourcesRelation.get(sharedSinkGroupName).contains(sharedSourceName)) {
+                        mapSharedSinkGroupsSourcesRelation.get(sharedSinkGroupName).add(sharedSourceName);
+                    }
+                }
+            }
+        }
+
+        return mapSharedSinkGroupsSourcesRelation;
+    }
 }

@@ -12,18 +12,18 @@ import org.keedio.flume.configurator.structures.LinkedProperties;
 import org.keedio.flume.configurator.utils.FlumeConfiguratorUtils;
 import org.slf4j.LoggerFactory;
 
-public class ConfigurationValidator {
+public class BaseConfigurationValidator {
 
-    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(ConfigurationValidator.class);
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(BaseConfigurationValidator.class);
 
-    private Properties flumeConfigurationProperties;
+    private Properties baseConfigurationProperties;
     private StringBuilder sbCheckErrors;
     private boolean isPropertiesFileOK;
     private String elementsCharacterSeparator;
 
 
-    public ConfigurationValidator(Properties flumeConfigurationProperties, String elementsCharacterSeparator) {
-        this.flumeConfigurationProperties = flumeConfigurationProperties;
+    public BaseConfigurationValidator(Properties flumeConfigurationProperties, String elementsCharacterSeparator) {
+        this.baseConfigurationProperties = flumeConfigurationProperties;
         sbCheckErrors = new StringBuilder();
         isPropertiesFileOK = true;
         this.elementsCharacterSeparator = elementsCharacterSeparator;
@@ -57,7 +57,7 @@ public class ConfigurationValidator {
         boolean isPropertiesCheckFileOK = true;
 
         //CHECK elements list
-        LinkedProperties elementsListProperties = FlumeConfiguratorUtils.matchingSubset(flumeConfigurationProperties, prefixProperty, true);
+        LinkedProperties elementsListProperties = FlumeConfiguratorUtils.matchingSubset(baseConfigurationProperties, prefixProperty, true);
 
         if (elementsListProperties.size() == 0) {
             isPropertiesCheckFileOK = false;
@@ -69,7 +69,7 @@ public class ConfigurationValidator {
 
                 String keySubsetFind = prefixProperty + FlumeConfiguratorConstants.DOT_SEPARATOR + agentNameList;
 
-                if (FlumeConfiguratorUtils.matchingSubset(flumeConfigurationProperties, keySubsetFind, true).size() == 0) {
+                if (FlumeConfiguratorUtils.matchingSubset(baseConfigurationProperties, keySubsetFind, true).size() == 0) {
                     isPropertiesCheckFileOK = false;
                     sbCheckErrors.append(FlumeConfiguratorConstants.CONFIGURATION_ERROR).append("There is no ").append(prefixProperty).append(" property for agent [").append(agentNameList).append("]").append(FlumeConfiguratorConstants.NEW_LINE);
                 }
@@ -116,7 +116,7 @@ public class ConfigurationValidator {
 
         boolean isPropertiesCheckFileOK = true;
 
-        LinkedProperties sinkGroupsListProperties = FlumeConfiguratorUtils.matchingSubset(flumeConfigurationProperties, FlumeConfiguratorConstants.SINKGROUPS_LIST_PROPERTIES_PREFIX, true);
+        LinkedProperties sinkGroupsListProperties = FlumeConfiguratorUtils.matchingSubset(baseConfigurationProperties, FlumeConfiguratorConstants.SINKGROUPS_LIST_PROPERTIES_PREFIX, true);
 
 
         for (Object keyObject : sinkGroupsListProperties.keySet()) {
@@ -157,7 +157,7 @@ public class ConfigurationValidator {
         boolean isPropertiesCheckFileOK = true;
         Map<String, List<String>> mapAgentsElements = new HashMap<>();
 
-        LinkedProperties groupsListProperties = FlumeConfiguratorUtils.matchingSubset(flumeConfigurationProperties, FlumeConfiguratorConstants.GROUPS_LIST_PROPERTIES_PREFIX, true);
+        LinkedProperties groupsListProperties = FlumeConfiguratorUtils.matchingSubset(baseConfigurationProperties, FlumeConfiguratorConstants.GROUPS_LIST_PROPERTIES_PREFIX, true);
 
         if (groupsListProperties.size() == 0) {
             isPropertiesCheckFileOK = false;
@@ -186,10 +186,10 @@ public class ConfigurationValidator {
                     List<String> listValuesProperty = Arrays.asList(FlumeConfiguratorUtils.splitWithoutSpacesOptional(valuesProperty,true,elementsCharacterSeparator));
 
                     //Generate a list with all sources, channels and sinks for the agent
-                    String sourcesAgent = flumeConfigurationProperties.getProperty( FlumeConfiguratorConstants.SOURCES_LIST_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + agentName);
-                    String channelsAgent = flumeConfigurationProperties.getProperty( FlumeConfiguratorConstants.CHANNELS_LIST_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + agentName);
-                    String sinksAgent = flumeConfigurationProperties.getProperty( FlumeConfiguratorConstants.SINKS_LIST_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + agentName);
-                    String sinkGroupsAgent = flumeConfigurationProperties.getProperty( FlumeConfiguratorConstants.SINKGROUPS_LIST_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + agentName);
+                    String sourcesAgent = baseConfigurationProperties.getProperty( FlumeConfiguratorConstants.SOURCES_LIST_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + agentName);
+                    String channelsAgent = baseConfigurationProperties.getProperty( FlumeConfiguratorConstants.CHANNELS_LIST_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + agentName);
+                    String sinksAgent = baseConfigurationProperties.getProperty( FlumeConfiguratorConstants.SINKS_LIST_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + agentName);
+                    String sinkGroupsAgent = baseConfigurationProperties.getProperty( FlumeConfiguratorConstants.SINKGROUPS_LIST_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + agentName);
 
                     List<String> listSourcesChannelsSinksAgent = new ArrayList<>();
 
@@ -236,10 +236,10 @@ public class ConfigurationValidator {
             //For every agent, check all his elements have been assigned
             for (String agentName : mapAgentsElements.keySet()) {
 
-                String sourcesAgent = flumeConfigurationProperties.getProperty( FlumeConfiguratorConstants.SOURCES_LIST_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + agentName);
-                String channelsAgent = flumeConfigurationProperties.getProperty( FlumeConfiguratorConstants.CHANNELS_LIST_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + agentName);
-                String sinksAgent = flumeConfigurationProperties.getProperty( FlumeConfiguratorConstants.SINKS_LIST_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + agentName);
-                String sinkGroupsAgent = flumeConfigurationProperties.getProperty( FlumeConfiguratorConstants.SINKGROUPS_LIST_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + agentName);
+                String sourcesAgent = baseConfigurationProperties.getProperty( FlumeConfiguratorConstants.SOURCES_LIST_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + agentName);
+                String channelsAgent = baseConfigurationProperties.getProperty( FlumeConfiguratorConstants.CHANNELS_LIST_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + agentName);
+                String sinksAgent = baseConfigurationProperties.getProperty( FlumeConfiguratorConstants.SINKS_LIST_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + agentName);
+                String sinkGroupsAgent = baseConfigurationProperties.getProperty( FlumeConfiguratorConstants.SINKGROUPS_LIST_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + agentName);
                 int sourcesNum = 0;
                 int channelsNum = 0;
                 int sinksNum = 0;
@@ -287,12 +287,12 @@ public class ConfigurationValidator {
 
         boolean isPropertiesCheckFileOK = true;
 
-        LinkedProperties interceptorsListProperties = FlumeConfiguratorUtils.matchingSubset(flumeConfigurationProperties, FlumeConfiguratorConstants.INTERCEPTORS_LIST_PROPERTIES_PREFIX, true);
+        LinkedProperties interceptorsListProperties = FlumeConfiguratorUtils.matchingSubset(baseConfigurationProperties, FlumeConfiguratorConstants.INTERCEPTORS_LIST_PROPERTIES_PREFIX, true);
 
         //Generate a list with all sources from all agents
         List<String> listSourcesAllAgents = new ArrayList<>();
         for (String agentNameList : agentsList) {
-            String sourcesAgent = flumeConfigurationProperties.getProperty( FlumeConfiguratorConstants.SOURCES_LIST_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + agentNameList);
+            String sourcesAgent = baseConfigurationProperties.getProperty( FlumeConfiguratorConstants.SOURCES_LIST_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + agentNameList);
             if (sourcesAgent != null) {
                 listSourcesAllAgents.addAll(Arrays.asList(FlumeConfiguratorUtils.splitWithoutSpacesOptional(sourcesAgent,true,elementsCharacterSeparator)));
             }
@@ -341,12 +341,12 @@ public class ConfigurationValidator {
         List<String> listSinksAllAgents = new ArrayList<>();
 
         for (String agentNameList : agentsList) {
-            String channelsAgent = flumeConfigurationProperties.getProperty(FlumeConfiguratorConstants.CHANNELS_LIST_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + agentNameList);
+            String channelsAgent = baseConfigurationProperties.getProperty(FlumeConfiguratorConstants.CHANNELS_LIST_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + agentNameList);
             if (channelsAgent != null) {
                 listChannelsAllAgents.addAll(Arrays.asList(FlumeConfiguratorUtils.splitWithoutSpacesOptional(channelsAgent,true,elementsCharacterSeparator)));
             }
 
-            String sinksAgent = flumeConfigurationProperties.getProperty(FlumeConfiguratorConstants.SINKS_LIST_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + agentNameList);
+            String sinksAgent = baseConfigurationProperties.getProperty(FlumeConfiguratorConstants.SINKS_LIST_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + agentNameList);
             if (sinksAgent != null) {
                 listSinksAllAgents.addAll(Arrays.asList(FlumeConfiguratorUtils.splitWithoutSpacesOptional(sinksAgent,true,elementsCharacterSeparator)));
             }
@@ -354,7 +354,7 @@ public class ConfigurationValidator {
 
 
 
-        LinkedProperties commonPropertiesList = FlumeConfiguratorUtils.matchingSubset(flumeConfigurationProperties, prefixProperty, true);
+        LinkedProperties commonPropertiesList = FlumeConfiguratorUtils.matchingSubset(baseConfigurationProperties, prefixProperty, true);
 
         for (Object keyObject : commonPropertiesList.keySet()) {
 
@@ -368,7 +368,7 @@ public class ConfigurationValidator {
             if (propertyName.startsWith(FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX)) {
 
                 String propertyReference = propertyName.substring(FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX.length());
-                String valuesPropertyReference = flumeConfigurationProperties.getProperty(prefixProperty + propertyReference);
+                String valuesPropertyReference = baseConfigurationProperties.getProperty(prefixProperty + propertyReference);
 
                 if (valuesPropertyReference == null) {
                     isPropertiesCheckFileOK = false;
@@ -387,7 +387,7 @@ public class ConfigurationValidator {
                         //Get the list of agents of the channel(s) (the channels of a source can be multiple and separated by white spaces)
                         List<String> listChannels = Arrays.asList(FlumeConfiguratorUtils.splitWithoutSpacesOptional(valuesProperty,false,FlumeConfiguratorConstants.WHITE_SPACE_REGEX));
                         for (String channel : listChannels) {
-                            List<String> listAgentsChannelPartial = FlumeConfiguratorUtils.getElementsAgents(flumeConfigurationProperties, FlumeConfiguratorConstants.CHANNELS_LIST_PROPERTIES_PREFIX, channel);
+                            List<String> listAgentsChannelPartial = FlumeConfiguratorUtils.getElementsAgents(baseConfigurationProperties, FlumeConfiguratorConstants.CHANNELS_LIST_PROPERTIES_PREFIX, channel);
                             if (listAgentsChannelPartial.isEmpty()) {
                                 //There is no agent for the channel
                                 isPropertiesCheckFileOK = false;
@@ -429,7 +429,7 @@ public class ConfigurationValidator {
                         //Get the list of agents of the sink(s) (the sinks of a sinkgroup can be multiple and separated by white spaces)
                         List<String> listSinks = Arrays.asList(FlumeConfiguratorUtils.splitWithoutSpacesOptional(valuesProperty,false,FlumeConfiguratorConstants.WHITE_SPACE_REGEX));
                         for (String sink : listSinks) {
-                            List<String> listAgentsSinkPartial = FlumeConfiguratorUtils.getElementsAgents(flumeConfigurationProperties, FlumeConfiguratorConstants.SINKS_LIST_PROPERTIES_PREFIX, sink);
+                            List<String> listAgentsSinkPartial = FlumeConfiguratorUtils.getElementsAgents(baseConfigurationProperties, FlumeConfiguratorConstants.SINKS_LIST_PROPERTIES_PREFIX, sink);
                             if (listAgentsSinkPartial.isEmpty()) {
                                 //There is no agent for the sink
                                 isPropertiesCheckFileOK = false;
@@ -472,41 +472,41 @@ public class ConfigurationValidator {
         List<String> listAgentsSinkGroup = new ArrayList<>();
 
         for (String agentNameList : agentsList) {
-            String sourcesAgent = flumeConfigurationProperties.getProperty(FlumeConfiguratorConstants.SOURCES_LIST_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + agentNameList);
+            String sourcesAgent = baseConfigurationProperties.getProperty(FlumeConfiguratorConstants.SOURCES_LIST_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + agentNameList);
             if (sourcesAgent != null) {
                 listSourcesAllAgents.addAll(Arrays.asList(FlumeConfiguratorUtils.splitWithoutSpacesOptional(sourcesAgent,true,elementsCharacterSeparator)));
             }
         }
 
         for (String agentNameList : agentsList) {
-            String channelsAgent = flumeConfigurationProperties.getProperty(FlumeConfiguratorConstants.CHANNELS_LIST_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + agentNameList);
+            String channelsAgent = baseConfigurationProperties.getProperty(FlumeConfiguratorConstants.CHANNELS_LIST_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + agentNameList);
             if (channelsAgent != null) {
                 listChannelsAllAgents.addAll(Arrays.asList(FlumeConfiguratorUtils.splitWithoutSpacesOptional(channelsAgent,true,elementsCharacterSeparator)));
             }
         }
 
         for (String agentNameList : agentsList) {
-            String sinksAgent = flumeConfigurationProperties.getProperty(FlumeConfiguratorConstants.SINKS_LIST_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + agentNameList);
+            String sinksAgent = baseConfigurationProperties.getProperty(FlumeConfiguratorConstants.SINKS_LIST_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + agentNameList);
             if (sinksAgent != null) {
                 listSinksAllAgents.addAll(Arrays.asList(FlumeConfiguratorUtils.splitWithoutSpacesOptional(sinksAgent,true,elementsCharacterSeparator)));
             }
         }
 
         for (String agentNameList : agentsList) {
-            String sinkGroupsAgent = flumeConfigurationProperties.getProperty(FlumeConfiguratorConstants.SINKGROUPS_LIST_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + agentNameList);
+            String sinkGroupsAgent = baseConfigurationProperties.getProperty(FlumeConfiguratorConstants.SINKGROUPS_LIST_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + agentNameList);
             if (sinkGroupsAgent != null) {
                 listSinkGroupsAllAgents.addAll(Arrays.asList(FlumeConfiguratorUtils.splitWithoutSpacesOptional(sinkGroupsAgent,true,elementsCharacterSeparator)));
             }
         }
 
         for (String sourceNameList : listSourcesAllAgents) {
-            String interceptorsSource = flumeConfigurationProperties.getProperty(FlumeConfiguratorConstants.INTERCEPTORS_LIST_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + sourceNameList);
+            String interceptorsSource = baseConfigurationProperties.getProperty(FlumeConfiguratorConstants.INTERCEPTORS_LIST_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + sourceNameList);
             if (interceptorsSource != null) {
                 listInterceptorsAllSources.addAll(Arrays.asList(FlumeConfiguratorUtils.splitWithoutSpacesOptional(interceptorsSource,true,elementsCharacterSeparator)));
             }
         }
 
-        LinkedProperties partialPropertiesList = FlumeConfiguratorUtils.matchingSubset(flumeConfigurationProperties, prefixProperty, true);
+        LinkedProperties partialPropertiesList = FlumeConfiguratorUtils.matchingSubset(baseConfigurationProperties, prefixProperty, true);
 
         for (Object keyObject : partialPropertiesList.keySet()) {
 
@@ -527,7 +527,7 @@ public class ConfigurationValidator {
 
                     //Check propertyValues property exists
                     String propertyReference = propertyName.substring(FlumeConfiguratorConstants.PARTIAL_PROPERTY_APPLIED_ELEMENTS_PROPERTIES_PREFIX.length());
-                    String valuesPropertyReference = flumeConfigurationProperties.getProperty(prefixProperty + FlumeConfiguratorConstants.DOT_SEPARATOR + FlumeConfiguratorConstants.PARTIAL_PROPERTY_PROPERTY_VALUES_PROPERTIES_PREFIX + propertyReference);
+                    String valuesPropertyReference = baseConfigurationProperties.getProperty(prefixProperty + FlumeConfiguratorConstants.DOT_SEPARATOR + FlumeConfiguratorConstants.PARTIAL_PROPERTY_PROPERTY_VALUES_PROPERTIES_PREFIX + propertyReference);
 
                     if (valuesPropertyReference == null) {
                         isPropertiesCheckFileOK = false;
@@ -560,7 +560,7 @@ public class ConfigurationValidator {
 
                     //Check appliedElements property exists
                     String propertyReference = propertyName.substring(FlumeConfiguratorConstants.PARTIAL_PROPERTY_PROPERTY_VALUES_PROPERTIES_PREFIX.length());
-                    String valuesPropertyReference = flumeConfigurationProperties.getProperty(prefixProperty + FlumeConfiguratorConstants.DOT_SEPARATOR + FlumeConfiguratorConstants.PARTIAL_PROPERTY_APPLIED_ELEMENTS_PROPERTIES_PREFIX + propertyReference);
+                    String valuesPropertyReference = baseConfigurationProperties.getProperty(prefixProperty + FlumeConfiguratorConstants.DOT_SEPARATOR + FlumeConfiguratorConstants.PARTIAL_PROPERTY_APPLIED_ELEMENTS_PROPERTIES_PREFIX + propertyReference);
 
                     if (valuesPropertyReference == null) {
                         isPropertiesCheckFileOK = false;
@@ -585,7 +585,7 @@ public class ConfigurationValidator {
                                 //Get the list of agents of the channel(s) (the channels of a source can be multiple and separated by white spaces)
                                 List<String> listChannels = Arrays.asList(FlumeConfiguratorUtils.splitWithoutSpacesOptional(valuesProperty,false, FlumeConfiguratorConstants.WHITE_SPACE_REGEX));
                                 for (String channel : listChannels) {
-                                    List<String> listAgentsChannelPartial = FlumeConfiguratorUtils.getElementsAgents(flumeConfigurationProperties, FlumeConfiguratorConstants.CHANNELS_LIST_PROPERTIES_PREFIX, channel);
+                                    List<String> listAgentsChannelPartial = FlumeConfiguratorUtils.getElementsAgents(baseConfigurationProperties, FlumeConfiguratorConstants.CHANNELS_LIST_PROPERTIES_PREFIX, channel);
                                     if (listAgentsChannelPartial.isEmpty()) {
                                         //There is no agent for the channel
                                         isPropertiesCheckFileOK = false;
@@ -599,7 +599,7 @@ public class ConfigurationValidator {
 
                                 for (String valuePropertyReference : listValuesPropertyReference) {
                                     //Get the list of agents for every source and compare with the list of agents of the channel(s)
-                                    listAgentsSource = FlumeConfiguratorUtils.getElementsAgents(flumeConfigurationProperties, FlumeConfiguratorConstants.SOURCES_LIST_PROPERTIES_PREFIX, valuePropertyReference);
+                                    listAgentsSource = FlumeConfiguratorUtils.getElementsAgents(baseConfigurationProperties, FlumeConfiguratorConstants.SOURCES_LIST_PROPERTIES_PREFIX, valuePropertyReference);
 
                                     if (!listAgentsSource.containsAll(listAgentsChannel)) {
                                         //The list of agents of the channel contains agents that are not declared for the source
@@ -615,13 +615,13 @@ public class ConfigurationValidator {
                                     String valuePropertyReference = listValuesPropertyReference.get(index);
                                     valuesProperty = listValuesProperty.get(index);
 
-                                    listAgentsSource = FlumeConfiguratorUtils.getElementsAgents(flumeConfigurationProperties, FlumeConfiguratorConstants.SOURCES_LIST_PROPERTIES_PREFIX, valuePropertyReference);
+                                    listAgentsSource = FlumeConfiguratorUtils.getElementsAgents(baseConfigurationProperties, FlumeConfiguratorConstants.SOURCES_LIST_PROPERTIES_PREFIX, valuePropertyReference);
                                     listAgentsChannel.clear();
 
                                     //Get the list of agents of the specified channel (or channels)
                                     List<String> listChannels = Arrays.asList(FlumeConfiguratorUtils.splitWithoutSpacesOptional(valuesProperty,false, FlumeConfiguratorConstants.WHITE_SPACE_REGEX));
                                     for (String channel : listChannels) {
-                                        List<String> listAgentsChannelPartial = FlumeConfiguratorUtils.getElementsAgents(flumeConfigurationProperties, FlumeConfiguratorConstants.CHANNELS_LIST_PROPERTIES_PREFIX, channel);
+                                        List<String> listAgentsChannelPartial = FlumeConfiguratorUtils.getElementsAgents(baseConfigurationProperties, FlumeConfiguratorConstants.CHANNELS_LIST_PROPERTIES_PREFIX, channel);
                                         if (listAgentsChannelPartial.isEmpty()) {
                                             //There is no agent for the channel
                                             isPropertiesCheckFileOK = false;
@@ -651,7 +651,7 @@ public class ConfigurationValidator {
                                 //Get the list of agents of the xpecified channel
                                 List<String> listChannels = Arrays.asList(FlumeConfiguratorUtils.splitWithoutSpacesOptional(valuesProperty,true,elementsCharacterSeparator));
                                 for (String channel : listChannels) {
-                                    List<String> listAgentsChannelPartial = FlumeConfiguratorUtils.getElementsAgents(flumeConfigurationProperties, FlumeConfiguratorConstants.CHANNELS_LIST_PROPERTIES_PREFIX, channel);
+                                    List<String> listAgentsChannelPartial = FlumeConfiguratorUtils.getElementsAgents(baseConfigurationProperties, FlumeConfiguratorConstants.CHANNELS_LIST_PROPERTIES_PREFIX, channel);
                                     if (listAgentsChannelPartial.isEmpty()) {
                                         //There is no agent for the channel
                                         isPropertiesCheckFileOK = false;
@@ -665,7 +665,7 @@ public class ConfigurationValidator {
 
                                 for (String valuePropertyReference : listValuesPropertyReference) {
                                     //Get the list of agents for every source and compare with the list of agents of the channel
-                                    listAgentsSink = FlumeConfiguratorUtils.getElementsAgents(flumeConfigurationProperties, FlumeConfiguratorConstants.SINKS_LIST_PROPERTIES_PREFIX, valuePropertyReference);
+                                    listAgentsSink = FlumeConfiguratorUtils.getElementsAgents(baseConfigurationProperties, FlumeConfiguratorConstants.SINKS_LIST_PROPERTIES_PREFIX, valuePropertyReference);
 
                                     if (!listAgentsSink.containsAll(listAgentsChannel)) {
                                         //The list of agents of the specified channel contains non defined agents for the sources
@@ -681,13 +681,13 @@ public class ConfigurationValidator {
                                     String valuePropertyReference = listValuesPropertyReference.get(index);
                                     valuesProperty = listValuesProperty.get(index);
 
-                                    listAgentsSink = FlumeConfiguratorUtils.getElementsAgents(flumeConfigurationProperties, FlumeConfiguratorConstants.SINKS_LIST_PROPERTIES_PREFIX, valuePropertyReference);
+                                    listAgentsSink = FlumeConfiguratorUtils.getElementsAgents(baseConfigurationProperties, FlumeConfiguratorConstants.SINKS_LIST_PROPERTIES_PREFIX, valuePropertyReference);
                                     listAgentsChannel.clear();
 
                                     //Get the list of agents of the specified channel
                                     List<String> listChannels = Arrays.asList(FlumeConfiguratorUtils.splitWithoutSpacesOptional(valuesProperty,true,elementsCharacterSeparator));
                                     for (String channel : listChannels) {
-                                        List<String> listAgentsChannelPartial = FlumeConfiguratorUtils.getElementsAgents(flumeConfigurationProperties, FlumeConfiguratorConstants.CHANNELS_LIST_PROPERTIES_PREFIX, channel);
+                                        List<String> listAgentsChannelPartial = FlumeConfiguratorUtils.getElementsAgents(baseConfigurationProperties, FlumeConfiguratorConstants.CHANNELS_LIST_PROPERTIES_PREFIX, channel);
                                         if (listAgentsChannelPartial.isEmpty()) {
                                             //There is no agent for the channel
                                             isPropertiesCheckFileOK = false;
@@ -717,7 +717,7 @@ public class ConfigurationValidator {
                                 //Get the list of agents of the sink(s) (the sinks of a sinkgroup can be multiple and separated by white spaces)
                                 List<String> listSinks = Arrays.asList(FlumeConfiguratorUtils.splitWithoutSpacesOptional(valuesProperty, false, FlumeConfiguratorConstants.WHITE_SPACE_REGEX));
                                 for (String sink : listSinks) {
-                                    List<String> listAgentsSinkPartial = FlumeConfiguratorUtils.getElementsAgents(flumeConfigurationProperties, FlumeConfiguratorConstants.SINKS_LIST_PROPERTIES_PREFIX, sink);
+                                    List<String> listAgentsSinkPartial = FlumeConfiguratorUtils.getElementsAgents(baseConfigurationProperties, FlumeConfiguratorConstants.SINKS_LIST_PROPERTIES_PREFIX, sink);
                                     if (listAgentsSinkPartial.isEmpty()) {
                                         //There is no agent for the sink
                                         isPropertiesCheckFileOK = false;
@@ -731,7 +731,7 @@ public class ConfigurationValidator {
 
                                 for (String valuePropertyReference : listValuesPropertyReference) {
                                     //Get the list of agents for every sinkgroup and compare with the list of agents of the sink(s)
-                                    listAgentsSinkGroup = FlumeConfiguratorUtils.getElementsAgents(flumeConfigurationProperties, FlumeConfiguratorConstants.SINKGROUPS_LIST_PROPERTIES_PREFIX, valuePropertyReference);
+                                    listAgentsSinkGroup = FlumeConfiguratorUtils.getElementsAgents(baseConfigurationProperties, FlumeConfiguratorConstants.SINKGROUPS_LIST_PROPERTIES_PREFIX, valuePropertyReference);
 
                                     if (!listAgentsSinkGroup.containsAll(listAgentsSink)) {
                                         //The list of agents of the sink contains agents that are not declared for the sink group
@@ -747,13 +747,13 @@ public class ConfigurationValidator {
                                     String valuePropertyReference = listValuesPropertyReference.get(index);
                                     valuesProperty = listValuesProperty.get(index);
 
-                                    listAgentsSinkGroup = FlumeConfiguratorUtils.getElementsAgents(flumeConfigurationProperties, FlumeConfiguratorConstants.SINKGROUPS_LIST_PROPERTIES_PREFIX, valuePropertyReference);
+                                    listAgentsSinkGroup = FlumeConfiguratorUtils.getElementsAgents(baseConfigurationProperties, FlumeConfiguratorConstants.SINKGROUPS_LIST_PROPERTIES_PREFIX, valuePropertyReference);
                                     listAgentsSink.clear();
 
                                     //Get the list of agents of the specified sink (or sinks)
                                     List<String> listSinks = Arrays.asList(FlumeConfiguratorUtils.splitWithoutSpacesOptional(valuesProperty, false, FlumeConfiguratorConstants.WHITE_SPACE_REGEX));
                                     for (String sink : listSinks) {
-                                        List<String> listAgentsSinkPartial = FlumeConfiguratorUtils.getElementsAgents(flumeConfigurationProperties, FlumeConfiguratorConstants.SINKS_LIST_PROPERTIES_PREFIX, sink);
+                                        List<String> listAgentsSinkPartial = FlumeConfiguratorUtils.getElementsAgents(baseConfigurationProperties, FlumeConfiguratorConstants.SINKS_LIST_PROPERTIES_PREFIX, sink);
                                         if (listAgentsSinkPartial.isEmpty()) {
                                             //There is no agent for the channel
                                             isPropertiesCheckFileOK = false;
@@ -782,7 +782,7 @@ public class ConfigurationValidator {
 
                 //Check appliedElements property exists
                 String propertyReference = propertyName.substring(FlumeConfiguratorConstants.PARTIAL_PROPERTY_COMMENT_PROPERTIES_PREFIX.length());
-                String valuesPropertyReference = flumeConfigurationProperties.getProperty(prefixProperty + FlumeConfiguratorConstants.DOT_SEPARATOR + FlumeConfiguratorConstants.PARTIAL_PROPERTY_APPLIED_ELEMENTS_PROPERTIES_PREFIX + propertyReference);
+                String valuesPropertyReference = baseConfigurationProperties.getProperty(prefixProperty + FlumeConfiguratorConstants.DOT_SEPARATOR + FlumeConfiguratorConstants.PARTIAL_PROPERTY_APPLIED_ELEMENTS_PROPERTIES_PREFIX + propertyReference);
 
                 if (valuesPropertyReference == null) {
                     isPropertiesCheckFileOK = false;
@@ -823,7 +823,7 @@ public class ConfigurationValidator {
 
 
         //Check all properties begin correctly
-        for (Object flumeConfigurationProperty : flumeConfigurationProperties.keySet()) {
+        for (Object flumeConfigurationProperty : baseConfigurationProperties.keySet()) {
 
             String flumeConfigurationPropertyString = (String) flumeConfigurationProperty;
 
@@ -855,7 +855,7 @@ public class ConfigurationValidator {
 
 
         //Check agents.list
-        String agentList = flumeConfigurationProperties.getProperty(FlumeConfiguratorConstants.AGENTS_LIST_PROPERTIES_PREFIX);
+        String agentList = baseConfigurationProperties.getProperty(FlumeConfiguratorConstants.AGENTS_LIST_PROPERTIES_PREFIX);
 
         if (agentList == null) {
             isPropertiesFileOK = false;
