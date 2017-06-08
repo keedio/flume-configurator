@@ -27,6 +27,7 @@ public class FlumeConfiguratorConstants {
     public static final String INTERCEPTORS_PROPERTY = "interceptors";
     public static final String TYPE_PROPERTY = "type";
     public static final String PROCESSOR_PROPERTY = "processor";
+    public static final String PROCESSOR_TYPE_PROPERTY = "processor.type";
     public static final String COMMENT_PROPERTY_PREFIX = "comment";
     public static final String COMMENT_PREFIX = "# ";
 
@@ -98,6 +99,13 @@ public class FlumeConfiguratorConstants {
     public static final String DRAW2D_BETWEEN_TYPE = "draw2d.shape.node.Between";
     public static final String DRAW2D_END_TYPE = "draw2d.shape.node.End";
     public static final String DRAW2D_CONNECTION_TYPE = "draw2d.Connection";
+
+    public static final String DRAW2D_AGENT_TYPE = "draw2d.Agent";
+    public static final String DRAW2D_SOURCE_TYPE = "draw2d.Source";
+    public static final String DRAW2D_CHANNEL_TYPE = "draw2d.Channel";
+    public static final String DRAW2D_SINK_TYPE = "draw2d.Sink";
+    public static final String DRAW2D_SINKGROUP_TYPE = "draw2d.Sinkgroup";
+    public static final String DRAW2D_INTERCEPTOR_TYPE = "draw2d.Interceptor";
 
 
     public static final String DRAW2D_START_CSS_CLASS = "draw2d_shape_node_Start";

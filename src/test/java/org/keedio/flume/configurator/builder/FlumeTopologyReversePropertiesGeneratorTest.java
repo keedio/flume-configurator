@@ -834,13 +834,24 @@ public class FlumeTopologyReversePropertiesGeneratorTest {
             FlumeTopologyReversePropertiesGenerator.setWithComments(true);
             FlumeTopologyReversePropertiesGenerator.setPathDraw2DFlumeTopologyGeneratedFile(OUTPUT_GENERATED_FILE_PATH_FILE);
 
-
             FileInputStream fis = new FileInputStream(FLUME_PROPERTIES_FILE_PATH + "/agent1_flume.properties");
             Properties properties = new Properties();
             properties.load(fis);
 
+            //Build with validation error properties
+            properties.remove("agent1.sources");
+
             //Invoke method
             String draw2DFlumeTopology = (String) generateDraw2DFlumeTopologyFromPropertiesMethod.invoke(flumeTopologyReversePropertiesGenerator, properties);
+            Assert.assertNull("The Draw2D flume configuration file has not been built correctly", draw2DFlumeTopology);
+
+            //Build correct
+            fis = new FileInputStream(FLUME_PROPERTIES_FILE_PATH + "/agent1_flume.properties");
+            properties = new Properties();
+            properties.load(fis);
+
+            //Invoke method
+            draw2DFlumeTopology = (String) generateDraw2DFlumeTopologyFromPropertiesMethod.invoke(flumeTopologyReversePropertiesGenerator, properties);
             Assert.assertFalse("The Draw2D flume configuration file has not been built correctly", draw2DFlumeTopology.isEmpty());
 
         } catch (Exception e) {
@@ -859,11 +870,46 @@ public class FlumeTopologyReversePropertiesGeneratorTest {
             FlumeTopologyReversePropertiesGenerator.setWithComments(true);
             FlumeTopologyReversePropertiesGenerator.setPathDraw2DFlumeTopologyGeneratedFile(OUTPUT_GENERATED_FILE_PATH_FILE);
 
-            byte[] flumeProperties = Files.readAllBytes(Paths.get(FLUME_PROPERTIES_FILE_PATH + "/agent1_flume.properties"));
-            String flumePropertiesString = new String(flumeProperties);
+            StringBuilder sb = new StringBuilder();
+
+            //Build with validation error properties (same agent name for several agents)
+            byte[] flumePropertiesAgent1 = Files.readAllBytes(Paths.get(FLUME_PROPERTIES_FILE_PATH_ERROR + "/agent1_flume.properties"));
+            String flumePropertiesStringAgent1 = new String(flumePropertiesAgent1);
+            sb.append(flumePropertiesStringAgent1).append(FlumeConfiguratorConstants.NEW_LINE);
+
+            byte[] flumePropertiesAgent2 = Files.readAllBytes(Paths.get(FLUME_PROPERTIES_FILE_PATH_ERROR + "/agent2_flume.properties"));
+            String flumePropertiesStringAgent2 = new String(flumePropertiesAgent2);
+            sb.append(flumePropertiesStringAgent2).append(FlumeConfiguratorConstants.NEW_LINE);
+
+            byte[] flumePropertiesAgent3 = Files.readAllBytes(Paths.get(FLUME_PROPERTIES_FILE_PATH_ERROR + "/agent3_flume.properties"));
+            String flumePropertiesStringAgent3 = new String(flumePropertiesAgent3);
+            sb.append(flumePropertiesStringAgent3).append(FlumeConfiguratorConstants.NEW_LINE);
+
+            String flumePropertiesString = sb.toString();
 
             //Invoke method
             String draw2DFlumeTopology = (String) generateDraw2DFlumeTopologyFromPropertiesStringMethod.invoke(flumeTopologyReversePropertiesGenerator, flumePropertiesString);
+            Assert.assertNull("The Draw2D flume configuration file has not been built correctly", draw2DFlumeTopology);
+
+            //Build correct
+            sb = new StringBuilder();
+
+            flumePropertiesAgent1 = Files.readAllBytes(Paths.get(FLUME_PROPERTIES_FILE_PATH + "/agent1_flume.properties"));
+            flumePropertiesStringAgent1 = new String(flumePropertiesAgent1);
+            sb.append(flumePropertiesStringAgent1).append(FlumeConfiguratorConstants.NEW_LINE);
+
+            flumePropertiesAgent2 = Files.readAllBytes(Paths.get(FLUME_PROPERTIES_FILE_PATH + "/agent2_flume.properties"));
+            flumePropertiesStringAgent2 = new String(flumePropertiesAgent2);
+            sb.append(flumePropertiesStringAgent2).append(FlumeConfiguratorConstants.NEW_LINE);
+
+            flumePropertiesAgent3 = Files.readAllBytes(Paths.get(FLUME_PROPERTIES_FILE_PATH + "/agent3_flume.properties"));
+            flumePropertiesStringAgent3 = new String(flumePropertiesAgent3);
+            sb.append(flumePropertiesStringAgent3).append(FlumeConfiguratorConstants.NEW_LINE);
+
+            flumePropertiesString = sb.toString();
+
+            //Invoke method
+            draw2DFlumeTopology = (String) generateDraw2DFlumeTopologyFromPropertiesStringMethod.invoke(flumeTopologyReversePropertiesGenerator, flumePropertiesString);
             Assert.assertFalse("The Draw2D flume configuration file has not been built correctly", draw2DFlumeTopology.isEmpty());
 
         } catch (Exception e) {
