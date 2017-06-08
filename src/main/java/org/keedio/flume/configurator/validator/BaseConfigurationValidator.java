@@ -98,6 +98,10 @@ public class BaseConfigurationValidator {
             }
         }
 
+        if (logger.isDebugEnabled()) {
+            logger.debug("END checkPropertiesFileSourcesChannelsSinksList");
+        }
+
         return isPropertiesCheckFileOK;
 
     }
@@ -138,6 +142,10 @@ public class BaseConfigurationValidator {
                     sbCheckErrors.append(FlumeConfiguratorConstants.CONFIGURATION_ERROR).append("The property [").append(keyProperty).append("] references an non declared agent [").append(agentName).append("]").append(FlumeConfiguratorConstants.NEW_LINE);
                 }
             }
+        }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("END checkPropertiesFileSinkGroupsList");
         }
 
         return isPropertiesCheckFileOK;
@@ -270,6 +278,10 @@ public class BaseConfigurationValidator {
 
         }
 
+        if (logger.isDebugEnabled()) {
+            logger.debug("END checkPropertiesFileGroupsList");
+        }
+
         return isPropertiesCheckFileOK;
     }
 
@@ -318,6 +330,10 @@ public class BaseConfigurationValidator {
                 }
 
             }
+        }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("END checkPropertiesFileInterceptorsList");
         }
 
         return isPropertiesCheckFileOK;
@@ -443,6 +459,11 @@ public class BaseConfigurationValidator {
                 }
             }
         }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("END checkPropertiesFileCommonProperties");
+        }
+
         return isPropertiesCheckFileOK;
     }
 
@@ -806,6 +827,11 @@ public class BaseConfigurationValidator {
 
             }
         }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("END checkPropertiesFilePartialProperties");
+        }
+
         return isPropertiesCheckFileOK;
     }
 
@@ -813,10 +839,10 @@ public class BaseConfigurationValidator {
     /**
      * Check if the properties configuration file is correct. Store the found errors
      */
-    public void validateConfiguration() {
+    public void validateBaseConfiguration() {
 
         if (logger.isDebugEnabled()) {
-            logger.debug("BEGIN validateConfiguration");
+            logger.debug("BEGIN validateBaseConfiguration");
         }
 
         List<String> agentsList = new ArrayList<>();
@@ -919,6 +945,9 @@ public class BaseConfigurationValidator {
         //Check sinkgroups.partialProperty
         isPropertiesFileOK = isPropertiesFileOK && checkPropertiesFilePartialProperties(FlumeConfiguratorConstants.SINKGROUPS_PARTIAL_PROPERTY_PROPERTIES_PREFIX, agentsList);
 
+        if (logger.isDebugEnabled()) {
+            logger.debug("END validateBaseConfiguration");
+        }
     }
 
 }

@@ -40,6 +40,7 @@ public class BaseConfigurationValidatorTest {
         FileInputStream fis = new FileInputStream("src/test/resources/FlumeConfigurationExample.properties");
         baseConfigurationProperties.clear();
         baseConfigurationProperties.load(fis);
+        agentList = new ArrayList<>();
         agentList.add(AGENT1_NAME);
         agentList.add(AGENT2_NAME);
         agentList.add(AGENT3_NAME);
@@ -1155,7 +1156,7 @@ public class BaseConfigurationValidatorTest {
 
 
     @Test
-    public void testValidateConfiguration() {
+    public void testValidateBaseConfiguration() {
 
         boolean isPropertiesFileOK;
 
@@ -1164,157 +1165,157 @@ public class BaseConfigurationValidatorTest {
             //Check validation OK
             loadPropertiesFile();
             resetConfigurationValidator();
-            baseConfigurationValidator.validateConfiguration();
+            baseConfigurationValidator.validateBaseConfiguration();
             isPropertiesFileOK = baseConfigurationValidator.isPropertiesFileOK();
-            Assert.assertTrue("The validation of the configuration is not correct", isPropertiesFileOK);
+            Assert.assertTrue("The validation of the base configuration is not correct", isPropertiesFileOK);
  
 
             //Check property unknown
             loadPropertiesFile();
             resetConfigurationValidator();
             baseConfigurationProperties.put("unknown.property", "Unknown value");
-            baseConfigurationValidator.validateConfiguration();
+            baseConfigurationValidator.validateBaseConfiguration();
             isPropertiesFileOK = baseConfigurationValidator.isPropertiesFileOK();
-            Assert.assertFalse("The validation of the configuration is not correct", isPropertiesFileOK);
+            Assert.assertFalse("The validation of the base configuration is not correct", isPropertiesFileOK);
 
 
             //Check agents.list property existence
             loadPropertiesFile();
             resetConfigurationValidator();
             baseConfigurationProperties.remove("agents.list");
-            baseConfigurationValidator.validateConfiguration();
+            baseConfigurationValidator.validateBaseConfiguration();
             isPropertiesFileOK = baseConfigurationValidator.isPropertiesFileOK();
-            Assert.assertFalse("The validation of the configuration is not correct", isPropertiesFileOK);
+            Assert.assertFalse("The validation of the base configuration is not correct", isPropertiesFileOK);
 
 
             //Check agents.list property empty
             loadPropertiesFile();
             resetConfigurationValidator();
             baseConfigurationProperties.put("agents.list", "");
-            baseConfigurationValidator.validateConfiguration();
+            baseConfigurationValidator.validateBaseConfiguration();
             isPropertiesFileOK = baseConfigurationValidator.isPropertiesFileOK();
-            Assert.assertFalse("The validation of the configuration is not correct", isPropertiesFileOK);
+            Assert.assertFalse("The validation of the base configuration is not correct", isPropertiesFileOK);
 
 
             //Check sources.list error
             loadPropertiesFile();
             resetConfigurationValidator();
             baseConfigurationProperties.remove("sources.list.agent1");
-            baseConfigurationValidator.validateConfiguration();
+            baseConfigurationValidator.validateBaseConfiguration();
             isPropertiesFileOK = baseConfigurationValidator.isPropertiesFileOK();
-            Assert.assertFalse("The validation of the configuration is not correct", isPropertiesFileOK);
+            Assert.assertFalse("The validation of the base configuration is not correct", isPropertiesFileOK);
 
 
             //Check channels.list error
             loadPropertiesFile();
             resetConfigurationValidator();
             baseConfigurationProperties.remove("channels.list.agent1");
-            baseConfigurationValidator.validateConfiguration();
+            baseConfigurationValidator.validateBaseConfiguration();
             isPropertiesFileOK = baseConfigurationValidator.isPropertiesFileOK();
-            Assert.assertFalse("The validation of the configuration is not correct", isPropertiesFileOK);
+            Assert.assertFalse("The validation of the base configuration is not correct", isPropertiesFileOK);
 
 
             //Check sinks.list error
             loadPropertiesFile();
             resetConfigurationValidator();
             baseConfigurationProperties.remove("sinks.list.agent1");
-            baseConfigurationValidator.validateConfiguration();
+            baseConfigurationValidator.validateBaseConfiguration();
             isPropertiesFileOK = baseConfigurationValidator.isPropertiesFileOK();
-            Assert.assertFalse("The validation of the configuration is not correct", isPropertiesFileOK);
+            Assert.assertFalse("The validation of the base configuration is not correct", isPropertiesFileOK);
 
 
             //Check groups.list error
             loadPropertiesFile();
             resetConfigurationValidator();
             baseConfigurationProperties.remove("groups.list.agent1.GROUP_1_1");
-            baseConfigurationValidator.validateConfiguration();
+            baseConfigurationValidator.validateBaseConfiguration();
             isPropertiesFileOK = baseConfigurationValidator.isPropertiesFileOK();
-            Assert.assertFalse("The validation of the configuration is not correct", isPropertiesFileOK);
+            Assert.assertFalse("The validation of the base configuration is not correct", isPropertiesFileOK);
 
 
             //Check interceptors.list error
             loadPropertiesFile();
             resetConfigurationValidator();
             baseConfigurationProperties.put("interceptors.list.source1_4", "interceptor1_4");
-            baseConfigurationValidator.validateConfiguration();
+            baseConfigurationValidator.validateBaseConfiguration();
             isPropertiesFileOK = baseConfigurationValidator.isPropertiesFileOK();
-            Assert.assertFalse("The validation of the configuration is not correct", isPropertiesFileOK);
+            Assert.assertFalse("The validation of the base configuration is not correct", isPropertiesFileOK);
 
 
             //Check sources.commonProperty error
             loadPropertiesFile();
             resetConfigurationValidator();
             baseConfigurationProperties.remove("sources.commonProperty.type");
-            baseConfigurationValidator.validateConfiguration();
+            baseConfigurationValidator.validateBaseConfiguration();
             isPropertiesFileOK = baseConfigurationValidator.isPropertiesFileOK();
-            Assert.assertFalse("The validation of the configuration is not correct", isPropertiesFileOK);
+            Assert.assertFalse("The validation of the base configuration is not correct", isPropertiesFileOK);
 
 
             //Check sources.partialProperty error
             loadPropertiesFile();
             resetConfigurationValidator();
             baseConfigurationProperties.remove("sources.partialProperty.propertyValues.topic");
-            baseConfigurationValidator.validateConfiguration();
+            baseConfigurationValidator.validateBaseConfiguration();
             isPropertiesFileOK = baseConfigurationValidator.isPropertiesFileOK();
-            Assert.assertFalse("The validation of the configuration is not correct", isPropertiesFileOK);
+            Assert.assertFalse("The validation of the base configuration is not correct", isPropertiesFileOK);
 
 
             //Check interceptors.commonProperty error
             loadPropertiesFile();
             resetConfigurationValidator();
             baseConfigurationProperties.remove("interceptors.commonProperty.serializer.type");
-            baseConfigurationValidator.validateConfiguration();
+            baseConfigurationValidator.validateBaseConfiguration();
             isPropertiesFileOK = baseConfigurationValidator.isPropertiesFileOK();
-            Assert.assertFalse("The validation of the configuration is not correct", isPropertiesFileOK);
+            Assert.assertFalse("The validation of the base configuration is not correct", isPropertiesFileOK);
 
 
             //Check interceptors.partialProperty error
             loadPropertiesFile();
             resetConfigurationValidator();
             baseConfigurationProperties.remove("interceptors.partialProperty.appliedElements.filename");
-            baseConfigurationValidator.validateConfiguration();
+            baseConfigurationValidator.validateBaseConfiguration();
             isPropertiesFileOK = baseConfigurationValidator.isPropertiesFileOK();
-            Assert.assertFalse("The validation of the configuration is not correct", isPropertiesFileOK);
+            Assert.assertFalse("The validation of the base configuration is not correct", isPropertiesFileOK);
  
 
             //Check channels.commonProperty error
             loadPropertiesFile();
             resetConfigurationValidator();
             baseConfigurationProperties.remove("channels.commonProperty.type");
-            baseConfigurationValidator.validateConfiguration();
+            baseConfigurationValidator.validateBaseConfiguration();
             isPropertiesFileOK = baseConfigurationValidator.isPropertiesFileOK();
-            Assert.assertFalse("The validation of the configuration is not correct", isPropertiesFileOK);
+            Assert.assertFalse("The validation of the base configuration is not correct", isPropertiesFileOK);
  
 
             //Check channels.partialProperty error
             loadPropertiesFile();
             resetConfigurationValidator();
             baseConfigurationProperties.remove("channels.partialProperty.appliedElements.type");
-            baseConfigurationValidator.validateConfiguration();
+            baseConfigurationValidator.validateBaseConfiguration();
             isPropertiesFileOK = baseConfigurationValidator.isPropertiesFileOK();
-            Assert.assertFalse("The validation of the configuration is not correct", isPropertiesFileOK);
+            Assert.assertFalse("The validation of the base configuration is not correct", isPropertiesFileOK);
  
 
             //Check sinks.commonProperty error
             loadPropertiesFile();
             resetConfigurationValidator();
             baseConfigurationProperties.remove("sinks.commonProperty.type");
-            baseConfigurationValidator.validateConfiguration();
+            baseConfigurationValidator.validateBaseConfiguration();
             isPropertiesFileOK = baseConfigurationValidator.isPropertiesFileOK();
-            Assert.assertFalse("The validation of the configuration is not correct", isPropertiesFileOK);
+            Assert.assertFalse("The validation of the base configuration is not correct", isPropertiesFileOK);
 
 
             //Check sinks.partialProperty error
             loadPropertiesFile();
             resetConfigurationValidator();
             baseConfigurationProperties.remove("sinks.partialProperty.appliedElements.hdfs.filePrefix");
-            baseConfigurationValidator.validateConfiguration();
+            baseConfigurationValidator.validateBaseConfiguration();
             isPropertiesFileOK = baseConfigurationValidator.isPropertiesFileOK();
-            Assert.assertFalse("The validation of the configuration is not correct", isPropertiesFileOK);
+            Assert.assertFalse("The validation of the base configuration is not correct", isPropertiesFileOK);
 
         } catch (Exception e) {
-            Assert.fail("An error has occurred [testCheckPropertiesFilePartialPropertiesInterceptorsCheck] method");
-            logger.error("An error has occurred [testCheckPropertiesFilePartialPropertiesInterceptorsCheck] method", e);
+            Assert.fail("An error has occurred [testValidateBaseConfiguration] method");
+            logger.error("An error has occurred [testValidateBaseConfiguration] method", e);
         }
     }
 

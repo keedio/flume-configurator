@@ -845,7 +845,7 @@ public class FlumePropertiesGenerator {
 
             //Properties file validation
             configurationValidator = new BaseConfigurationValidator(flumeConfigurationProperties,elementsCharacterSeparator);
-            configurationValidator.validateConfiguration();
+            configurationValidator.validateBaseConfiguration();
 
             isPropertiesFileOK = configurationValidator.isPropertiesFileOK();
 
@@ -951,7 +951,7 @@ public class FlumePropertiesGenerator {
         }
 
         boolean isPropertiesFileOK;
-        BaseConfigurationValidator configurationValidator;
+        BaseConfigurationValidator baseConfigurationValidator;
         Map<String, List<String>> mapAgentChannels;
         Map<String, List<String>> mapAgentSinks;
         Map<String, List<String>> mapAgentSinkGroups;
@@ -968,10 +968,10 @@ public class FlumePropertiesGenerator {
             flumeConfigurationProperties.load(new StringReader(properties));
 
             //Properties file validation
-            configurationValidator = new BaseConfigurationValidator(flumeConfigurationProperties,elementsCharacterSeparator);
-            configurationValidator.validateConfiguration();
+            baseConfigurationValidator = new BaseConfigurationValidator(flumeConfigurationProperties,elementsCharacterSeparator);
+            baseConfigurationValidator.validateBaseConfiguration();
 
-            isPropertiesFileOK = configurationValidator.isPropertiesFileOK();
+            isPropertiesFileOK = baseConfigurationValidator.isPropertiesFileOK();
 
             if (isPropertiesFileOK) {
                 logger.info("checkPropertiesFile: The properties file is correct");
@@ -1065,7 +1065,7 @@ public class FlumePropertiesGenerator {
 
             } else {
                 logger.error("[ERROR] The configuration file is not correct");
-                logger.error(configurationValidator.getSbCheckErrors().toString());
+                logger.error(baseConfigurationValidator.getSbCheckErrors().toString());
                 return null;
             }
 
