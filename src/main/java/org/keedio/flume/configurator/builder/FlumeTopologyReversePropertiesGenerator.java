@@ -9,6 +9,7 @@ import org.keedio.flume.configurator.topology.IGraph;
 import org.keedio.flume.configurator.topology.JSONStringSerializer;
 import org.keedio.flume.configurator.utils.FlumeConfiguratorTopologyUtils;
 import org.keedio.flume.configurator.utils.FlumeConfiguratorUtils;
+import org.keedio.flume.configurator.validator.FlumeConfigurationValidator;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
@@ -188,9 +189,7 @@ public class FlumeTopologyReversePropertiesGenerator {
 
                     mapFlumeLinesProperties.put(filePath.getFileName().toString(), flumeLinesProperties);
                 }
-
             }
-
 
         } else {
 
@@ -214,7 +213,6 @@ public class FlumeTopologyReversePropertiesGenerator {
             mapFlumeLinesProperties.put(flumePropertiesFile.getName(), flumeLinesProperties);
 
         }
-
 
         if (logger.isDebugEnabled()) {
             logger.debug("END loadFlumePropertiesFile");
@@ -2402,6 +2400,7 @@ public class FlumeTopologyReversePropertiesGenerator {
                 flumeTopology.setWidth(String.valueOf(FlumeConfiguratorConstants.CANVAS_ELEMENT_PX_WIDTH));
                 flumeTopology.setHeight(String.valueOf(FlumeConfiguratorConstants.CANVAS_ELEMENT_PX_HEIGHT));
 
+
                 if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_AGENT.equals(flumeType)) {
                     flumeTopology.setBgColor(FlumeConfiguratorConstants.CANVAS_AGENT_BGCOLOR);
                 } else if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE.equals(flumeType)) {
@@ -2468,21 +2467,27 @@ public class FlumeTopologyReversePropertiesGenerator {
             if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_AGENT.equals(flumeType)) {
                 flumeTopology.setType(FlumeConfiguratorConstants.DRAW2D_START_TYPE);
                 flumeTopology.setCssClass(FlumeConfiguratorConstants.DRAW2D_START_CSS_CLASS);
+                //flumeTopology.setType(FlumeConfiguratorConstants.DRAW2D_AGENT_TYPE);
             } else if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE.equals(flumeType)) {
                 flumeTopology.setType(FlumeConfiguratorConstants.DRAW2D_BETWEEN_TYPE);
                 flumeTopology.setCssClass(FlumeConfiguratorConstants.DRAW2D_BETWEEN_CSS_CLASS);
+                //flumeTopology.setType(FlumeConfiguratorConstants.DRAW2D_SOURCE_TYPE);
             } else if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR.equals(flumeType)) {
                 flumeTopology.setType(FlumeConfiguratorConstants.DRAW2D_BETWEEN_TYPE);
                 flumeTopology.setCssClass(FlumeConfiguratorConstants.DRAW2D_BETWEEN_CSS_CLASS);
+                //flumeTopology.setType(FlumeConfiguratorConstants.DRAW2D_INTERCEPTOR_TYPE);
             } else if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL.equals(flumeType)) {
                 flumeTopology.setType(FlumeConfiguratorConstants.DRAW2D_BETWEEN_TYPE);
                 flumeTopology.setCssClass(FlumeConfiguratorConstants.DRAW2D_BETWEEN_CSS_CLASS);
+                //flumeTopology.setType(FlumeConfiguratorConstants.DRAW2D_CHANNEL_TYPE);
             } else if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK.equals(flumeType)) {
                 flumeTopology.setType(FlumeConfiguratorConstants.DRAW2D_BETWEEN_TYPE);
                 flumeTopology.setCssClass(FlumeConfiguratorConstants.DRAW2D_BETWEEN_CSS_CLASS);
+                //flumeTopology.setType(FlumeConfiguratorConstants.DRAW2D_SINK_TYPE);
             } else if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP.equals(flumeType)) {
                 flumeTopology.setType(FlumeConfiguratorConstants.DRAW2D_END_TYPE);
                 flumeTopology.setCssClass(FlumeConfiguratorConstants.DRAW2D_END_CSS_CLASS);
+                //flumeTopology.setType(FlumeConfiguratorConstants.DRAW2D_SINKGROUP_TYPE);
             } else if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_CONNECTION.equals(flumeType)) {
                 flumeTopology.setType(FlumeConfiguratorConstants.DRAW2D_CONNECTION_TYPE);
                 flumeTopology.setCssClass(FlumeConfiguratorConstants.DRAW2D_CONNECTION_CSS_CLASS);
@@ -2566,6 +2571,9 @@ public class FlumeTopologyReversePropertiesGenerator {
                 logger.debug("BEGIN generateDraw2DFlumeTopologyFromProperties");
             }
 
+            boolean isPropertiesFileOK;
+            FlumeConfigurationValidator flumeConfigurationValidator;
+
             //Create initial structures
             createInitialStructures();
 
@@ -2576,48 +2584,64 @@ public class FlumeTopologyReversePropertiesGenerator {
 
             flumeLinesProperties.setProperties(linkedProperties);
 
-            //Generate Agents Flume topology elements
-            generateAgentsFlumeTopology();
+            //Flume properties file validation
+            flumeConfigurationValidator = new FlumeConfigurationValidator(flumeLinesProperties.getProperties());
+            flumeConfigurationValidator.validateFlumeConfiguration();
 
-            //Generate Sources Flume topology elements
-            generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE, FlumeConfiguratorConstants.SOURCES_PROPERTY, FlumeConfiguratorConstants.SOURCES_LIST_PROPERTY_PART_INDEX);
+            isPropertiesFileOK = flumeConfigurationValidator.isPropertiesFileOK();
 
-            //Generate Channels Flume topology elements
-            generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL, FlumeConfiguratorConstants.CHANNELS_PROPERTY, FlumeConfiguratorConstants.CHANNELS_LIST_PROPERTY_PART_INDEX);
+            if (isPropertiesFileOK) {
 
-            //Generate Sinks Flume topology elements
-            generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK, FlumeConfiguratorConstants.SINKS_PROPERTY, FlumeConfiguratorConstants.SINKS_LIST_PROPERTY_PART_INDEX);
+                //Generate Agents Flume topology elements
+                generateAgentsFlumeTopology();
 
-            //Generate Sinkgroups Flume topology elements
-            generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP, FlumeConfiguratorConstants.SINKGROUPS_PROPERTY, FlumeConfiguratorConstants.SINKGROUPS_LIST_PROPERTY_PART_INDEX);
+                //Generate Sources Flume topology elements
+                generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE, FlumeConfiguratorConstants.SOURCES_PROPERTY, FlumeConfiguratorConstants.SOURCES_LIST_PROPERTY_PART_INDEX);
 
-            //Generate Interceptors Flume topology elements
-            generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR, FlumeConfiguratorConstants.INTERCEPTORS_PROPERTY, FlumeConfiguratorConstants.INTERCEPTORS_LIST_PROPERTY_PART_INDEX);
+                //Generate Channels Flume topology elements
+                generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL, FlumeConfiguratorConstants.CHANNELS_PROPERTY, FlumeConfiguratorConstants.CHANNELS_LIST_PROPERTY_PART_INDEX);
 
-            //Generate Flume topology elements properties
-            generateElementsProperties();
+                //Generate Sinks Flume topology elements
+                generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK, FlumeConfiguratorConstants.SINKS_PROPERTY, FlumeConfiguratorConstants.SINKS_LIST_PROPERTY_PART_INDEX);
 
-            //Generate Flume topology connections
-            generateFlumeTopologyConnections();
+                //Generate Sinkgroups Flume topology elements
+                generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP, FlumeConfiguratorConstants.SINKGROUPS_PROPERTY, FlumeConfiguratorConstants.SINKGROUPS_LIST_PROPERTY_PART_INDEX);
 
-            //Generate graph
-            generateGraph();
+                //Generate Interceptors Flume topology elements
+                generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR, FlumeConfiguratorConstants.INTERCEPTORS_PROPERTY, FlumeConfiguratorConstants.INTERCEPTORS_LIST_PROPERTY_PART_INDEX);
 
-            //Generate internal property flumeType and type according Draw2D
-            generatePropertiesDraw2D();
+                //Generate Flume topology elements properties
+                generateElementsProperties();
 
-            //Generate json flume topology
-            String draw2DFlumeTopology = JSONStringSerializer.toJSONString(flumeTopologyConnectionList);
+                //Generate Flume topology connections
+                generateFlumeTopologyConnections();
 
-            if (logger.isDebugEnabled()) {
-                logger.debug(draw2DFlumeTopology);
+                //Generate graph
+                generateGraph();
+
+                //Generate internal property flumeType and type according Draw2D
+                generatePropertiesDraw2D();
+
+                //Generate json flume topology
+                String draw2DFlumeTopology = JSONStringSerializer.toJSONString(flumeTopologyConnectionList);
+
+                if (logger.isDebugEnabled()) {
+                    logger.debug(draw2DFlumeTopology);
+                }
+
+                if (logger.isDebugEnabled()) {
+                    logger.debug("END generateDraw2DFlumeTopologyFromProperties");
+                }
+
+                return draw2DFlumeTopology;
+
+            } else {
+                logger.error("[ERROR] The Flume configuration file is not correct");
+                logger.error(flumeConfigurationValidator.getSbCheckErrors().toString());
+                return null;
             }
 
-            if (logger.isDebugEnabled()) {
-                logger.debug("END generateDraw2DFlumeTopologyFromProperties");
-            }
 
-            return draw2DFlumeTopology;
 
         } catch (IOException e) {
             logger.error("An error has occurred on serialization of Flume topology", e);
@@ -2639,12 +2663,15 @@ public class FlumeTopologyReversePropertiesGenerator {
 
         try {
 
-            LinkedProperties linkedProperties = new LinkedProperties();
-            List<String> lines = new ArrayList<>();
-
             if (logger.isDebugEnabled()) {
                 logger.debug("BEGIN generateDraw2DFlumeTopologyFromPropertiesString");
             }
+
+            LinkedProperties linkedProperties = new LinkedProperties();
+            List<String> lines;
+
+            boolean isPropertiesFileOK;
+            FlumeConfigurationValidator flumeConfigurationValidator;
 
             //Create initial structures
             createInitialStructures();
@@ -2659,48 +2686,64 @@ public class FlumeTopologyReversePropertiesGenerator {
                 flumeLinesProperties.setLines(lines);
             }
 
-            //Generate Agents Flume topology elements
-            generateAgentsFlumeTopology();
+            //Flume properties file validation
+            flumeConfigurationValidator = new FlumeConfigurationValidator(flumeLinesProperties.getProperties());
+            flumeConfigurationValidator.validateFlumeConfiguration();
 
-            //Generate Sources Flume topology elements
-            generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE, FlumeConfiguratorConstants.SOURCES_PROPERTY, FlumeConfiguratorConstants.SOURCES_LIST_PROPERTY_PART_INDEX);
+            isPropertiesFileOK = flumeConfigurationValidator.isPropertiesFileOK();
 
-            //Generate Channels Flume topology elements
-            generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL, FlumeConfiguratorConstants.CHANNELS_PROPERTY, FlumeConfiguratorConstants.CHANNELS_LIST_PROPERTY_PART_INDEX);
+            if (isPropertiesFileOK) {
+                logger.info("check Flume configuration file: The Flume configuration file is correct");
 
-            //Generate Sinks Flume topology elements
-            generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK, FlumeConfiguratorConstants.SINKS_PROPERTY, FlumeConfiguratorConstants.SINKS_LIST_PROPERTY_PART_INDEX);
+                //Generate Agents Flume topology elements
+                generateAgentsFlumeTopology();
 
-            //Generate Sinkgroups Flume topology elements
-            generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP, FlumeConfiguratorConstants.SINKGROUPS_PROPERTY, FlumeConfiguratorConstants.SINKGROUPS_LIST_PROPERTY_PART_INDEX);
+                //Generate Sources Flume topology elements
+                generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE, FlumeConfiguratorConstants.SOURCES_PROPERTY, FlumeConfiguratorConstants.SOURCES_LIST_PROPERTY_PART_INDEX);
 
-            //Generate Interceptors Flume topology elements
-            generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR, FlumeConfiguratorConstants.INTERCEPTORS_PROPERTY, FlumeConfiguratorConstants.INTERCEPTORS_LIST_PROPERTY_PART_INDEX);
+                //Generate Channels Flume topology elements
+                generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL, FlumeConfiguratorConstants.CHANNELS_PROPERTY, FlumeConfiguratorConstants.CHANNELS_LIST_PROPERTY_PART_INDEX);
 
-            //Generate Flume topology elements properties
-            generateElementsProperties();
+                //Generate Sinks Flume topology elements
+                generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK, FlumeConfiguratorConstants.SINKS_PROPERTY, FlumeConfiguratorConstants.SINKS_LIST_PROPERTY_PART_INDEX);
 
-            //Generate Flume topology connections
-            generateFlumeTopologyConnections();
+                //Generate Sinkgroups Flume topology elements
+                generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP, FlumeConfiguratorConstants.SINKGROUPS_PROPERTY, FlumeConfiguratorConstants.SINKGROUPS_LIST_PROPERTY_PART_INDEX);
 
-            //Generate graph
-            generateGraph();
+                //Generate Interceptors Flume topology elements
+                generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR, FlumeConfiguratorConstants.INTERCEPTORS_PROPERTY, FlumeConfiguratorConstants.INTERCEPTORS_LIST_PROPERTY_PART_INDEX);
 
-            //Generate internal property flumeType and type according Draw2D
-            generatePropertiesDraw2D();
+                //Generate Flume topology elements properties
+                generateElementsProperties();
 
-            //Generate Draw2D Flume topology
-            String draw2DFlumeTopology = JSONStringSerializer.toJSONString(flumeTopologyConnectionList);
+                //Generate Flume topology connections
+                generateFlumeTopologyConnections();
 
-            if (logger.isDebugEnabled()) {
-                logger.debug(draw2DFlumeTopology);
+                //Generate graph
+                generateGraph();
+
+                //Generate internal property flumeType and type according Draw2D
+                generatePropertiesDraw2D();
+
+                //Generate Draw2D Flume topology
+                String draw2DFlumeTopology = JSONStringSerializer.toJSONString(flumeTopologyConnectionList);
+
+                if (logger.isDebugEnabled()) {
+                    logger.debug(draw2DFlumeTopology);
+                }
+
+                if (logger.isDebugEnabled()) {
+                    logger.debug("END generateDraw2DFlumeTopologyFromPropertiesString");
+                }
+
+                return draw2DFlumeTopology;
+
+            } else {
+                logger.error("[ERROR] The Flume configuration file is not correct");
+                logger.error(flumeConfigurationValidator.getSbCheckErrors().toString());
+                return null;
             }
 
-            if (logger.isDebugEnabled()) {
-                logger.debug("END generateDraw2DFlumeTopologyFromPropertiesString");
-            }
-
-            return draw2DFlumeTopology;
 
         } catch (IOException e) {
             logger.error("An error has occurred on serialization of Flume topology", e);
@@ -2724,6 +2767,9 @@ public class FlumeTopologyReversePropertiesGenerator {
             logger.debug("BEGIN generateDraw2DFlumeTopology");
         }
 
+        boolean isPropertiesFileOK;
+        FlumeConfigurationValidator flumeConfigurationValidator;
+
         try {
 
             //Create initial structures
@@ -2735,48 +2781,63 @@ public class FlumeTopologyReversePropertiesGenerator {
             //Generate a single information unit
             generateSingleLinesProperties();
 
-            //Generate Agents Flume topology elements
-            generateAgentsFlumeTopology();
+            //Flume properties file validation
+            flumeConfigurationValidator = new FlumeConfigurationValidator(flumeLinesProperties.getProperties());
+            flumeConfigurationValidator.validateFlumeConfiguration();
 
-            //Generate Sources Flume topology elements
-            generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE, FlumeConfiguratorConstants.SOURCES_PROPERTY, FlumeConfiguratorConstants.SOURCES_LIST_PROPERTY_PART_INDEX);
+            isPropertiesFileOK = flumeConfigurationValidator.isPropertiesFileOK();
 
-            //Generate Channels Flume topology elements
-            generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL, FlumeConfiguratorConstants.CHANNELS_PROPERTY, FlumeConfiguratorConstants.CHANNELS_LIST_PROPERTY_PART_INDEX);
+            if (isPropertiesFileOK) {
+                logger.info("check Flume configuration file: The Flume configuration file is correct");
 
-            //Generate Sinks Flume topology elements
-            generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK, FlumeConfiguratorConstants.SINKS_PROPERTY, FlumeConfiguratorConstants.SINKS_LIST_PROPERTY_PART_INDEX);
+                //Generate Agents Flume topology elements
+                generateAgentsFlumeTopology();
 
-            //Generate Sinkgroups Flume topology elements
-            generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP, FlumeConfiguratorConstants.SINKGROUPS_PROPERTY, FlumeConfiguratorConstants.SINKGROUPS_LIST_PROPERTY_PART_INDEX);
+                //Generate Sources Flume topology elements
+                generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE, FlumeConfiguratorConstants.SOURCES_PROPERTY, FlumeConfiguratorConstants.SOURCES_LIST_PROPERTY_PART_INDEX);
 
-            //Generate Interceptors Flume topology elements
-            generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR, FlumeConfiguratorConstants.INTERCEPTORS_PROPERTY, FlumeConfiguratorConstants.INTERCEPTORS_LIST_PROPERTY_PART_INDEX);
+                //Generate Channels Flume topology elements
+                generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL, FlumeConfiguratorConstants.CHANNELS_PROPERTY, FlumeConfiguratorConstants.CHANNELS_LIST_PROPERTY_PART_INDEX);
 
-            //Generate Flume topology elements properties
-            generateElementsProperties();
+                //Generate Sinks Flume topology elements
+                generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK, FlumeConfiguratorConstants.SINKS_PROPERTY, FlumeConfiguratorConstants.SINKS_LIST_PROPERTY_PART_INDEX);
 
-            //Generate Flume topology connections
-            generateFlumeTopologyConnections();
+                //Generate Sinkgroups Flume topology elements
+                generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP, FlumeConfiguratorConstants.SINKGROUPS_PROPERTY, FlumeConfiguratorConstants.SINKGROUPS_LIST_PROPERTY_PART_INDEX);
 
-            //Generate graph 
-            generateGraph();
+                //Generate Interceptors Flume topology elements
+                generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR, FlumeConfiguratorConstants.INTERCEPTORS_PROPERTY, FlumeConfiguratorConstants.INTERCEPTORS_LIST_PROPERTY_PART_INDEX);
 
-            //Generate internal property flumeType and type according Draw2D
-            generatePropertiesDraw2D();
+                //Generate Flume topology elements properties
+                generateElementsProperties();
 
-            //Write the Draw2D Flume topology file
-            writeDraw2DFlumeTopologyFile();
+                //Generate Flume topology connections
+                generateFlumeTopologyConnections();
 
-            logger.info("The process has ended correctly. The output file is in " + pathDraw2DFlumeTopologyGeneratedFile);
+                //Generate graph
+                generateGraph();
 
-            logger.info("******* END DRAW2D FLUME TOPOLOGY GENERATOR PROCESS *****************");
+                //Generate internal property flumeType and type according Draw2D
+                generatePropertiesDraw2D();
 
-            if (logger.isDebugEnabled()) {
-                logger.debug("END generateDraw2DFlumeTopology");
+                //Write the Draw2D Flume topology file
+                writeDraw2DFlumeTopologyFile();
+
+                logger.info("The process has ended correctly. The output file is in " + pathDraw2DFlumeTopologyGeneratedFile);
+
+                logger.info("******* END DRAW2D FLUME TOPOLOGY GENERATOR PROCESS *****************");
+
+                if (logger.isDebugEnabled()) {
+                    logger.debug("END generateDraw2DFlumeTopology");
+                }
+
+                return true;
+
+            } else {
+                logger.error("[ERROR] The Flume configuration file is not correct");
+                logger.error(flumeConfigurationValidator.getSbCheckErrors().toString());
+                return false;
             }
-
-            return true;
 
         } catch (NoSuchFileException e) {
             logger.error("Flume properties file not found", e);
