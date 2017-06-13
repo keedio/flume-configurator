@@ -74,8 +74,33 @@ class FlumePropertiesGeneratorTestUtils {
 
         return containsSourcesInterceptors;
     }
-    
-    
+
+
+    static boolean containsSelectorsProperties(Map<String,LinkedProperties> configurationInitialMap) {
+        boolean containsSelectorsProperties = false;
+
+        if (configurationInitialMap != null) {
+            for (String agentName : configurationInitialMap.keySet()) {
+                LinkedProperties agentProperties = configurationInitialMap.get(agentName);
+                for (Object agentProperty : agentProperties.entrySet()) {
+                    Map.Entry<?,?> agentPropertyEntry = (Map.Entry<?,?>) agentProperty;
+
+                    String propertyKey = (String) agentPropertyEntry.getKey();
+
+                    String[] propertyKeyPartsArray = propertyKey.split(FlumeConfiguratorConstants.DOT_REGEX);
+
+                    if ((propertyKeyPartsArray.length > 4) && (propertyKeyPartsArray[3].equals(FlumeConfiguratorConstants.SELECTOR_PROPERTY))) {
+                        containsSelectorsProperties = true;
+                    }
+
+                }
+            }
+        }
+
+        return containsSelectorsProperties;
+    }
+
+
     static boolean containsInterceptorsProperties(Map<String,LinkedProperties> configurationInitialMap) {
         boolean containsInterceptorsProperties = false;
 
@@ -99,7 +124,9 @@ class FlumePropertiesGeneratorTestUtils {
 
         return containsInterceptorsProperties;
     }    
-    
+
+
+
     
     
     
@@ -119,8 +146,8 @@ class FlumePropertiesGeneratorTestUtils {
                     if ((propertyKeyPartsArray.length > 2) && (propertyKeyPartsArray[1].equals(prefixElement))) {
 
                         if (FlumeConfiguratorConstants.SOURCES_PROPERTY.equals(prefixElement)) {
-                            //Source property but not interceptor property
-                            if (!propertyKeyPartsArray[3].equals(FlumeConfiguratorConstants.INTERCEPTORS_PROPERTY)) {
+                            //Source property but not interceptor property or selector property
+                            if (!propertyKeyPartsArray[3].equals(FlumeConfiguratorConstants.INTERCEPTORS_PROPERTY) && !propertyKeyPartsArray[3].equals(FlumeConfiguratorConstants.SELECTOR_PROPERTY)) {
                                 containsElementsProperties = true;
                             }
 

@@ -25,7 +25,11 @@ public class FlumeConfiguratorConstants {
     public static final String SINKS_PROPERTY = "sinks";
     public static final String SINKGROUPS_PROPERTY = "sinkgroups";
     public static final String INTERCEPTORS_PROPERTY = "interceptors";
+    public static final String SELECTOR_PROPERTY = "selector";
     public static final String TYPE_PROPERTY = "type";
+    public static final String MAPPING_PROPERTY = "mapping";
+    public static final String DEFAULT_PROPERTY = "default";
+    public static final String OPTIONAL_PROPERTY = "optional";
     public static final String PROCESSOR_PROPERTY = "processor";
     public static final String PROCESSOR_TYPE_PROPERTY = "processor.type";
     public static final String COMMENT_PROPERTY_PREFIX = "comment";
@@ -44,8 +48,11 @@ public class FlumeConfiguratorConstants {
     public static final String SINKGROUPS_LIST_PROPERTIES_PREFIX = "sinkgroups.list";
     public static final String INTERCEPTORS_LIST_PROPERTIES_PREFIX = "interceptors.list";
     public static final String GROUPS_LIST_PROPERTIES_PREFIX = "groups.list";
+    public static final String SELECTORS_LIST_PROPERTIES_PREFIX = "sourcesWithSelector.list";
     public static final String SOURCES_COMMON_PROPERTY_PROPERTIES_PREFIX = "sources.commonProperty";
     public static final String SOURCES_PARTIAL_PROPERTY_PROPERTIES_PREFIX = "sources.partialProperty";
+    public static final String SELECTORS_COMMON_PROPERTY_PROPERTIES_PREFIX = "selectors.commonProperty";
+    public static final String SELECTORS_PARTIAL_PROPERTY_PROPERTIES_PREFIX = "selectors.partialProperty";
     public static final String INTERCEPTORS_COMMON_PROPERTY_PROPERTIES_PREFIX = "interceptors.commonProperty";
     public static final String INTERCEPTORS_PARTIAL_PROPERTY_PROPERTIES_PREFIX = "interceptors.partialProperty";
     public static final String CHANNELS_COMMON_PROPERTY_PROPERTIES_PREFIX = "channels.commonProperty";

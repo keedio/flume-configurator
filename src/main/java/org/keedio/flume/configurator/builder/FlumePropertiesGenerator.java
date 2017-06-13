@@ -32,6 +32,8 @@ public class FlumePropertiesGenerator {
     private Map<String, List<String>> mapAgentSources;
     private Map<String, List<String>> mapSourcesInterceptors;
 
+    private Map<String, List<String>> mapAgentSelectors;
+
 
 
     /**
@@ -144,6 +146,11 @@ public class FlumePropertiesGenerator {
 
 
     /**
+     * @return the mapAgentSelectors
+     */
+    public Map<String, List<String>> getMapAgentSelectors() {return mapAgentSelectors; }
+
+    /**
      * Create initial structures
      */
     private void createInitialStructures() {
@@ -158,6 +165,7 @@ public class FlumePropertiesGenerator {
         agentsList = new ArrayList<>();
         mapAgentSources = new HashMap<>();
         mapSourcesInterceptors = new HashMap<>();
+        mapAgentSelectors = new HashMap<>();
 
         if (logger.isDebugEnabled()) {
             logger.debug("END createInitialStructures");
@@ -251,7 +259,159 @@ public class FlumePropertiesGenerator {
         return mapAgentElements;
     }
 
+    /**
+     * Generate the initial structure with the information of selectors of the sources
+     */
+    private void generateSourcesSelectors() {
 
+        if (logger.isDebugEnabled()) {
+            logger.debug("BEGIN generateSourcesSelectors");
+        }
+
+        //Get agents selectors relation
+        mapAgentSelectors = FlumeConfiguratorUtils.getAgentElementsMapFromProperties(flumeConfigurationProperties, FlumeConfiguratorConstants.SELECTORS_LIST_PROPERTIES_PREFIX, elementsCharacterSeparator);
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("END generateSourcesSelectors");
+        }
+    }
+
+
+    /**
+     * Generate the initial structure with the information of the common properties of the selectors (for all sources with selector)
+     */
+    private void generateSelectorsCommonProperties() {
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("BEGIN generateSelectorsCommonProperties");
+        }
+
+        //Set sources interceptors common properties
+        LinkedProperties sourcesSelectorsCommonProperties = FlumeConfiguratorUtils.getElementsCommonPropertiesFromProperties(flumeConfigurationProperties, FlumeConfiguratorConstants.SELECTORS_COMMON_PROPERTY_PROPERTIES_PREFIX);
+
+        for (String agentName : mapAgentSelectors.keySet()) {
+
+            List<String> agentSourcesWithSelectorList = mapAgentSelectors.get(agentName);
+
+            if (agentSourcesWithSelectorList != null) {
+
+                for (String sourceWithSelectorName : agentSourcesWithSelectorList) {
+
+                    for (Object sourceSelectorCommonProperty : sourcesSelectorsCommonProperties.keySet()) {
+                        StringBuilder sbSelectorPropertyName = new StringBuilder();
+                        Object selectorPropertyValue = sourcesSelectorsCommonProperties.get(sourceSelectorCommonProperty);
+
+                        sbSelectorPropertyName.append(agentName);
+                        sbSelectorPropertyName.append(FlumeConfiguratorConstants.DOT_SEPARATOR);
+                        sbSelectorPropertyName.append(FlumeConfiguratorConstants.SOURCES_PROPERTY);
+                        sbSelectorPropertyName.append(FlumeConfiguratorConstants.DOT_SEPARATOR);
+                        sbSelectorPropertyName.append(sourceWithSelectorName);
+                        sbSelectorPropertyName.append(FlumeConfiguratorConstants.DOT_SEPARATOR);
+                        sbSelectorPropertyName.append(FlumeConfiguratorConstants.SELECTOR_PROPERTY);
+                        sbSelectorPropertyName.append(FlumeConfiguratorConstants.DOT_SEPARATOR);
+                        sbSelectorPropertyName.append(sourceSelectorCommonProperty);
+
+                        configurationInitialMap.get(agentName).put(sbSelectorPropertyName.toString(), selectorPropertyValue);
+                    }
+                }
+            }
+        }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("END generateSelectorsCommonProperties");
+        }
+    }
+
+
+
+    /**
+     * Generate the initial structure with the information of the partial properties of the selectors
+     */
+    private void generateSelectorsPartialProperties() {
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("BEGIN generateSelectorsPartialProperties");
+        }
+
+        //Set sources selectors partial properties
+        PartialProperties sourcesSelectorsPartialProperties = FlumeConfiguratorUtils.getElementsPartialPropertiesFromProperties(flumeConfigurationProperties, FlumeConfiguratorConstants.SELECTORS_PARTIAL_PROPERTY_PROPERTIES_PREFIX, elementsCharacterSeparator);
+
+        LinkedProperties appliedSourcesSelectorsElements = sourcesSelectorsPartialProperties.getAppliedElements();
+        LinkedProperties sourcesSelectorsPropertiesValues = sourcesSelectorsPartialProperties.getPropertiesValues();
+        LinkedProperties sourcesSelectorsPropertiesComments = sourcesSelectorsPartialProperties.getPropertiesComments();
+
+        for (Object partialProperty : appliedSourcesSelectorsElements.keySet()) {
+            String appliedSourcesSelectorsElementsString = (String) appliedSourcesSelectorsElements.get(partialProperty);
+            String[] appliedSourcesSelectorsElementsArray = FlumeConfiguratorUtils.splitWithoutSpacesOptionalKeepInternalSpaces(appliedSourcesSelectorsElementsString,true,elementsCharacterSeparator);
+
+            String sourcesSelectorsPropertiesValuesString = (String) sourcesSelectorsPropertiesValues.get(partialProperty);
+            String[] sourcesSelectorsPropertiesValuesArray = FlumeConfiguratorUtils.splitWithoutSpacesOptionalKeepInternalSpaces(sourcesSelectorsPropertiesValuesString,true,elementsCharacterSeparator);
+
+            String sourcesSelectorsPropertiesCommentsString = (String) sourcesSelectorsPropertiesComments.get(partialProperty);
+            String[] sourcesSelectorsPropertiesCommentsArray = FlumeConfiguratorUtils.splitWithoutSpacesOptionalKeepInternalSpaces(sourcesSelectorsPropertiesCommentsString,false,elementsCharacterSeparator);
+
+            for (int index=0; index < appliedSourcesSelectorsElementsArray.length; index++) {
+
+                String appliedSourceSelector = appliedSourcesSelectorsElementsArray[index];
+                String sourceSelectorPropertyValue = sourcesSelectorsPropertiesValuesArray[index];
+                String sourceSelectorPropertyComment = (sourcesSelectorsPropertiesCommentsArray != null)? sourcesSelectorsPropertiesCommentsArray[index].trim() : null;
+
+                logger.debug("******** appliedSourceSelector: " + appliedSourceSelector);
+
+                //Get the agent(s) of the source with selector
+                List<String> agentsSourceWithSelectorList = FlumeConfiguratorUtils.getElementsAgents(mapAgentSources, appliedSourceSelector);
+
+                for (String agentName : agentsSourceWithSelectorList) {
+                    logger.debug("******** agentName: " + agentName);
+
+                    if (sourceSelectorPropertyComment != null) {
+                        //Construct selector property comment name (comments before)
+                        String fullSelectorPropertyCommentName = FlumeConfiguratorUtils.constructFullSelectorPropertyName(agentName, appliedSourceSelector, true, (String) partialProperty);
+                        logger.debug("******** fullSelectorPropertyCommentName: " + fullSelectorPropertyCommentName);
+
+                        //Check if the selector property exists in agent configuration
+                        if (configurationInitialMap.get(agentName).containsKey(fullSelectorPropertyCommentName)) {
+                            logger.debug("----MODIFY SELECTOR comment property " + fullSelectorPropertyCommentName + " to [Agent= " + agentName + " , Source= " + appliedSourceSelector + "]");
+
+                            //Modify selector property comment to agent
+                            configurationInitialMap.get(agentName).put(fullSelectorPropertyCommentName, sourceSelectorPropertyComment);
+
+
+                        } else {
+                            logger.debug("----ADD SELECTOR comment property " + fullSelectorPropertyCommentName + " to [Agent= " + agentName + " , Source= " + appliedSourceSelector + "]");
+
+                            //ADD selector property to agent
+                            configurationInitialMap.get(agentName).put(fullSelectorPropertyCommentName, sourceSelectorPropertyComment);
+
+                        }
+                    }
+
+                    //Construct selector property name
+                    String fullSelectorPropertyName = FlumeConfiguratorUtils.constructFullSelectorPropertyName(agentName, appliedSourceSelector, false, (String) partialProperty);
+                    logger.debug("******** fullSelectorPropertyName: " + fullSelectorPropertyName);
+
+                    //Check if the señectpr property exists in agent configuration
+                    if (configurationInitialMap.get(agentName).containsKey(fullSelectorPropertyName)) {
+                        logger.debug("----MODIFY SELECTOR property " + fullSelectorPropertyName + " to [Agent= " + agentName + " , Source= " + appliedSourceSelector + "]");
+
+                        //Modify property to agent
+                        configurationInitialMap.get(agentName).put(fullSelectorPropertyName, sourceSelectorPropertyValue);
+
+
+                    } else {
+                        logger.debug("----ADD SELECTOR property " + fullSelectorPropertyName + " to [Agent= " + agentName + " , Source= " + appliedSourceSelector + "]");
+
+                        //ADD property to agent
+                        configurationInitialMap.get(agentName).put(fullSelectorPropertyName, sourceSelectorPropertyValue);
+                    }
+                }
+            }
+        }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("END generateSelectorsPartialProperties");
+        }
+    }
 
     /**
      * Generate the initial structure with the information of interceptors of the sources
@@ -445,7 +605,6 @@ public class FlumePropertiesGenerator {
             logger.debug("END generateInterceptorsPartialProperties");
         }
     }
-
 
 
     /**
@@ -873,6 +1032,15 @@ public class FlumePropertiesGenerator {
                 //Generate Sources Partial Properties
                 generateElementsPartialProperties(FlumeConfiguratorConstants.SOURCES_PARTIAL_PROPERTY_PROPERTIES_PREFIX, FlumeConfiguratorConstants.SOURCES_PROPERTY, mapAgentSources);
 
+                //Generate Sources Selectors
+                generateSourcesSelectors();
+
+                //Generate Selectors Common Properties
+                generateSelectorsCommonProperties();
+
+                //Generate Selectors Partial Properties
+                generateSelectorsPartialProperties();
+
                 //Generate Sources Interceptors
                 generateSourcesInterceptors();
 
@@ -997,6 +1165,15 @@ public class FlumePropertiesGenerator {
 
                 //Generate Sources Partial Properties
                 generateElementsPartialProperties(FlumeConfiguratorConstants.SOURCES_PARTIAL_PROPERTY_PROPERTIES_PREFIX, FlumeConfiguratorConstants.SOURCES_PROPERTY, mapAgentSources);
+
+                //Generate Sources Selectors
+                generateSourcesSelectors();
+
+                //Generate Selectors Common Properties
+                generateSelectorsCommonProperties();
+
+                //Generate Selectors Partial Properties
+                generateSelectorsPartialProperties();
 
                 //Generate Sources Interceptors
                 generateSourcesInterceptors();

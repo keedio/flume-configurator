@@ -1587,25 +1587,59 @@ public class FlumeConfiguratorTopologyUtils {
         Collection<List<String>> correctSourcesPermutations = new ArrayList<>();
         Collection<List<String>> sourcesPermutations = new ArrayList<>();
 
+        List<String> sourcesInMap = new ArrayList<>();
+        List<String> sourcesNotInMap = new ArrayList<>();
+        List<String> sourcesNotInMapWithSourcePermutation = new ArrayList<>();
+        boolean isSharedSource = false;
+
         if (completeSourcesList != null && mapSharedChannelsSourcesRelation != null) {
-            //Get all permutations and correct permutations of the sources
-            boolean isCorrectSourcerOrder = false;
+            if (mapSharedChannelsSourcesRelation.size() > 0) {
+                //Detect sources not referencied by map
+                for (String sourceName : completeSourcesList) {
+                    isSharedSource = false;
+                    for (String channelName : mapSharedChannelsSourcesRelation.keySet()) {
+                        List<String> channelSourcesList = mapSharedChannelsSourcesRelation.get(channelName);
+                        if (channelSourcesList.contains(sourceName)) {
+                            if (!sourcesInMap.contains(sourceName)) {
+                                sourcesInMap.add(sourceName);
+                            }
+                            isSharedSource = true;
+                        }
+                    }
 
-            sourcesPermutations = CollectionUtils.permutations(completeSourcesList);
-
-            Iterator<List<String>> itSourcesPermutations = sourcesPermutations.iterator();
-            while (itSourcesPermutations.hasNext()) {
-                List<String> sourcePermutation = itSourcesPermutations.next();
-
-                isCorrectSourcerOrder = true;
-                for (String channelName : mapSharedChannelsSourcesRelation.keySet()) {
-                    List<String> channelSourcesList = mapSharedChannelsSourcesRelation.get(channelName);
-                    isCorrectSourcerOrder = isCorrectSourcerOrder && FlumeConfiguratorTopologyUtils.isCorrectOrderSublist(sourcePermutation, channelSourcesList);
+                    if (!isSharedSource) {
+                        sourcesNotInMap.add(sourceName);
+                    }
                 }
 
-                if (isCorrectSourcerOrder) {
-                    correctSourcesPermutations.add(sourcePermutation);
+                //Get all permutations and correct permutations of the sources
+                boolean isCorrectSourcerOrder = false;
+
+                sourcesPermutations = CollectionUtils.permutations(sourcesInMap);
+
+                Iterator<List<String>> itSourcesPermutations = sourcesPermutations.iterator();
+                while (itSourcesPermutations.hasNext()) {
+                    List<String> sourcePermutation = itSourcesPermutations.next();
+
+                    isCorrectSourcerOrder = true;
+                    for (String channelName : mapSharedChannelsSourcesRelation.keySet()) {
+                        List<String> channelSourcesList = mapSharedChannelsSourcesRelation.get(channelName);
+                        isCorrectSourcerOrder = isCorrectSourcerOrder && FlumeConfiguratorTopologyUtils.isCorrectOrderSublist(sourcePermutation, channelSourcesList);
+                    }
+
+                    if (isCorrectSourcerOrder) {
+                        //Add permutation from sources not in map + correct permutation of sources in map
+
+                        sourcesNotInMapWithSourcePermutation = new ArrayList(sourcesNotInMap);
+                        sourcesNotInMapWithSourcePermutation.addAll(sourcePermutation);
+                        correctSourcesPermutations.add(sourcesNotInMapWithSourcePermutation);
+
+                        //correctSourcesPermutations.add(sourcePermutation);
+                    }
                 }
+            } else {
+                //It's not neccesary permutations. Any order is OK
+                correctSourcesPermutations.add(completeSourcesList);
             }
         }
 

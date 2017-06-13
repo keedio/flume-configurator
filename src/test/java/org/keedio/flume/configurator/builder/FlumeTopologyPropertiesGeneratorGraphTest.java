@@ -552,6 +552,7 @@ public class FlumeTopologyPropertiesGeneratorGraphTest {
 
             //Check output base configuration directory
             FlumeTopologyPropertiesGenerator.setPathJSONTopology(GRAPH_TOPOLOGY_FILE_PATH);
+            FlumeTopologyPropertiesGenerator.setPathConfigurationGeneratedFile(OUTPUT_GENERATED_FILE_PATH_FILE);
 
             //Invoke method
             isCorrect = (boolean) generateInputPropertiesMethod.invoke(flumeTopologyPropertiesGenerator, objectNull);

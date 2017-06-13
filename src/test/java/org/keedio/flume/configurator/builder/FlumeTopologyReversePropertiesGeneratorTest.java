@@ -13,10 +13,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runners.MethodSorters;
 import org.keedio.flume.configurator.constants.FlumeConfiguratorConstants;
 import org.keedio.flume.configurator.exceptions.FlumeConfiguratorException;
@@ -915,6 +912,31 @@ public class FlumeTopologyReversePropertiesGeneratorTest {
         } catch (Exception e) {
             Assert.fail("An error has occurred [test16GenerateDraw2DFlumeTopologyFromPropertiesString] method");
             logger.error("An error has occurred [test16GenerateDraw2DFlumeTopologyFromPropertiesString] method", e);
+        }
+    }
+
+
+    @Ignore
+    @Test
+    public void testXXGenerateDraw2DFlumeTopology() {
+
+        try {
+
+            String path = "/Users/inigosanmartin/flume configurator/pruebas_03_sinkgroup/flume_properties/1_agent";
+            FlumeTopologyReversePropertiesGenerator.setGeneratePositionCoordinates(true);
+            FlumeTopologyReversePropertiesGenerator.setWithComments(true);
+            FlumeTopologyReversePropertiesGenerator.setPathDraw2DFlumeTopologyGeneratedFile(OUTPUT_GENERATED_FILE_PATH_FILE);
+
+            //Build correct
+            FlumeTopologyReversePropertiesGenerator.setPathFlumeProperties(path);
+
+            //Invoke method
+            boolean isCorrect = (boolean) generateDraw2DFlumeTopologyMethod.invoke(flumeTopologyReversePropertiesGenerator, objectNull);
+            Assert.assertTrue("The Draw2D flume configuration file has not been built correctly", isCorrect);
+
+        } catch (Exception e) {
+            Assert.fail("An error has occurred [test14GenerateDraw2DFlumeTopology] method");
+            logger.error("An error has occurred [test14GenerateDraw2DFlumeTopology] method", e);
         }
     }
 }

@@ -46,6 +46,9 @@ public class FlumePropertiesGeneratorTest {
     private static Method loadPropertiesFileMethod;
     private static Method generateAgentsListMethod;
     private static Method generateAgentElementsMethod;
+    private static Method generateSourcesSelectorsMethod;
+    private static Method generateSelectorsCommonPropertiesMethod;
+    private static Method generateSelectorsPartialPropertiesMethod;
     private static Method generateSourcesInterceptorsMethod;
     private static Method generateInterceptorsCommonPropertiesMethod;
     private static Method generateInterceptorsPartialPropertiesMethod;
@@ -81,7 +84,19 @@ public class FlumePropertiesGeneratorTest {
         
         generateAgentElementsMethod = FlumePropertiesGenerator.class.getDeclaredMethod("generateAgentElements", argsGenerateAgentElementsMethod);
         generateAgentElementsMethod.setAccessible(true);
-        
+
+        //generateSourcesSelectors is a private method. Access by reflection
+        generateSourcesSelectorsMethod = FlumePropertiesGenerator.class.getDeclaredMethod("generateSourcesSelectors", classNull);
+        generateSourcesSelectorsMethod.setAccessible(true);
+
+        //generateSelectorsCommonProperties is a private method. Access by reflection
+        generateSelectorsCommonPropertiesMethod = FlumePropertiesGenerator.class.getDeclaredMethod("generateSelectorsCommonProperties", classNull);
+        generateSelectorsCommonPropertiesMethod.setAccessible(true);
+
+        //generateSelectorsPartialProperties is a private method. Access by reflection
+        generateSelectorsPartialPropertiesMethod = FlumePropertiesGenerator.class.getDeclaredMethod("generateSelectorsPartialProperties", classNull);
+        generateSelectorsPartialPropertiesMethod.setAccessible(true);
+
         //generateSourcesInterceptors is a private method. Access by reflection
         generateSourcesInterceptorsMethod = FlumePropertiesGenerator.class.getDeclaredMethod("generateSourcesInterceptors", classNull);
         generateSourcesInterceptorsMethod.setAccessible(true); 
@@ -143,7 +158,7 @@ public class FlumePropertiesGeneratorTest {
     }
 
     @Test
-    public void test01createInitialStructures() {
+    public void test01CreateInitialStructures() {
 
         try {
 
@@ -165,8 +180,8 @@ public class FlumePropertiesGeneratorTest {
             Assert.assertTrue("The creation of initial structures is not correct", flumePropertiesGenerator.getMapSourcesInterceptors().isEmpty());
 
         } catch (Exception e) {
-            Assert.fail("An error has occurred [test01createInitialStructures] method");
-            logger.error("An error has occurred [test01createInitialStructures] method", e);
+            Assert.fail("An error has occurred [test01CreateInitialStructures] method");
+            logger.error("An error has occurred [test01CreateInitialStructures] method", e);
         }
     }
     
@@ -332,12 +347,82 @@ public class FlumePropertiesGeneratorTest {
             Assert.fail("An error has occurred [test05GenerateAgentElements] method");
             logger.error("An error has occurred [test05GenerateAgentElements] method", e);
         }
-    }  
-    
-    
-    
+    }
+
+
     @Test
-    public void test06GenerateSourcesInterceptors() {
+    public void test06GenerateSourcesSelectors() {
+
+        try {
+
+            int beforeGenerateSourcesSelectorsPropertiesNumber = FlumePropertiesGeneratorTestUtils.calculatePropertiesTotalNumber(flumePropertiesGenerator.getConfigurationInitialMap());
+
+            Map<String, List<String>> mapAgentSelectors = flumePropertiesGenerator.getMapAgentSelectors();
+            Assert.assertTrue("The generation of the list of sources with selector is not correct", mapAgentSelectors.isEmpty());
+
+            //Invoke method
+            generateSourcesSelectorsMethod.invoke(flumePropertiesGenerator, objectNull);
+
+            mapAgentSelectors = flumePropertiesGenerator.getMapAgentSelectors();
+            Assert.assertNotNull("The generation of the list of sources with selector is not correct", mapAgentSelectors);
+            Assert.assertTrue("The generation of the list of sources with selector is not correct", mapAgentSelectors.size() > 0);
+
+            int afterGenerateSourcesSelectorsPropertiesNumber = FlumePropertiesGeneratorTestUtils.calculatePropertiesTotalNumber(flumePropertiesGenerator.getConfigurationInitialMap());
+            Assert.assertEquals("The generation of the list of sources with selector is not correct", beforeGenerateSourcesSelectorsPropertiesNumber, afterGenerateSourcesSelectorsPropertiesNumber);
+
+        } catch (Exception e) {
+            Assert.fail("An error has occurred [test06GenerateSourcesSelectors] method");
+            logger.error("An error has occurred [test06GenerateSourcesSelectors] method", e);
+        }
+    }
+
+
+    @Test
+    public void test07GenerateSourcesSelectorsCommonProperties() {
+
+        try {
+
+            int beforeGenerateSourcesSelectorsCommonPropertiesPropertiesNumber = FlumePropertiesGeneratorTestUtils.calculatePropertiesTotalNumber(flumePropertiesGenerator.getConfigurationInitialMap());
+            boolean containsSelectorsProperties = FlumePropertiesGeneratorTestUtils.containsSelectorsProperties(flumePropertiesGenerator.getConfigurationInitialMap());
+            Assert.assertFalse("The generation of the list of selectors common properties is not correct", containsSelectorsProperties);
+
+            //Invoke method
+            generateSelectorsCommonPropertiesMethod.invoke(flumePropertiesGenerator, objectNull);
+
+            int afterGenerateSourcesSelectorsCommonPropertiesPropertiesNumber = FlumePropertiesGeneratorTestUtils.calculatePropertiesTotalNumber(flumePropertiesGenerator.getConfigurationInitialMap());
+            Assert.assertTrue("The generation of the list of selectors common properties is not correct", afterGenerateSourcesSelectorsCommonPropertiesPropertiesNumber > beforeGenerateSourcesSelectorsCommonPropertiesPropertiesNumber);
+            containsSelectorsProperties = FlumePropertiesGeneratorTestUtils.containsSelectorsProperties(flumePropertiesGenerator.getConfigurationInitialMap());
+            Assert.assertTrue("The generation of the list of selectors common properties is not correct", containsSelectorsProperties);
+
+        } catch (Exception e) {
+            Assert.fail("An error has occurred [test07GenerateSourcesSelectorsCommonProperties] method");
+            logger.error("An error has occurred [test07GenerateSourcesSelectorsCommonProperties] method", e);
+        }
+    }
+
+
+    @Test
+    public void test08GenerateSourcesSelectorsPartialProperties() {
+
+        try {
+
+            int beforeGenerateSourcesSelectorsPartialPropertiesPropertiesNumber = FlumePropertiesGeneratorTestUtils.calculatePropertiesTotalNumber(flumePropertiesGenerator.getConfigurationInitialMap());
+
+            //Invoke method
+            generateSelectorsPartialPropertiesMethod.invoke(flumePropertiesGenerator, objectNull);
+
+            int afterGenerateSourcesSelectorsPartialPropertiesPropertiesNumber = FlumePropertiesGeneratorTestUtils.calculatePropertiesTotalNumber(flumePropertiesGenerator.getConfigurationInitialMap());
+            Assert.assertTrue("The generation of the list of selectors partial properties is not correct", afterGenerateSourcesSelectorsPartialPropertiesPropertiesNumber > beforeGenerateSourcesSelectorsPartialPropertiesPropertiesNumber);
+
+        } catch (Exception e) {
+            Assert.fail("An error has occurred [test08GenerateSourcesSelectorsPartialProperties] method");
+            logger.error("An error has occurred [test08GenerateSourcesSelectorsPartialProperties] method", e);
+        }
+    }
+
+
+    @Test
+    public void test09GenerateSourcesInterceptors() {
 
         try {    
 
@@ -356,20 +441,20 @@ public class FlumePropertiesGeneratorTest {
             Assert.assertTrue("The generation of the list of interceptors is not correct", mapSourcesInterceptors.size() > 0);
 
             int afterGenerateSourcesInterceptorsPropertiesNumber = FlumePropertiesGeneratorTestUtils.calculatePropertiesTotalNumber(flumePropertiesGenerator.getConfigurationInitialMap());
-            Assert.assertTrue("The generation of the list of sources is not correct", afterGenerateSourcesInterceptorsPropertiesNumber > beforeGenerateSourcesInterceptorsPropertiesNumber);
+            Assert.assertTrue("The generation of the list of interceptors is not correct", afterGenerateSourcesInterceptorsPropertiesNumber > beforeGenerateSourcesInterceptorsPropertiesNumber);
             containsSourcesInterceptors = FlumePropertiesGeneratorTestUtils.containsSourcesInterceptors(flumePropertiesGenerator.getConfigurationInitialMap());
             Assert.assertTrue("The generation of the list of interceptors is not correct", containsSourcesInterceptors);
 
         } catch (Exception e) {
-            Assert.fail("An error has occurred [test06GenerateSourcesInterceptors] method");
-            logger.error("An error has occurred [test06GenerateSourcesInterceptors] method", e);
+            Assert.fail("An error has occurred [test09GenerateSourcesInterceptors] method");
+            logger.error("An error has occurred [test09GenerateSourcesInterceptors] method", e);
         }
     }  
     
     
     
     @Test
-    public void test07GenerateSourcesInterceptorsCommonProperties() {
+    public void test10GenerateSourcesInterceptorsCommonProperties() {
 
         try {    
 
@@ -386,36 +471,36 @@ public class FlumePropertiesGeneratorTest {
             Assert.assertTrue("The generation of the list of interceptors common properties is not correct", containsInterceptorsProperties);
   
         } catch (Exception e) {
-            Assert.fail("An error has occurred [test07GenerateSourcesInterceptorsCommonProperties] method");
-            logger.error("An error has occurred [test07GenerateSourcesInterceptorsCommonProperties] method", e);
+            Assert.fail("An error has occurred [test10GenerateSourcesInterceptorsCommonProperties] method");
+            logger.error("An error has occurred [test10GenerateSourcesInterceptorsCommonProperties] method", e);
         }
     }    
     
     
     
     @Test
-    public void test08GenerateSourcesInterceptorsPartialProperties() {
+    public void test11GenerateSourcesInterceptorsPartialProperties() {
 
         try {    
 
-            int beforeGenerateSourcesInterceptorsCommonPropertiesPropertiesNumber = FlumePropertiesGeneratorTestUtils.calculatePropertiesTotalNumber(flumePropertiesGenerator.getConfigurationInitialMap());
+            int beforeGenerateSourcesInterceptorsPartialPropertiesPropertiesNumber = FlumePropertiesGeneratorTestUtils.calculatePropertiesTotalNumber(flumePropertiesGenerator.getConfigurationInitialMap());
 
             //Invoke method
             generateInterceptorsPartialPropertiesMethod.invoke(flumePropertiesGenerator, objectNull);
 
-            int afterGenerateSourcesInterceptorsCommonPropertiesPropertiesNumber = FlumePropertiesGeneratorTestUtils.calculatePropertiesTotalNumber(flumePropertiesGenerator.getConfigurationInitialMap());
-            Assert.assertTrue("The generation of the list of interceptors partial properties is not correct", afterGenerateSourcesInterceptorsCommonPropertiesPropertiesNumber > beforeGenerateSourcesInterceptorsCommonPropertiesPropertiesNumber);
+            int afterGenerateSourcesInterceptorsPartialPropertiesPropertiesNumber = FlumePropertiesGeneratorTestUtils.calculatePropertiesTotalNumber(flumePropertiesGenerator.getConfigurationInitialMap());
+            Assert.assertTrue("The generation of the list of interceptors partial properties is not correct", afterGenerateSourcesInterceptorsPartialPropertiesPropertiesNumber > beforeGenerateSourcesInterceptorsPartialPropertiesPropertiesNumber);
 
         } catch (Exception e) {
-            Assert.fail("An error has occurred [test08GenerateSourcesInterceptorsPartialProperties] method");
-            logger.error("An error has occurred [test08GenerateSourcesInterceptorsPartialProperties] method", e);
+            Assert.fail("An error has occurred [test11GenerateSourcesInterceptorsPartialProperties] method");
+            logger.error("An error has occurred [test11GenerateSourcesInterceptorsPartialProperties] method", e);
         }
     }     
     
     
     
     @Test
-    public void test09GenerateElementsCommonProperties() {
+    public void test12GenerateElementsCommonProperties() {
 
         try {    
 
@@ -473,15 +558,15 @@ public class FlumePropertiesGeneratorTest {
 
 
         } catch (Exception e) {
-            Assert.fail("An error has occurred [test09GenerateElementsCommonProperties] method");
-            logger.error("An error has occurred [test09GenerateElementsCommonProperties] method", e);
+            Assert.fail("An error has occurred [test12GenerateElementsCommonProperties] method");
+            logger.error("An error has occurred [test12GenerateElementsCommonProperties] method", e);
         }
     }      
     
     
     
     @Test
-    public void test10GenerateElementsPartialProperties() {
+    public void test13GenerateElementsPartialProperties() {
 
         try {    
 
@@ -541,14 +626,14 @@ public class FlumePropertiesGeneratorTest {
             Assert.assertTrue("The generation of the list of sinkgroups partial properties is not correct", containsSinkGroupsProperties);
 
         } catch (Exception e) {
-            Assert.fail("An error has occurred [test10GenerateElementsPartialProperties] method");
-            logger.error("An error has occurred [test10GenerateElementsPartialProperties] method", e);
+            Assert.fail("An error has occurred [test13GenerateElementsPartialProperties] method");
+            logger.error("An error has occurred [test13GenerateElementsPartialProperties] method", e);
         }
     }  
     
     
     @Test
-    public void test11GenerateFinalStructureMaps() {
+    public void test14GenerateFinalStructureMaps() {
 
         try {
 
@@ -569,15 +654,15 @@ public class FlumePropertiesGeneratorTest {
             }
 
         } catch (Exception e) {
-            Assert.fail("An error has occurred [test11GenerateFinalStructureMaps] method");
-            logger.error("An error has occurred [test11GenerateFinalStructureMaps] method", e);
+            Assert.fail("An error has occurred [test14GenerateFinalStructureMaps] method");
+            logger.error("An error has occurred [test14GenerateFinalStructureMaps] method", e);
         }
     }  
     
    
     
     @Test
-    public void test12WriteConfigurationFilesInvalidPath() {
+    public void test15WriteConfigurationFilesInvalidPath() {
 
         try {
 
@@ -589,18 +674,18 @@ public class FlumePropertiesGeneratorTest {
 
         } catch (InvocationTargetException ite) {
                if (!(ite.getCause() instanceof InvalidPathException)) {
-                   Assert.fail("An error has occurred [test12WriteConfigurationFilesInvalidPath] method");
-                   logger.error("An error has occurred [test12WriteConfigurationFilesInvalidPath] method", ite);
+                   Assert.fail("An error has occurred [test15WriteConfigurationFilesInvalidPath] method");
+                   logger.error("An error has occurred [test15WriteConfigurationFilesInvalidPath] method", ite);
                }
         } catch (Exception e) {
-            Assert.fail("An error has occurred [test12WriteConfigurationFilesInvalidPath] method");
-            logger.error("An error has occurred [test12WriteConfigurationFilesInvalidPath] method", e);
+            Assert.fail("An error has occurred [test15WriteConfigurationFilesInvalidPath] method");
+            logger.error("An error has occurred [test15WriteConfigurationFilesInvalidPath] method", e);
         }
     }    
     
     
     @Test
-    public void test13WriteConfigurationFiles() {
+    public void test16WriteConfigurationFiles() {
 
         try {
 
@@ -636,14 +721,14 @@ public class FlumePropertiesGeneratorTest {
             writeConfigurationFilesMethod.invoke(flumePropertiesGenerator, objectNull);
 
         } catch (Exception e) {
-            Assert.fail("An error has occurred [test13WriteConfigurationFiles] method");
-            logger.error("An error has occurred [test13WriteConfigurationFiles] method", e);
+            Assert.fail("An error has occurred [test16WriteConfigurationFiles] method");
+            logger.error("An error has occurred [test16WriteConfigurationFiles] method", e);
         }
     }   
     
     
     @Test
-    public void test14BuildConfigurationMap() {
+    public void test17BuildConfigurationMap() {
 
         try {  
 
@@ -667,14 +752,14 @@ public class FlumePropertiesGeneratorTest {
             Assert.assertTrue("The Flume configuration file has not been built correctly", isCorrect);
             
         } catch (Exception e) {
-            Assert.fail("An error has occurred [test14BuildConfigurationMap] method");
-            logger.error("An error has occurred [test14BuildConfigurationMap] method", e);
+            Assert.fail("An error has occurred [test17BuildConfigurationMap] method");
+            logger.error("An error has occurred [test17BuildConfigurationMap] method", e);
         }
     }
 
 
     @Test
-    public void test15BuildConfigurationMapFromStringProperties() {
+    public void test18BuildConfigurationMapFromStringProperties() {
 
         try {
 
@@ -694,8 +779,8 @@ public class FlumePropertiesGeneratorTest {
             Assert.assertFalse("The Flume configuration file has not been built correctly", configurationMapString.isEmpty());
 
         } catch (Exception e) {
-            Assert.fail("An error has occurred [test15BuildConfigurationMapFromStringProperties] method");
-            logger.error("An error has occurred [test15BuildConfigurationMapFromStringProperties] method", e);
+            Assert.fail("An error has occurred [test18BuildConfigurationMapFromStringProperties] method");
+            logger.error("An error has occurred [test18BuildConfigurationMapFromStringProperties] method", e);
         }
     }
 

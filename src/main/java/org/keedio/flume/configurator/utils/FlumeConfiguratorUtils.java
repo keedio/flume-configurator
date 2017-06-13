@@ -161,10 +161,10 @@ public class FlumeConfiguratorUtils {
      * @param sourceName String with the name of the source of the interceptor property
      * @param interceptorName String with the name of the interceptor of the property
      * @param isComment boolean true if is a comment property, false otherwise
-     * @param propertyInterceptorName  String with the name of the interceptor property
+     * @param interceptorPropertyName  String with the name of the interceptor property
      * @return String with the full name of the interceptor property
      */
-    public static String constructFullInterceptorPropertyName(String agentName, String sourceName, String interceptorName, boolean isComment, String propertyInterceptorName) {
+    public static String constructFullInterceptorPropertyName(String agentName, String sourceName, String interceptorName, boolean isComment, String interceptorPropertyName) {
 
         StringBuilder sb = new StringBuilder();
         sb.append(agentName);
@@ -181,7 +181,36 @@ public class FlumeConfiguratorUtils {
             sb.append(FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX);
             sb.append(FlumeConfiguratorConstants.DOT_SEPARATOR);
         }
-        sb.append(propertyInterceptorName);
+        sb.append(interceptorPropertyName);
+
+        return sb.toString();
+    }
+
+
+    /**
+     * Build the full name of a configuration selector property
+     * @param agentName String with the name of the agent of the property
+     * @param sourceName String with the name of the source of the selector property
+     * @param isComment boolean true if is a comment property, false otherwise
+     * @param selectorPropertyName  String with the name of the selector property
+     * @return String with the full name of the selector property
+     */
+    public static String constructFullSelectorPropertyName(String agentName, String sourceName, boolean isComment, String selectorPropertyName) {
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(agentName);
+        sb.append(FlumeConfiguratorConstants.DOT_SEPARATOR);
+        sb.append(FlumeConfiguratorConstants.SOURCES_PROPERTY);
+        sb.append(FlumeConfiguratorConstants.DOT_SEPARATOR);
+        sb.append(sourceName);
+        sb.append(FlumeConfiguratorConstants.DOT_SEPARATOR);
+        sb.append(FlumeConfiguratorConstants.SELECTOR_PROPERTY);
+        sb.append(FlumeConfiguratorConstants.DOT_SEPARATOR);
+        if (isComment) {
+            sb.append(FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX);
+            sb.append(FlumeConfiguratorConstants.DOT_SEPARATOR);
+        }
+        sb.append(selectorPropertyName);
 
         return sb.toString();
     }
@@ -284,6 +313,7 @@ public class FlumeConfiguratorUtils {
         //Groups
         Map<String,AgentConfigurationGroupProperties> agentConfigurationGroupPropertiesMap = agentConfigurationProperties.getMapGroupProperties();
 
+
         for (String groupName : agentConfigurationGroupPropertiesMap.keySet()) {
 
             textHeader = new StringBuilder().append("GROUP:  ").append(groupName);
@@ -291,6 +321,7 @@ public class FlumeConfiguratorUtils {
 
             AgentConfigurationGroupProperties agentConfigurationGroupProperties = agentConfigurationGroupPropertiesMap.get(groupName);
 
+            boolean withProperties = false;
 
             //Sources properties
             List listSourceProperties = agentConfigurationGroupProperties.getListSourceProperties();
@@ -301,18 +332,23 @@ public class FlumeConfiguratorUtils {
 
                 if (!sourcePropertyEntry.getKey().toString().contains(FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX)) {
                     sb.append(sourcePropertyEntry).append(FlumeConfiguratorConstants.NEW_LINE);
+                    withProperties = true;
                 } else {
                     if (addComments) {
                         String sourcePropertyEntryString = (String) sourcePropertyEntry.getValue();
                         if (!"".equals(sourcePropertyEntryString.trim())) {
                             sb.append(FlumeConfiguratorConstants.COMMENT_PREFIX).append(sourcePropertyEntry.getValue()).append(FlumeConfiguratorConstants.NEW_LINE);
+                            withProperties = true;
                         }
                     }
                 }
             }
 
+            if (withProperties) {
+                sb.append(FlumeConfiguratorConstants.NEW_LINE);
+                withProperties = false;
+            }
 
-            sb.append(FlumeConfiguratorConstants.NEW_LINE);
 
             //Source interceptors properties
             Map<String, List<String>> mapSourceInterceptorProperties = agentConfigurationGroupProperties.getMapSourceInterceptorProperties();
@@ -326,18 +362,23 @@ public class FlumeConfiguratorUtils {
 
                     if (!sourceInterceptorPropertyEntry.getKey().toString().contains(FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX)) {
                         sb.append(sourceInterceptorPropertyEntry).append(FlumeConfiguratorConstants.NEW_LINE);
+                        withProperties = true;
                     } else {
                         if (addComments) {
                             String sourceInterceptorPropertyEntryString = (String) sourceInterceptorPropertyEntry.getValue();
                             if (!"".equals(sourceInterceptorPropertyEntryString.trim())) {
                                 sb.append(FlumeConfiguratorConstants.COMMENT_PREFIX).append(sourceInterceptorPropertyEntry.getValue()).append(FlumeConfiguratorConstants.NEW_LINE);
+                                withProperties = true;
                             }
                         }
                     }
                 }
             }
 
-            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            if (withProperties) {
+                sb.append(FlumeConfiguratorConstants.NEW_LINE);
+                withProperties = false;
+            }
 
             //Channels properties
             List listChannelProperties = agentConfigurationGroupProperties.getListChannelProperties();
@@ -348,17 +389,22 @@ public class FlumeConfiguratorUtils {
 
                 if (!channelPropertyEntry.getKey().toString().contains(FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX)) {
                     sb.append(channelPropertyEntry).append(FlumeConfiguratorConstants.NEW_LINE);
+                    withProperties = true;
                 } else {
                     if (addComments) {
                         String channelPropertyEntryString = (String) channelPropertyEntry.getValue();
                         if (!"".equals(channelPropertyEntryString.trim())) {
                             sb.append(FlumeConfiguratorConstants.COMMENT_PREFIX).append(channelPropertyEntry.getValue()).append(FlumeConfiguratorConstants.NEW_LINE);
+                            withProperties = true;
                         }
                     }
                 }
             }
 
-            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            if (withProperties) {
+                sb.append(FlumeConfiguratorConstants.NEW_LINE);
+                withProperties = false;
+            }
 
             //Sinks properties
             List listSinkProperties = agentConfigurationGroupProperties.getListSinkProperties();
@@ -369,17 +415,22 @@ public class FlumeConfiguratorUtils {
 
                 if (!sinkPropertyEntry.getKey().toString().contains(FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX)) {
                     sb.append(sinkPropertyEntry).append(FlumeConfiguratorConstants.NEW_LINE);
+                    withProperties = true;
                 } else {
                     if (addComments) {
                         String sinkPropertyEntryString = (String) sinkPropertyEntry.getValue();
                         if (!"".equals(sinkPropertyEntryString.trim())) {
                             sb.append(FlumeConfiguratorConstants.COMMENT_PREFIX).append(sinkPropertyEntry.getValue()).append(FlumeConfiguratorConstants.NEW_LINE);
+                            withProperties = true;
                         }
                     }
                 }
             }
 
-            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            if (withProperties) {
+                sb.append(FlumeConfiguratorConstants.NEW_LINE);
+                withProperties = false;
+            }
 
             //Sink groups properties
             List listSinkGroupsProperties = agentConfigurationGroupProperties.getListSinkGroupProperties();
@@ -390,15 +441,16 @@ public class FlumeConfiguratorUtils {
 
                 if (!sinkGroupPropertyEntry.getKey().toString().contains(FlumeConfiguratorConstants.COMMENT_PROPERTY_PREFIX)) {
                     sb.append(sinkGroupPropertyEntry).append(FlumeConfiguratorConstants.NEW_LINE);
+                    withProperties = true;
                 } else {
                     if (addComments) {
                         String sinkGroupPropertyEntryString = (String) sinkGroupPropertyEntry.getValue();
                         if (!"".equals(sinkGroupPropertyEntryString.trim())) {
                             sb.append(FlumeConfiguratorConstants.COMMENT_PREFIX).append(sinkGroupPropertyEntry.getValue()).append(FlumeConfiguratorConstants.NEW_LINE);
+                            withProperties = true;
                         }
                     }
                 }
-
             }
 
 
@@ -751,7 +803,7 @@ public class FlumeConfiguratorUtils {
     /**
      * Indicate if a property is the channels property of sources
      * @param propertyName String with the name of the property
-     * @return boolean true if the property is the channels property of sources, false otherwise
+     * @return true if the property is the channels property of sources, false otherwise
      */
     public static boolean isSourceChannelsProperty(String propertyName) {
 
@@ -765,7 +817,7 @@ public class FlumeConfiguratorUtils {
     /**
      * Indicate if a property is the channel property of sinks
      * @param propertyName String with the name of the property
-     * @return boolean true if the property is the channel property of sinks, false otherwise
+     * @return true if the property is the channel property of sinks, false otherwise
      */
     public static boolean isSinkChannelProperty(String propertyName) {
 
@@ -778,13 +830,30 @@ public class FlumeConfiguratorUtils {
     /**
      * Indicate if a property is the sinks property of sinkgroups
      * @param propertyName String with the name of the property
-     * @return boolean true if the property is the sinks property of sinkgroups, false otherwise
+     * @return true if the property is the sinks property of sinkgroups, false otherwise
      */
     public static boolean isSinkGroupsSinksProperty(String propertyName) {
 
         return (propertyName.startsWith(FlumeConfiguratorConstants.SINKGROUPS_COMMON_PROPERTY_PROPERTIES_PREFIX) ||
                 propertyName.startsWith(FlumeConfiguratorConstants.SINKGROUPS_PARTIAL_PROPERTY_PROPERTIES_PREFIX)) &&
                 propertyName.endsWith(FlumeConfiguratorConstants.SINKS_PROPERTY);
+
+    }
+
+    /**
+     * Indicate if a property is a property of selector that references channels
+     * @param propertyName String with the name of the property
+     * @return true if the property is t a property of selector that references channels, false otherwise
+     */
+    public static boolean isSelectorChannelReferenceProperty(String propertyName) {
+
+        return (propertyName.startsWith(FlumeConfiguratorConstants.SELECTORS_COMMON_PROPERTY_PROPERTIES_PREFIX) ||
+                propertyName.startsWith(FlumeConfiguratorConstants.SELECTORS_PARTIAL_PROPERTY_PROPERTIES_PREFIX)) &&
+                (propertyName.contains(FlumeConfiguratorConstants.SELECTOR_PROPERTY) &&
+                (propertyName.contains(FlumeConfiguratorConstants.MAPPING_PROPERTY) ||
+                propertyName.contains(FlumeConfiguratorConstants.OPTIONAL_PROPERTY) ||
+                propertyName.contains(FlumeConfiguratorConstants.DEFAULT_PROPERTY)));
+
     }
 
     /**
@@ -824,6 +893,71 @@ public class FlumeConfiguratorUtils {
             }
             return splittedValues;
         } return new String[]{};
+    }
+
+
+    /**
+     *
+     * Get the list of channels of a source
+     * @param flumeConfigurationProperties Properties with the configuration file
+     * @param sourceName String with the name of source
+     * @param separatorCharacter String with the separator character between the elements
+     * @return List with the list of agents that reference the specified element
+     */
+    public static List<String> getSourceChannels(Properties flumeConfigurationProperties, String sourceName, String separatorCharacter) {
+
+        List<String> sourceChannelsList = new ArrayList<>();
+
+        //Get channels from the common property
+        String valuesProperty = flumeConfigurationProperties.getProperty(FlumeConfiguratorConstants.SOURCES_COMMON_PROPERTY_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + FlumeConfiguratorConstants.CHANNELS_PROPERTY);
+        if (valuesProperty != null && !valuesProperty.isEmpty()) {
+            List<String> listChannels = Arrays.asList(FlumeConfiguratorUtils.splitWithoutSpacesOptional(valuesProperty, false, FlumeConfiguratorConstants.WHITE_SPACE_REGEX));
+            for (String channel : listChannels) {
+                if (!sourceChannelsList.contains(channel)) {
+                    sourceChannelsList.add(channel);
+                }
+            }
+        }
+
+        //Get channels from the partial property
+        String appliedElementsList = flumeConfigurationProperties.getProperty(FlumeConfiguratorConstants.SOURCES_PARTIAL_PROPERTY_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + FlumeConfiguratorConstants.PARTIAL_PROPERTY_APPLIED_ELEMENTS_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + FlumeConfiguratorConstants.CHANNELS_PROPERTY);
+        String propertyValuesList = flumeConfigurationProperties.getProperty(FlumeConfiguratorConstants.SOURCES_PARTIAL_PROPERTY_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + FlumeConfiguratorConstants.PARTIAL_PROPERTY_PROPERTY_VALUES_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + FlumeConfiguratorConstants.CHANNELS_PROPERTY);
+
+        if (appliedElementsList != null && propertyValuesList != null) {
+
+            String[] appliedElementsArray = FlumeConfiguratorUtils.splitWithoutSpacesOptionalKeepInternalSpaces(appliedElementsList,true,separatorCharacter);
+            String[] propertyValuesArray = FlumeConfiguratorUtils.splitWithoutSpacesOptionalKeepInternalSpaces(propertyValuesList,true,separatorCharacter);
+
+            for (int i = 0; i < appliedElementsArray.length; i++) {
+                String source = appliedElementsArray[i];
+                if (source.equals(sourceName)) {
+                    //The common property is overwrite
+                    sourceChannelsList.clear();
+                    if (propertyValuesArray.length == appliedElementsArray.length) {
+                        valuesProperty = propertyValuesArray[i];
+
+                        List<String> listChannels = Arrays.asList(FlumeConfiguratorUtils.splitWithoutSpacesOptional(valuesProperty, false, FlumeConfiguratorConstants.WHITE_SPACE_REGEX));
+                        for (String channel : listChannels) {
+                            if (!sourceChannelsList.contains(channel)) {
+                                sourceChannelsList.add(channel);
+                            }
+                        }
+                    } else if (propertyValuesArray.length == 1) {
+                        valuesProperty = propertyValuesArray[0];
+                        List<String> listChannels = Arrays.asList(FlumeConfiguratorUtils.splitWithoutSpacesOptional(valuesProperty, false, FlumeConfiguratorConstants.WHITE_SPACE_REGEX));
+                        for (String channel : listChannels) {
+                            if (!sourceChannelsList.contains(channel)) {
+                                sourceChannelsList.add(channel);
+                            }
+                        }
+                    } else {
+                        sourceChannelsList.clear();
+                    }
+                }
+            }
+        }
+
+        return sourceChannelsList;
     }
 
 

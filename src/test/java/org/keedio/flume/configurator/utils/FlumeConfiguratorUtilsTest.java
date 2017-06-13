@@ -731,5 +731,34 @@ public class FlumeConfiguratorUtilsTest {
             Assert.fail("An error has occurred [testSplitWithoutSpacesOptionalKeepInternalSpaces] method");
             logger.error("An error has occurred [testSplitWithoutSpacesOptionalKeepInternalSpaces] method", e);
         }
-    }    
+    }
+
+
+    @Test
+    public void testGetSourceChannels() {
+
+        String sourceName = "source1_1";
+        String sourceChannelsExpected_1 = "channel1_1";
+        String sourceChannelsExpected_2 = "channel1_2";
+        String sourceChannelsExpected_3 = "channel1_3";
+        String nonExistSourceName = "sourceFake";
+
+        try {
+
+            //Check source channels
+            List<String> sourceChannelsList = FlumeConfiguratorUtils.getSourceChannels(flumeConfigurationProperties, sourceName, DEFAULT_SEPARATOR);
+            Assert.assertEquals("The channels of the source are not correct", sourceChannelsList.size() , 3);
+            Assert.assertEquals("The agent of the source is not correct", sourceChannelsList.get(0) , sourceChannelsExpected_1);
+            Assert.assertEquals("The agent of the source is not correct", sourceChannelsList.get(1) , sourceChannelsExpected_2);
+            Assert.assertEquals("The agent of the source is not correct", sourceChannelsList.get(2) , sourceChannelsExpected_3);
+
+            //Check source channels non exist source
+            sourceChannelsList = FlumeConfiguratorUtils.getSourceChannels(flumeConfigurationProperties, nonExistSourceName, DEFAULT_SEPARATOR);
+            Assert.assertEquals("The channels of the source are not correct", sourceChannelsList.size() , 0);
+
+        } catch (Exception e) {
+            Assert.fail("An error has occurred [testGetSourceChannels] method");
+            logger.error("An error has occurred [testGetSourceChannels] method", e);
+        }
+    }
 }
