@@ -58,17 +58,20 @@ public class FlumeTopologyPropertiesGenerator {
     private int channelsNumber = 0;
     private int sinksNumber = 0;
     private int sinkGroupsNumber = 0;
+    private int selectorsNumber = 0;
 
     private Properties flumeConfigurationProperties = new LinkedProperties();
 
 
     private Map<String, List<TopologyPropertyBean>> sourcesPropertiesMap =  new LinkedHashMap<>();
+    private Map<String, List<TopologyPropertyBean>> selectorsPropertiesMap =  new LinkedHashMap<>();
     private Map<String, List<TopologyPropertyBean>> interceptorsPropertiesMap =  new LinkedHashMap<>();
     private Map<String, List<TopologyPropertyBean>> channelsPropertiesMap =  new LinkedHashMap<>();
     private Map<String, List<TopologyPropertyBean>> sinksPropertiesMap =  new LinkedHashMap<>();
     private Map<String, List<TopologyPropertyBean>> sinkGroupsPropertiesMap =  new LinkedHashMap<>();
 
     private Map<String, TopologyPropertyBean> sourcesCommonPropertiesMap = new LinkedHashMap<>();
+    private Map<String, TopologyPropertyBean> selectorsCommonPropertiesMap = new LinkedHashMap<>();
     private Map<String, TopologyPropertyBean> interceptorsCommonPropertiesMap = new LinkedHashMap<>();
     private Map<String, TopologyPropertyBean> channelsCommonPropertiesMap = new LinkedHashMap<>();
     private Map<String, TopologyPropertyBean> sinksCommonPropertiesMap = new LinkedHashMap<>();
@@ -704,6 +707,8 @@ public class FlumeTopologyPropertiesGenerator {
                         sinksNumber++;
                     } else if (flumeTopologyElement.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP)) {
                         sinkGroupsNumber++;
+                    } else if (flumeTopologyElement.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SELECTOR)) {
+                        selectorsNumber++;
                     }
                 }
             }
@@ -727,6 +732,8 @@ public class FlumeTopologyPropertiesGenerator {
                         sinksNumber++;
                     } else if (agentVertex.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP)) {
                         sinkGroupsNumber++;
+                    } else if (agentVertex.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SELECTOR)) {
+                        selectorsNumber++;
                     }
                 }
             }
@@ -736,6 +743,7 @@ public class FlumeTopologyPropertiesGenerator {
         logger.debug("Agents number: " + agentsNumber);
         logger.debug("Sources number: " + sourcesNumber);
         logger.debug("Interceptors number: " + interceptorsNumber);
+        logger.debug("Selectors number: " + selectorsNumber);
         logger.debug("Channels number: " + channelsNumber);
         logger.debug("Sinks number: " + sinksNumber);
         logger.debug("Sink Groups number: " + sinkGroupsNumber);
@@ -1138,7 +1146,8 @@ public class FlumeTopologyPropertiesGenerator {
                         String sourceName = flumeTopologySource.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
                         Enumeration elementTreeNodes = sourceTreeNode.preorderEnumeration();
 
-                        List<String> sourceGroupsList = new ArrayList<>();
+                        List<FlumeTopology> sourceGroupsList = new ArrayList<>();
+                        List<String> sourceGroupsNamesList = new ArrayList<>();
 
                         while (elementTreeNodes.hasMoreElements()) {
                             DefaultMutableTreeNode agentTreeNode = (DefaultMutableTreeNode) elementTreeNodes.nextElement();
@@ -1148,16 +1157,22 @@ public class FlumeTopologyPropertiesGenerator {
                                     (flumeTopologyElement.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL)) ||
                                     (flumeTopologyElement.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK)) ||
                                     (flumeTopologyElement.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP))){
-                                String elementName = flumeTopologyElement.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
-                                sourceGroupsList.add(elementName);
+                                sourceGroupsList.add(flumeTopologyElement);
                             }
 
+                        }
+
+                        //Extract names ordered by type
+                        Collections.sort(sourceGroupsList);
+                        for(FlumeTopology flumeTopologyElement : sourceGroupsList) {
+                            String elementName = flumeTopologyElement.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
+                            sourceGroupsNamesList.add(elementName);
                         }
 
                         String propertyKey = FlumeConfiguratorTopologyUtils.getKeyPropertyString(FlumeConfiguratorConstants.GROUPS_LIST_PROPERTIES_PREFIX, FlumeConfiguratorConstants.DOT_SEPARATOR,
                                             agentName, FlumeConfiguratorConstants.DOT_SEPARATOR, FlumeConfiguratorConstants.FLUME_TOPOLOGY_GROUP_NAME_DEFAULT,
                                             FlumeConfiguratorConstants.UNDERSCORE_SEPARATOR, sourceName.toUpperCase());
-                        flumeConfigurationProperties = FlumeConfiguratorTopologyUtils.addTopologyProperty(flumeConfigurationProperties, propertyKey, sourceGroupsList,
+                        flumeConfigurationProperties = FlumeConfiguratorTopologyUtils.addTopologyProperty(flumeConfigurationProperties, propertyKey, sourceGroupsNamesList,
                                 FlumeConfiguratorConstants.PROPERTY_SEPARATOR_DEFAULT);
 
                     }
@@ -1168,7 +1183,9 @@ public class FlumeTopologyPropertiesGenerator {
                 } else {
                     //Group per agent
                     Enumeration agentTreeNodes = agentRootNode.preorderEnumeration();
-                    List<String> agentGroupsList = new ArrayList<>();
+                    List<FlumeTopology> agentGroupsList = new ArrayList<>();
+                    List<String> agentGroupsNamesList = new ArrayList<>();
+
                     while (agentTreeNodes.hasMoreElements()) {
                         DefaultMutableTreeNode agentTreeNode = (DefaultMutableTreeNode) agentTreeNodes.nextElement();
                         FlumeTopology flumeTopologyElement = (FlumeTopology) agentTreeNode.getUserObject();
@@ -1177,15 +1194,21 @@ public class FlumeTopologyPropertiesGenerator {
                                 (flumeTopologyElement.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL)) ||
                                 (flumeTopologyElement.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK)) ||
                                 (flumeTopologyElement.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP))){
-                            String elementName = flumeTopologyElement.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
-                            agentGroupsList.add(elementName);
+                            agentGroupsList.add(flumeTopologyElement);
                         }
+                    }
+
+                    //Extract names ordered by type
+                    Collections.sort(agentGroupsList);
+                    for(FlumeTopology flumeTopologyElement : agentGroupsList) {
+                        String elementName = flumeTopologyElement.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
+                        agentGroupsNamesList.add(elementName);
                     }
 
                     String propertyKey = FlumeConfiguratorTopologyUtils.getKeyPropertyString(FlumeConfiguratorConstants.GROUPS_LIST_PROPERTIES_PREFIX, FlumeConfiguratorConstants.DOT_SEPARATOR,
                                         agentName,  FlumeConfiguratorConstants.DOT_SEPARATOR, FlumeConfiguratorConstants.FLUME_TOPOLOGY_GROUP_NAME_DEFAULT,
                                         FlumeConfiguratorConstants.UNDERSCORE_SEPARATOR, agentName.toUpperCase());
-                    flumeConfigurationProperties = FlumeConfiguratorTopologyUtils.addTopologyProperty(flumeConfigurationProperties, propertyKey, agentGroupsList,
+                    flumeConfigurationProperties = FlumeConfiguratorTopologyUtils.addTopologyProperty(flumeConfigurationProperties, propertyKey, agentGroupsNamesList,
                             FlumeConfiguratorConstants.PROPERTY_SEPARATOR_DEFAULT);
                 }
 
@@ -1236,11 +1259,11 @@ public class FlumeTopologyPropertiesGenerator {
                     for (FlumeTopology source : sourcesList) {
 
                         String sourceName = source.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
-                        List<String> sourceGroupsList = new ArrayList<>();
+                        List<FlumeTopology> sourceGroupsList = new ArrayList<>();
+                        List<String> sourceGroupsNamesList = new ArrayList<>();
 
                         if (source.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE)) {
-                            String elementName = source.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
-                            sourceGroupsList.add(elementName);
+                            sourceGroupsList.add(source);
 
                             Set<FlumeTopology> sourceChildren = FlumeConfiguratorTopologyUtils.convetTreeSet(agentGraph.getVertexDescendants(source));
                             Iterator<FlumeTopology> itSourceChildren = sourceChildren.iterator();
@@ -1252,17 +1275,23 @@ public class FlumeTopologyPropertiesGenerator {
                                         (sourceChild.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL)) ||
                                         (sourceChild.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK)) ||
                                         (sourceChild.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP))){
-                                    elementName = sourceChild.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
-                                    sourceGroupsList.add(elementName);
+                                    sourceGroupsList.add(sourceChild);
                                 }
 
+                            }
+
+                            //Extract names ordered by type
+                            Collections.sort(sourceGroupsList);
+                            for(FlumeTopology flumeTopologyElement : sourceGroupsList) {
+                                String elementName = flumeTopologyElement.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
+                                sourceGroupsNamesList.add(elementName);
                             }
 
 
                             String propertyKey = FlumeConfiguratorTopologyUtils.getKeyPropertyString(FlumeConfiguratorConstants.GROUPS_LIST_PROPERTIES_PREFIX, FlumeConfiguratorConstants.DOT_SEPARATOR,
                                     agentName, FlumeConfiguratorConstants.DOT_SEPARATOR, FlumeConfiguratorConstants.FLUME_TOPOLOGY_GROUP_NAME_DEFAULT,
                                     FlumeConfiguratorConstants.UNDERSCORE_SEPARATOR, sourceName.toUpperCase());
-                            flumeConfigurationProperties = FlumeConfiguratorTopologyUtils.addTopologyProperty(flumeConfigurationProperties, propertyKey, sourceGroupsList,
+                            flumeConfigurationProperties = FlumeConfiguratorTopologyUtils.addTopologyProperty(flumeConfigurationProperties, propertyKey, sourceGroupsNamesList,
                                     FlumeConfiguratorConstants.PROPERTY_SEPARATOR_DEFAULT);
 
                         }
@@ -1273,7 +1302,8 @@ public class FlumeTopologyPropertiesGenerator {
 
                     //Get the descendants of the agent vertex
                     agentVertexChildren = agentGraph.getVertexDescendants(agentVertex);
-                    List<String> agentElementsList = new ArrayList<>();
+                    List<FlumeTopology> agentElementsList = new ArrayList<>();
+                    List<String> agentElementsNamesList = new ArrayList<>();
 
                     for (FlumeTopology agentVertexChild : agentVertexChildren) {
 
@@ -1281,17 +1311,21 @@ public class FlumeTopologyPropertiesGenerator {
                                 (agentVertexChild.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL)) ||
                                 (agentVertexChild.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK)) ||
                         (agentVertexChild.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP))){
-                            String elementName = agentVertexChild.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
-                            agentElementsList.add(elementName);
+                            agentElementsList.add(agentVertexChild);
                         }
                     }
 
+                    //Extract names ordered by type
                     Collections.sort(agentElementsList);
+                    for(FlumeTopology flumeTopologyElement : agentElementsList) {
+                        String elementName = flumeTopologyElement.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
+                        agentElementsNamesList.add(elementName);
+                    }
 
                     String propertyKey = FlumeConfiguratorTopologyUtils.getKeyPropertyString(FlumeConfiguratorConstants.GROUPS_LIST_PROPERTIES_PREFIX, FlumeConfiguratorConstants.DOT_SEPARATOR,
                             agentName,  FlumeConfiguratorConstants.DOT_SEPARATOR, FlumeConfiguratorConstants.FLUME_TOPOLOGY_GROUP_NAME_DEFAULT,
                             FlumeConfiguratorConstants.UNDERSCORE_SEPARATOR, agentName.toUpperCase());
-                    flumeConfigurationProperties = FlumeConfiguratorTopologyUtils.addTopologyProperty(flumeConfigurationProperties, propertyKey, agentElementsList,
+                    flumeConfigurationProperties = FlumeConfiguratorTopologyUtils.addTopologyProperty(flumeConfigurationProperties, propertyKey, agentElementsNamesList,
                             FlumeConfiguratorConstants.PROPERTY_SEPARATOR_DEFAULT);
 
                 }
@@ -1306,6 +1340,99 @@ public class FlumeTopologyPropertiesGenerator {
 
 
     }
+
+    /**
+     * Generate properties for selectors
+     */
+    private void generateSelectorsListProperties() {
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("BEGIN generateSelectorsListProperties");
+        }
+
+        if (isTreeCompliant) {
+
+            for (String agentName : flumeTreeTopology.keySet()) {
+
+                DefaultMutableTreeNode agentRootNode = flumeTreeTopology.get(agentName);
+                Enumeration agentSources = agentRootNode.children();
+
+                List<String> agentSelectorsList = new ArrayList<>();
+
+                while (agentSources.hasMoreElements()) {
+
+                    DefaultMutableTreeNode agentSourceNode = (DefaultMutableTreeNode) agentSources.nextElement();
+                    FlumeTopology flumeTopologySource = (FlumeTopology) agentSourceNode.getUserObject();
+                    String sourceName = flumeTopologySource.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
+
+                    Enumeration sourceTreeNodes = agentSourceNode.preorderEnumeration();
+
+                    while (sourceTreeNodes.hasMoreElements()) {
+
+                        DefaultMutableTreeNode sourceTreeNode = (DefaultMutableTreeNode) sourceTreeNodes.nextElement();
+                        FlumeTopology flumeTopologyElement = (FlumeTopology) sourceTreeNode.getUserObject();
+
+                        if (flumeTopologyElement.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SELECTOR)) {
+                            agentSelectorsList.add(sourceName);
+                        }
+                    }
+                }
+
+                String propertyKey = FlumeConfiguratorConstants.SELECTORS_LIST_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + agentName;
+                flumeConfigurationProperties = FlumeConfiguratorTopologyUtils.addTopologyProperty(flumeConfigurationProperties, propertyKey, agentSelectorsList,
+                        FlumeConfiguratorConstants.PROPERTY_SEPARATOR_DEFAULT);
+            }
+
+
+        } else {
+
+            for (String agentName : flumeGraphTopology.keySet()) {
+
+                IGraph agentGraph = flumeGraphTopology.get(agentName);
+                FlumeTopology agentVertex = FlumeConfiguratorTopologyUtils.getAgentVertexFromGraph(agentGraph);
+
+                //Get the sources of the agent vertex
+                List<FlumeTopology> sourcesList = agentGraph.successorListOf(agentVertex);
+                Collections.sort(sourcesList);
+
+                List<String> agentSelectorsList = new ArrayList<>();
+
+                //Get the descendants of the source
+                for (FlumeTopology source : sourcesList) {
+
+                    String sourceName = source.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
+
+                    if (source.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE)) {
+
+                        Set<FlumeTopology> sourceChildren = FlumeConfiguratorTopologyUtils.convetTreeSet(agentGraph.getVertexDescendants(source));
+                        Iterator<FlumeTopology> itSourceChildren = sourceChildren.iterator();
+
+                        while (itSourceChildren.hasNext()) {
+                            FlumeTopology sourceChild = itSourceChildren.next();
+
+                            if (sourceChild.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SELECTOR)) {
+                                agentSelectorsList.add(sourceName);
+                            }
+                        }
+                    }
+                }
+
+                String propertyKey = FlumeConfiguratorConstants.SELECTORS_LIST_PROPERTIES_PREFIX + FlumeConfiguratorConstants.DOT_SEPARATOR + agentName;
+
+                flumeConfigurationProperties = FlumeConfiguratorTopologyUtils.addTopologyProperty(flumeConfigurationProperties, propertyKey, agentSelectorsList,
+                        FlumeConfiguratorConstants.PROPERTY_SEPARATOR_DEFAULT);
+
+            }
+
+        }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("END generateSelectorsListProperties");
+        }
+
+
+    }
+
 
     /**
      * Generate properties for interceptors
@@ -1429,6 +1556,10 @@ public class FlumeTopologyPropertiesGenerator {
             elementsMap = sourcesPropertiesMap;
             elementsCommonPropertiesMap = sourcesCommonPropertiesMap;
             elementsNumber = sourcesNumber;
+        } else if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_SELECTOR.equals(topologyType)) {
+            elementsMap = selectorsPropertiesMap;
+            elementsCommonPropertiesMap = selectorsCommonPropertiesMap;
+            elementsNumber = selectorsNumber;
         } else if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR.equals(topologyType)) {
             elementsMap = interceptorsPropertiesMap;
             elementsCommonPropertiesMap = interceptorsCommonPropertiesMap;
@@ -1460,6 +1591,17 @@ public class FlumeTopologyPropertiesGenerator {
                     String elementName = flumeTopologyElement.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
 
                     if (flumeTopologyElement.getType().equals(topologyType)) {
+
+                        if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_SELECTOR.equals(topologyType)) {
+                            //Selectors have source as appliedElements
+                            DefaultMutableTreeNode sourceAncestorNode =FlumeConfiguratorTopologyUtils.getFirstAncestorByType(agentElementNode, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE);
+                            FlumeTopology flumeTopologySourceAncestorElement = (FlumeTopology) sourceAncestorNode.getUserObject();
+
+                            if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE.equals(flumeTopologySourceAncestorElement.getType())) {
+                                elementName = flumeTopologySourceAncestorElement.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
+                            }
+                        }
+
                         Map<String, String> originalTopologyElementProperties = flumeTopologyElement.getData();
                         Map<String, String> topologyElementProperties = FlumeConfiguratorTopologyUtils.getValidTopologyProperties(originalTopologyElementProperties);
 
@@ -1497,6 +1639,20 @@ public class FlumeTopologyPropertiesGenerator {
 
                     if (agentVertexChild.getType().equals(topologyType)) {
                         String elementName = agentVertexChild.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
+                        if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_SELECTOR.equals(topologyType)) {
+                            //Selectors have source as appliedElements
+                            Set<FlumeTopology> agentVertexChildParents = agentGraph.getVertexAncestors(agentVertexChild);
+                            Iterator<FlumeTopology> itAgentVertexChildParents = agentVertexChildParents.iterator();
+
+                            while (itAgentVertexChildParents.hasNext()) {
+                                FlumeTopology agentVertexChildParent = itAgentVertexChildParents.next();
+
+                                if (agentVertexChildParent.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE)) {
+                                    elementName = agentVertexChildParent.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
+                                }
+                            }
+                        }
+
                         Map<String, String> originalTopologyElementProperties = agentVertexChild.getData();
                         Map<String, String> topologyElementProperties = FlumeConfiguratorTopologyUtils.getValidTopologyProperties(originalTopologyElementProperties);
 
@@ -1628,7 +1784,12 @@ public class FlumeTopologyPropertiesGenerator {
 
         //Write Flume configuration properties file
         FlumePropertiesGenerator flumePropertiesGenerator = new FlumePropertiesGenerator();
-        flumePropertiesGenerator.buildConfigurationMapFromStringProperties(baseConfigurationPropertiesString,FlumeConfiguratorConstants.PROPERTY_SEPARATOR_DEFAULT, addComments, true, pathConfigurationGeneratedFile, multipleAgentConfigurationFiles);
+        String flumeConfigurationProperties = flumePropertiesGenerator.buildConfigurationMapFromStringProperties(baseConfigurationPropertiesString,FlumeConfiguratorConstants.PROPERTY_SEPARATOR_DEFAULT, addComments, true, pathConfigurationGeneratedFile, multipleAgentConfigurationFiles);
+
+        if (flumeConfigurationProperties == null) {
+            //The base configuration is not valid
+            throw new FlumeConfiguratorException("An error has occurred on the creation of Flume configuration from a base configuration");
+        }
 
         if (generateBaseConfigurationFiles) {
 
@@ -1715,12 +1876,19 @@ public class FlumeTopologyPropertiesGenerator {
             //Generate group lists properties
             generateGroupsListProperties(true);
 
+            //Generate sourcesWithSelector lists properties
+            generateSelectorsListProperties();
+
             //Generate interceptors list properties
             generateInterceptorsListProperties();
 
             //Generate sources properties
             generateElementsProperties(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE, FlumeConfiguratorConstants.SOURCES_COMMON_PROPERTY_PROPERTIES_PREFIX,
                     FlumeConfiguratorConstants.SOURCES_PARTIAL_PROPERTY_PROPERTIES_PREFIX);
+
+            //Generate selectors properties
+            generateElementsProperties(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SELECTOR, FlumeConfiguratorConstants.SELECTORS_COMMON_PROPERTY_PROPERTIES_PREFIX,
+                    FlumeConfiguratorConstants.SELECTORS_PARTIAL_PROPERTY_PROPERTIES_PREFIX);
 
             //Generate interceptors properties
             generateElementsProperties(FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR, FlumeConfiguratorConstants.INTERCEPTORS_COMMON_PROPERTY_PROPERTIES_PREFIX,
@@ -1823,12 +1991,19 @@ public class FlumeTopologyPropertiesGenerator {
             //Generate group lists properties
             generateGroupsListProperties(true);
 
+            //Generate sourcesWithSelector lists properties
+            generateSelectorsListProperties();
+
             //Generate interceptors list properties
             generateInterceptorsListProperties();
 
             //Generate sources properties
             generateElementsProperties(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE, FlumeConfiguratorConstants.SOURCES_COMMON_PROPERTY_PROPERTIES_PREFIX,
                     FlumeConfiguratorConstants.SOURCES_PARTIAL_PROPERTY_PROPERTIES_PREFIX);
+
+            //Generate selectors properties
+            generateElementsProperties(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SELECTOR, FlumeConfiguratorConstants.SELECTORS_COMMON_PROPERTY_PROPERTIES_PREFIX,
+                    FlumeConfiguratorConstants.SELECTORS_PARTIAL_PROPERTY_PROPERTIES_PREFIX);
 
             //Generate interceptors properties
             generateElementsProperties(FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR, FlumeConfiguratorConstants.INTERCEPTORS_COMMON_PROPERTY_PROPERTIES_PREFIX,

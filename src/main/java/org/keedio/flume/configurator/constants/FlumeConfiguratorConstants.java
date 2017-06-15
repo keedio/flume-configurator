@@ -74,6 +74,7 @@ public class FlumeConfiguratorConstants {
     public static final String FLUME_TOPOLOGY_SINK = "Sink";
     public static final String FLUME_TOPOLOGY_SINKGROUP = "SinkGroup";
     public static final String FLUME_TOPOLOGY_INTERCEPTOR = "Interceptor";
+    public static final String FLUME_TOPOLOGY_SELECTOR = "Selector";
     public static final String FLUME_TOPOLOGY_CONNECTION = "Connection";
 
     public static final String FLUME_TOPOLOGY_PROPERTY_AGENT_NAME = "agentName";

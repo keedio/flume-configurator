@@ -37,6 +37,7 @@ public class FlumeConfiguratorTopologyUtilsTest {
     private static Map<String, IGraph> flumeGraphTopology;
     private static DefaultMutableTreeNode flumeTopologyTreeRootNode;
 
+    private static DefaultMutableTreeNode flumeTopologyNodeE;
 
     @BeforeClass
     public static void loadPropertiesFile() throws IOException {
@@ -52,21 +53,30 @@ public class FlumeConfiguratorTopologyUtilsTest {
         //Create tree
         FlumeTopology flumeTopologyA = new FlumeTopology();
         flumeTopologyA.setId("A");
+        flumeTopologyA.setType(FlumeConfiguratorConstants.FLUME_TOPOLOGY_AGENT);
         FlumeTopology flumeTopologyB = new FlumeTopology();
         flumeTopologyB.setId("B");
+        flumeTopologyB.setType(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE);
         FlumeTopology flumeTopologyC = new FlumeTopology();
         flumeTopologyC.setId("C");
+        flumeTopologyC.setType(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE);
         FlumeTopology flumeTopologyD = new FlumeTopology();
         flumeTopologyD.setId("D");
+        flumeTopologyD.setType(FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL);
+        FlumeTopology flumeTopologyE = new FlumeTopology();
+        flumeTopologyE.setId("E");
+        flumeTopologyE.setType(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK);
 
         flumeTopologyTreeRootNode = new DefaultMutableTreeNode(flumeTopologyA);
         DefaultMutableTreeNode flumeTopologyNodeB = new DefaultMutableTreeNode(flumeTopologyB);
         DefaultMutableTreeNode flumeTopologyNodeC = new DefaultMutableTreeNode(flumeTopologyC);
         DefaultMutableTreeNode flumeTopologyNodeD = new DefaultMutableTreeNode(flumeTopologyD);
+        flumeTopologyNodeE = new DefaultMutableTreeNode(flumeTopologyE);
 
         flumeTopologyTreeRootNode.add(flumeTopologyNodeB);
         flumeTopologyTreeRootNode.add(flumeTopologyNodeC);
         flumeTopologyNodeB.add(flumeTopologyNodeD);
+        flumeTopologyNodeD.add(flumeTopologyNodeE);
 
         listSharedSourcesGraphAgent1 = new ArrayList<>();
         listSharedSourcesGraphAgent1.add("source1");
@@ -2116,6 +2126,43 @@ public class FlumeConfiguratorTopologyUtilsTest {
         Assert.assertTrue("The result of the getListFlumeTopologyByType method is not correct",listFlumeTopologyByType.size() > 0);
         for (FlumeTopology flumeTopologyElement : listFlumeTopologyByType) {
             Assert.assertEquals("The result of the getListFlumeTopologyByType method is not correct",flumeTopologyElement.getType(), elementType);
+        }
+    }
+
+
+    @Test
+    public void testGetFirstAncestorByType() {
+
+        try {
+            String elementType = FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL;
+            DefaultMutableTreeNode ancestorNode = FlumeConfiguratorTopologyUtils.getFirstAncestorByType(flumeTopologyNodeE, elementType);
+            Assert.assertNotNull("The result of the getFirstAncestorByType method is not correct",ancestorNode);
+            FlumeTopology flumeTopologyAncestorElement = (FlumeTopology) ancestorNode.getUserObject();
+            Assert.assertEquals("The result of the getFirstAncestorByType method is not correct", flumeTopologyAncestorElement.getType(), elementType);
+
+            elementType = FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE;
+            ancestorNode = FlumeConfiguratorTopologyUtils.getFirstAncestorByType(flumeTopologyNodeE, elementType);
+            Assert.assertNotNull("The result of the getFirstAncestorByType method is not correct",ancestorNode);
+            flumeTopologyAncestorElement = (FlumeTopology) ancestorNode.getUserObject();
+            Assert.assertEquals("The result of the getFirstAncestorByType method is not correct", flumeTopologyAncestorElement.getType(), elementType);
+
+            elementType = FlumeConfiguratorConstants.FLUME_TOPOLOGY_AGENT;
+            ancestorNode = FlumeConfiguratorTopologyUtils.getFirstAncestorByType(flumeTopologyNodeE, elementType);
+            Assert.assertNotNull("The result of the getFirstAncestorByType method is not correct",ancestorNode);
+            flumeTopologyAncestorElement = (FlumeTopology) ancestorNode.getUserObject();
+            Assert.assertEquals("The result of the getFirstAncestorByType method is not correct", flumeTopologyAncestorElement.getType(), elementType);
+
+            elementType = FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK; //Non exist ancestor of this type
+            ancestorNode = FlumeConfiguratorTopologyUtils.getFirstAncestorByType(flumeTopologyNodeE, elementType);
+            Assert.assertNull("The result of the getFirstAncestorByType method is not correct",ancestorNode);
+
+            elementType = FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE;
+            ancestorNode = FlumeConfiguratorTopologyUtils.getFirstAncestorByType(null, elementType);
+            Assert.assertNull("The result of the getFirstAncestorByType method is not correct",ancestorNode);
+
+        } catch (Exception e) {
+            Assert.fail("An error has occurred [testGetFirstAncestorByType] method");
+            logger.error("An error has occurred [testGetFirstAncestorByType] method", e);
         }
     }
 }

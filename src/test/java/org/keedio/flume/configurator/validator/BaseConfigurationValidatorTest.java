@@ -816,6 +816,13 @@ public class BaseConfigurationValidatorTest {
             Assert.assertFalse("The selectors common properties validation is not correct", isPropertiesFileOK);
             showCheckErrors();
 
+            //Check selectors.commonProperty.<propertyReferencesChannel>... references channel(s) that don't belong to the channels of all sources with selector
+            loadPropertiesFile();
+            resetConfigurationValidator();
+            baseConfigurationProperties.put("selectors.commonProperty.default","channel1_1");
+            isPropertiesFileOK = (boolean) checkPropertiesFileCommonPropertiesMethod.invoke(baseConfigurationValidator, prefixProperty, agentList);
+            Assert.assertFalse("The selectors common properties validation is not correct", isPropertiesFileOK);
+            showCheckErrors();
 
 
         } catch (Exception e) {

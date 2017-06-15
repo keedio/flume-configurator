@@ -541,8 +541,31 @@ public class BaseConfigurationValidator {
                             }
 
                         }
-                    }
 
+                        //Check all sources with selector of all agents have these channels as channels property
+
+                        //Get all sources with Selector of all agents
+                        LinkedProperties agentsSourcesWithSelectorList = FlumeConfiguratorUtils.matchingSubset(baseConfigurationProperties, FlumeConfiguratorConstants.SELECTORS_LIST_PROPERTIES_PREFIX, true);
+
+                        for (Object keySelectorObject : agentsSourcesWithSelectorList.keySet()) {
+
+                            String keySourceWithSelectorProperty = (String) keySelectorObject;
+                            String valuesSourceWithSelectorProperty = agentsSourcesWithSelectorList.getProperty(keySourceWithSelectorProperty);
+                            List<String> listValuesSourceWithSelectorProperty = Arrays.asList(FlumeConfiguratorUtils.splitWithoutSpacesOptionalKeepInternalSpaces(valuesSourceWithSelectorProperty, true, elementsCharacterSeparator));
+
+                            for (String sourceWithSelector : listValuesSourceWithSelectorProperty) {
+
+                                //Get all channels of the source with Selector
+                                List<String> sourceChannelsList = FlumeConfiguratorUtils.getSourceChannels(baseConfigurationProperties, sourceWithSelector, elementsCharacterSeparator);
+
+                                //Check list of channels (propertyValue) is a subset of list of channels of the source
+                                if (!sourceChannelsList.containsAll(listChannels)) {
+                                    isPropertiesCheckFileOK = false;
+                                    sbCheckErrors.append(FlumeConfiguratorConstants.CONFIGURATION_ERROR).append("[").append(keyProperty).append("] property has a channel(s) value [").append(valuesProperty).append("] with channels that are not declared as channels of the selector source [").append(sourceWithSelector).append("]").append(FlumeConfiguratorConstants.NEW_LINE);
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

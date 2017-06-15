@@ -145,6 +145,7 @@ public class FlumeConfiguratorTopologyUtils {
     }
 
 
+
     /**
      * Render a tree topology
      * @param rootNodesCollection collection of root nodes of the trees
@@ -443,6 +444,7 @@ public class FlumeConfiguratorTopologyUtils {
             }
 
             boolean commonPropertyNotComment = ((keyPropertyStr.contains(FlumeConfiguratorConstants.SOURCES_COMMON_PROPERTY_PROPERTIES_PREFIX))
+                    || (keyPropertyStr.contains(FlumeConfiguratorConstants.SELECTORS_COMMON_PROPERTY_PROPERTIES_PREFIX))
                     || (keyPropertyStr.contains(FlumeConfiguratorConstants.INTERCEPTORS_COMMON_PROPERTY_PROPERTIES_PREFIX))
                     || (keyPropertyStr.contains(FlumeConfiguratorConstants.CHANNELS_COMMON_PROPERTY_PROPERTIES_PREFIX))
                     || (keyPropertyStr.contains(FlumeConfiguratorConstants.SINKS_COMMON_PROPERTY_PROPERTIES_PREFIX))
@@ -498,6 +500,17 @@ public class FlumeConfiguratorTopologyUtils {
         //Sources partial properties
         getPartialFlumePropertiesAsString(printWriter, "Sources partial properties list", properties,
                 FlumeConfiguratorConstants.SOURCES_PARTIAL_PROPERTY_PROPERTIES_PREFIX);
+
+        //SourcesWithSelector list
+        getPartialFlumePropertiesAsString(printWriter, "Sources with selector list", properties,FlumeConfiguratorConstants.SELECTORS_LIST_PROPERTIES_PREFIX);
+
+        //Selectors common properties
+        getPartialFlumePropertiesAsString(printWriter, "Selectors common properties list (Common to all selectors from sources with selector)", properties,
+                FlumeConfiguratorConstants.SELECTORS_COMMON_PROPERTY_PROPERTIES_PREFIX);
+
+        //Selectors partial properties
+        getPartialFlumePropertiesAsString(printWriter, "Selectors partial properties list", properties,
+                FlumeConfiguratorConstants.SELECTORS_PARTIAL_PROPERTY_PROPERTIES_PREFIX);
 
         //Interceptors list
         getPartialFlumePropertiesAsString(printWriter, "Interceptors per source list", properties,FlumeConfiguratorConstants.INTERCEPTORS_LIST_PROPERTIES_PREFIX);
@@ -994,7 +1007,7 @@ public class FlumeConfiguratorTopologyUtils {
         return treeSet;
     }
 
-    /*****************************************************************/
+
 
     /**
      * Get the number of parts of the Flume property
@@ -2020,5 +2033,33 @@ public class FlumeConfiguratorTopologyUtils {
         }
 
         return mapSharedSinkGroupsSourcesRelation;
+    }
+
+
+    /**
+     * Get first ancestor with indicated type of the node
+     * @param node Node of the tree
+     * @param elementType type of the searched ancestor
+     * @return first ancestor with the indicated type
+     */
+    public static DefaultMutableTreeNode getFirstAncestorByType(DefaultMutableTreeNode node, String elementType) {
+
+        DefaultMutableTreeNode ancestorNode = null;
+
+        if (node != null) {
+            DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();
+            FlumeTopology flumeTopologyParentElement = (FlumeTopology) parentNode.getUserObject();
+            while (parentNode != null && !flumeTopologyParentElement.getType().equals(elementType)) {
+                parentNode = (DefaultMutableTreeNode) parentNode.getParent();
+                if (parentNode != null) {
+                    flumeTopologyParentElement = (FlumeTopology) parentNode.getUserObject();
+                }
+
+            }
+
+            ancestorNode = parentNode;
+        }
+
+        return ancestorNode;
     }
 }

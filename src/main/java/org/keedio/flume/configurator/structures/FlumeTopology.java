@@ -40,8 +40,10 @@ public class FlumeTopology implements Comparable {
         orderTypeArrayList.add(FlumeConfiguratorConstants.FLUME_TOPOLOGY_AGENT);
         orderTypeArrayList.add(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE);
         orderTypeArrayList.add(FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR);
+        orderTypeArrayList.add(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SELECTOR);
         orderTypeArrayList.add(FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL);
         orderTypeArrayList.add(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK);
+        orderTypeArrayList.add(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP);
         orderTypeArrayList.add(FlumeConfiguratorConstants.FLUME_TOPOLOGY_CONNECTION);
 
     }

@@ -29,7 +29,8 @@ public class FlumeTopologyPropertiesGeneratorGraphTest {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(FlumeTopologyPropertiesGeneratorGraphTest.class);
 
     //private static final String GRAPH_TOPOLOGY_FILE_PATH = "src/test/resources/FlumeTopologyGraphWithComments_with2Agent.json";
-    private static final String GRAPH_TOPOLOGY_FILE_PATH = "src/test/resources/FlumeTopologyGraphSinkGroups_with2Agent.json";
+    //private static final String GRAPH_TOPOLOGY_FILE_PATH = "src/test/resources/FlumeTopologyGraphSinkGroups_with2Agent.json";
+    private static final String GRAPH_TOPOLOGY_FILE_PATH = "src/test/resources/FlumeTopologyGraphSinkGroupsSelectors_with2Agent.json";
     private static final String TOPOLOGY_FILE_PATH_ERROR = "src/test/resources/FlumeTopologyError.json";
     private static final String OUTPUT_GENERATED_FILE_PATH_DIRECTORY = ".";
     private static final String OUTPUT_GENERATED_FILE_PATH_FILE = "." + File.separator + "outputFile.conf";
@@ -43,6 +44,7 @@ public class FlumeTopologyPropertiesGeneratorGraphTest {
     private static Method generateAgentListPropertyMethod;
     private static Method generateElementsListPropertiesMethod;
     private static Method generateGroupsListPropertiesMethod;
+    private static Method generateSelectorsListPropertiesMethod;
     private static Method generateInterceptorsListPropertiesMethod;
     private static Method generateElementsPropertiesMethod;
     private static Method writeConfigurationPropertiesFileMethod;
@@ -71,16 +73,18 @@ public class FlumeTopologyPropertiesGeneratorGraphTest {
             Class<?>[] argsGenerateElementsListPropertiesMethod = new Class[2];
             argsGenerateElementsListPropertiesMethod[0] = String.class;
             argsGenerateElementsListPropertiesMethod[1] = String.class;
-
             generateElementsListPropertiesMethod = FlumeTopologyPropertiesGenerator.class.getDeclaredMethod("generateElementsListProperties", argsGenerateElementsListPropertiesMethod);
             generateElementsListPropertiesMethod.setAccessible(true);
 
             //generateGroupsListProperties is a private method. Access by reflection
             Class<?>[] argsGenerateGroupsListPropertiesMethod = new Class[1];
             argsGenerateGroupsListPropertiesMethod[0] = boolean.class;
-
             generateGroupsListPropertiesMethod = FlumeTopologyPropertiesGenerator.class.getDeclaredMethod("generateGroupsListProperties", argsGenerateGroupsListPropertiesMethod);
             generateGroupsListPropertiesMethod.setAccessible(true);
+
+            //generateSelectorsListProperties is a private method. Access by reflection
+            generateSelectorsListPropertiesMethod = FlumeTopologyPropertiesGenerator.class.getDeclaredMethod("generateSelectorsListProperties", classNull);
+            generateSelectorsListPropertiesMethod.setAccessible(true);
 
             //generateInterceptorsListProperties is a private method. Access by reflection
             generateInterceptorsListPropertiesMethod = FlumeTopologyPropertiesGenerator.class.getDeclaredMethod("generateInterceptorsListProperties", classNull);
@@ -91,7 +95,6 @@ public class FlumeTopologyPropertiesGeneratorGraphTest {
             argsGenerateElementsPropertiesMethod[0] = String.class;
             argsGenerateElementsPropertiesMethod[1] = String.class;
             argsGenerateElementsPropertiesMethod[2] = String.class;
-
             generateElementsPropertiesMethod = FlumeTopologyPropertiesGenerator.class.getDeclaredMethod("generateElementsProperties", argsGenerateElementsPropertiesMethod);
             generateElementsPropertiesMethod.setAccessible(true);
 
@@ -108,7 +111,6 @@ public class FlumeTopologyPropertiesGeneratorGraphTest {
             argsGenerateInputPropertiesFromDraw2DFlumeTopologyMethod[0] = String.class;
             argsGenerateInputPropertiesFromDraw2DFlumeTopologyMethod[1] = boolean.class;
             argsGenerateInputPropertiesFromDraw2DFlumeTopologyMethod[2] = boolean.class;
-
             generateInputPropertiesFromDraw2DFlumeTopologyMethod = FlumeTopologyPropertiesGenerator.class.getDeclaredMethod("generateInputPropertiesFromDraw2DFlumeTopology", argsGenerateInputPropertiesFromDraw2DFlumeTopologyMethod);
             generateInputPropertiesFromDraw2DFlumeTopologyMethod.setAccessible(true);
 
@@ -335,8 +337,31 @@ public class FlumeTopologyPropertiesGeneratorGraphTest {
     }
 
 
+
     @Test
-    public void test07GenerateInterceptorsListProperties() {
+    public void test07GenerateSelectorsListProperties() {
+
+        try {
+
+            Properties flumeConfigurationProperties = flumeTopologyPropertiesGenerator.getFlumeConfigurationProperties();
+            int beforeGenerateSelectorsListPropertiesNumber =  FlumeConfiguratorUtils.matchingSubset(flumeConfigurationProperties,  FlumeConfiguratorConstants.SELECTORS_LIST_PROPERTIES_PREFIX, true).size();
+            Assert.assertEquals("The creation of the selectors list property is not correct", beforeGenerateSelectorsListPropertiesNumber, 0);
+
+            //Invoke method
+            generateSelectorsListPropertiesMethod.invoke(flumeTopologyPropertiesGenerator, objectNull);
+
+            flumeConfigurationProperties = flumeTopologyPropertiesGenerator.getFlumeConfigurationProperties();
+            int afterGenerateSelectorsListPropertiesNumber =  FlumeConfiguratorUtils.matchingSubset(flumeConfigurationProperties,  FlumeConfiguratorConstants.SELECTORS_LIST_PROPERTIES_PREFIX, true).size();
+            Assert.assertTrue("The creation of the selectors list property is not correct", afterGenerateSelectorsListPropertiesNumber > beforeGenerateSelectorsListPropertiesNumber);
+
+        } catch (Exception e) {
+            Assert.fail("An error has occurred [test07GenerateSelectorsListProperties] method");
+            logger.error("An error has occurred [test07GenerateSelectorsListProperties] method", e);
+        }
+    }
+
+    @Test
+    public void test08GenerateInterceptorsListProperties() {
 
         try {
 
@@ -352,14 +377,14 @@ public class FlumeTopologyPropertiesGeneratorGraphTest {
             Assert.assertTrue("The creation of the interceptors list property is not correct", afterGenerateInterceptorsListPropertiesNumber > beforeGenerateInterceptorsListPropertiesNumber);
 
         } catch (Exception e) {
-            Assert.fail("An error has occurred [test07GenerateInterceptorsListProperties] method");
-            logger.error("An error has occurred [test07GenerateInterceptorsListProperties] method", e);
+            Assert.fail("An error has occurred [test08GenerateInterceptorsListProperties] method");
+            logger.error("An error has occurred [test08GenerateInterceptorsListProperties] method", e);
         }
     }
 
 
     @Test
-    public void test08GenerateElementsProperties() {
+    public void test09GenerateElementsProperties() {
 
         try {
 
@@ -378,6 +403,22 @@ public class FlumeTopologyPropertiesGeneratorGraphTest {
             Assert.assertTrue("The creation of the sources common properties is not correct", afterGenerateSourcesCommonPropertiesNumber >= beforeGenerateSourcesCommonPropertiesNumber);
             int afterGenerateSourcesPartialPropertiesNumber =  FlumeConfiguratorUtils.matchingSubset(flumeConfigurationProperties,  FlumeConfiguratorConstants.SOURCES_PARTIAL_PROPERTY_PROPERTIES_PREFIX, true).size();
             Assert.assertTrue("The creation of the sources partial properties is not correct", afterGenerateSourcesPartialPropertiesNumber > beforeGenerateSourcesPartialPropertiesNumber);
+
+
+            //SELECTORS
+            int beforeGenerateSelectorsCommonPropertiesNumber =  FlumeConfiguratorUtils.matchingSubset(flumeConfigurationProperties,  FlumeConfiguratorConstants.SELECTORS_COMMON_PROPERTY_PROPERTIES_PREFIX, true).size();
+            Assert.assertEquals("The creation of the selectors common properties is not correct", beforeGenerateSelectorsCommonPropertiesNumber, 0);
+            int beforeGenerateSelectorsPartialPropertiesNumber =  FlumeConfiguratorUtils.matchingSubset(flumeConfigurationProperties,  FlumeConfiguratorConstants.SELECTORS_PARTIAL_PROPERTY_PROPERTIES_PREFIX, true).size();
+            Assert.assertEquals("The creation of the selectors partial properties is not correct", beforeGenerateSelectorsPartialPropertiesNumber, 0);
+
+            //Invoke method
+            generateElementsPropertiesMethod.invoke(flumeTopologyPropertiesGenerator, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SELECTOR, FlumeConfiguratorConstants.SELECTORS_COMMON_PROPERTY_PROPERTIES_PREFIX, FlumeConfiguratorConstants.SELECTORS_PARTIAL_PROPERTY_PROPERTIES_PREFIX);
+
+            flumeConfigurationProperties = flumeTopologyPropertiesGenerator.getFlumeConfigurationProperties();
+            int afterGenerateSelectorsCommonPropertiesNumber =  FlumeConfiguratorUtils.matchingSubset(flumeConfigurationProperties,  FlumeConfiguratorConstants.SELECTORS_COMMON_PROPERTY_PROPERTIES_PREFIX, true).size();
+            Assert.assertTrue("The creation of the selectors common properties is not correct", afterGenerateSelectorsCommonPropertiesNumber >= beforeGenerateSelectorsCommonPropertiesNumber);
+            int afterGenerateSelectorsPartialPropertiesNumber =  FlumeConfiguratorUtils.matchingSubset(flumeConfigurationProperties,  FlumeConfiguratorConstants.SELECTORS_PARTIAL_PROPERTY_PROPERTIES_PREFIX, true).size();
+            Assert.assertTrue("The creation of the selectors partial properties is not correct", afterGenerateSelectorsPartialPropertiesNumber > beforeGenerateSelectorsPartialPropertiesNumber);
 
 
             //INTERCEPTORS
@@ -444,14 +485,14 @@ public class FlumeTopologyPropertiesGeneratorGraphTest {
             Assert.assertTrue("The creation of the sinkgroups partial properties is not correct", afterGenerateSinkGroupsPartialPropertiesNumber > beforeGenerateSinkGroupsPartialPropertiesNumber);
 
         } catch (Exception e) {
-            Assert.fail("An error has occurred [test08GenerateElementsProperties] method");
-            logger.error("An error has occurred [test08GenerateElementsProperties] method", e);
+            Assert.fail("An error has occurred [test09GenerateElementsProperties] method");
+            logger.error("An error has occurred [test09GenerateElementsProperties] method", e);
         }
     }
 
 
     @Test
-    public void test09WriteConfigurationPropertiesFileFlumePropertiesInvalidPath() {
+    public void test10WriteConfigurationPropertiesFileFlumePropertiesInvalidPath() {
 
         try {
 
@@ -465,18 +506,18 @@ public class FlumeTopologyPropertiesGeneratorGraphTest {
 
         } catch (InvocationTargetException ite) {
             if (!(ite.getCause() instanceof InvalidPathException)) {
-                Assert.fail("An error has occurred [test09WriteConfigurationPropertiesFileFlumePropertiesInvalidPath] method");
-                logger.error("An error has occurred [test09WriteConfigurationPropertiesFileFlumePropertiesInvalidPath] method", ite);
+                Assert.fail("An error has occurred [test10WriteConfigurationPropertiesFileFlumePropertiesInvalidPath] method");
+                logger.error("An error has occurred [test10WriteConfigurationPropertiesFileFlumePropertiesInvalidPath] method", ite);
             }
         } catch (Exception e) {
-            Assert.fail("An error has occurred [test09WriteConfigurationPropertiesFileFlumePropertiesInvalidPath] method");
-            logger.error("An error has occurred [test09WriteConfigurationPropertiesFileFlumePropertiesInvalidPath] method", e);
+            Assert.fail("An error has occurred [test10WriteConfigurationPropertiesFileFlumePropertiesInvalidPath] method");
+            logger.error("An error has occurred [test10WriteConfigurationPropertiesFileFlumePropertiesInvalidPath] method", e);
         }
     }
 
 
     @Test
-    public void test10WriteConfigurationPropertiesFileBaseConfigurationPropertiesInvalidPath() {
+    public void test11WriteConfigurationPropertiesFileBaseConfigurationPropertiesInvalidPath() {
 
         try {
 
@@ -494,18 +535,18 @@ public class FlumeTopologyPropertiesGeneratorGraphTest {
 
         } catch (InvocationTargetException ite) {
             if (!(ite.getCause() instanceof InvalidPathException)) {
-                Assert.fail("An error has occurred [test10WriteConfigurationPropertiesFileBaseConfigurationPropertiesInvalidPath] method");
-                logger.error("An error has occurred [test10WriteConfigurationPropertiesFileBaseConfigurationPropertiesInvalidPath] method", ite);
+                Assert.fail("An error has occurred [test11WriteConfigurationPropertiesFileBaseConfigurationPropertiesInvalidPath] method");
+                logger.error("An error has occurred [test11WriteConfigurationPropertiesFileBaseConfigurationPropertiesInvalidPath] method", ite);
             }
         } catch (Exception e) {
-            Assert.fail("An error has occurred [test10WriteConfigurationPropertiesFileBaseConfigurationPropertiesInvalidPath] method");
-            logger.error("An error has occurred [test10WriteConfigurationPropertiesFileBaseConfigurationPropertiesInvalidPath] method", e);
+            Assert.fail("An error has occurred [test11WriteConfigurationPropertiesFileBaseConfigurationPropertiesInvalidPath] method");
+            logger.error("An error has occurred [test11WriteConfigurationPropertiesFileBaseConfigurationPropertiesInvalidPath] method", e);
         }
     }
 
 
     @Test
-    public void test11WriteConfigurationPropertiesFile() {
+    public void test12WriteConfigurationPropertiesFile() {
 
         try {
 
@@ -527,14 +568,14 @@ public class FlumeTopologyPropertiesGeneratorGraphTest {
             writeConfigurationPropertiesFileMethod.invoke(flumeTopologyPropertiesGenerator, objectNull);
 
         } catch (Exception e) {
-            Assert.fail("An error has occurred [test11WriteConfigurationPropertiesFile] method");
-            logger.error("An error has occurred [test11WriteConfigurationPropertiesFile] method", e);
+            Assert.fail("An error has occurred [test12WriteConfigurationPropertiesFile] method");
+            logger.error("An error has occurred [test12WriteConfigurationPropertiesFile] method", e);
         }
     }
 
 
     @Test
-    public void test12GenerateInputProperties() {
+    public void test13GenerateInputProperties() {
 
         try {
 
@@ -559,14 +600,14 @@ public class FlumeTopologyPropertiesGeneratorGraphTest {
             Assert.assertTrue("The Flume configuration file has not been built correctly", isCorrect);
 
         } catch (Exception e) {
-            Assert.fail("An error has occurred [test12GenerateInputProperties] method");
-            logger.error("An error has occurred [test12GenerateInputProperties] method", e);
+            Assert.fail("An error has occurred [test13GenerateInputProperties] method");
+            logger.error("An error has occurred [test13GenerateInputProperties] method", e);
         }
     }
 
 
     @Test
-    public void test13GenerateInputPropertiesFromDraw2DFlumeTopology() {
+    public void test14GenerateInputPropertiesFromDraw2DFlumeTopology() {
 
         try {
 
@@ -618,8 +659,8 @@ public class FlumeTopologyPropertiesGeneratorGraphTest {
             Assert.assertFalse("The Flume configuration file has not been built correctly", configurationPropertiesMap.get(FlumeConfiguratorConstants.FLUME_CONFIGURATION_KEY).isEmpty());
 
         } catch (Exception e) {
-            Assert.fail("An error has occurred [test13GenerateInputPropertiesFromDraw2DFlumeTopology] method");
-            logger.error("An error has occurred [test13GenerateInputPropertiesFromDraw2DFlumeTopology] method", e);
+            Assert.fail("An error has occurred [test14GenerateInputPropertiesFromDraw2DFlumeTopology] method");
+            logger.error("An error has occurred [test14GenerateInputPropertiesFromDraw2DFlumeTopology] method", e);
         }
     }
 
