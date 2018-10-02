@@ -6,6 +6,7 @@ import org.keedio.flume.configurator.exceptions.FlumeConfiguratorException;
 import org.slf4j.LoggerFactory;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -28,9 +29,10 @@ public class ConfiguratorBuilder {
     private static String pathBasePropertiesGeneratedFile;
 
     private static String pathFlumeProperties;
-    private static String pathJSONFlumeTopologyGeneratedFile;
+    private static String pathDraw2DFlumeTopologyGeneratedFile;
     private static boolean withComments = false;
     private static boolean generatePositionCoordinates = true;
+    private static List<Integer> alternativeOptimizationPermutationAgentList = new ArrayList<>();
 
 
     /**
@@ -165,7 +167,7 @@ public class ConfiguratorBuilder {
             sb.append(FlumeConfiguratorConstants.NEW_LINE);
             sb.append("pathBaseConfigurationProperties => Path of the base (template) configuration file");
             sb.append(FlumeConfiguratorConstants.NEW_LINE);
-            sb.append("elementsCharacterSeparator => Separator character used in base (template) configuration file");
+            sb.append("elementsCharacterSeparator => Separator character used in base (template) configuration file. Example: ';'");
             sb.append(FlumeConfiguratorConstants.NEW_LINE);
             sb.append("multipleAgentConfigurationFiles => (boolean)");
             sb.append(FlumeConfiguratorConstants.NEW_LINE);
@@ -212,7 +214,7 @@ public class ConfiguratorBuilder {
             sb.append(FlumeConfiguratorConstants.NEW_LINE);
             sb.append("                         false -> The tree topology is processed without any graph library");
             sb.append(FlumeConfiguratorConstants.NEW_LINE);
-            sb.append("ratioCommonProperty => Ratio used for determinate if a property is considered as a common property or not (generation of template configuration file)");
+            sb.append("ratioCommonProperty => (float) Ratio used for determinate if a property is considered as a common property or not (generation of template configuration file). Example: 0.8");
             sb.append(FlumeConfiguratorConstants.NEW_LINE);
             sb.append("pathPropertiesGeneratedFile => Path of the created flume configuration file(s).May be a directory if several");
             sb.append(FlumeConfiguratorConstants.NEW_LINE);
@@ -244,6 +246,16 @@ public class ConfiguratorBuilder {
             sb.append("                                 false -> The created Draw2D Flume topology configuration file doesn't include position coordinates for its elements");
             sb.append(FlumeConfiguratorConstants.NEW_LINE);
             sb.append("pathJSONFlumeTopologyGeneratedFile => Path of the created Draw2D Flume topology configuration file.May be a directory (the directory must be exist)");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            sb.append("alternativeOptimizationPermutationAgentList => (Optional parameter(s)) list with numbers of alternative best permutations of shared sources for the agent(s).");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            sb.append("                                 If the parameter(s) is not present for an agent, the alternative number by default is 1. Shared sources are sources that share the channel with another source");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            sb.append("                                 Example: 1 3 2 (the first agent show best calculated permutation of his shared sources, the second agent will show his third best permutation of his shared sources");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            sb.append("                                 and the third agent will show his second best permutation of his shared sources. The agent number four and following will show their best permutation sources (alternative 1)");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+
         }
 
         return sb.toString();
@@ -308,65 +320,83 @@ public class ConfiguratorBuilder {
 
                     if (args.length == 7) {
 
-                        pathJSONTopology = args[1];
-                        multipleAgentConfigurationFiles = Boolean.valueOf(args[2]);
-                        addComments = Boolean.valueOf(args[3]);
-                        computeTreeAsGraph = Boolean.valueOf(args[4]);
-                        ratioCommonProperty = Double.valueOf(args[5]);
-                        pathConfigurationGeneratedFile = args[6];
+                        try {
 
-                        if (logger.isDebugEnabled()) {
-                            logger.debug("Parameter pathJSONTopology: " + pathJSONTopology);
-                            logger.debug("Parameter multipleAgentConfigurationFiles: " + multipleAgentConfigurationFiles);
-                            logger.debug("Parameter addComments: " + addComments);
-                            logger.debug("Parameter computeTreeAsGraph: " + computeTreeAsGraph);
-                            logger.debug("Parameter ratioCommonProperty: " + ratioCommonProperty);
-                            logger.debug("Parameter pathPropertiesGeneratedFile: " + pathConfigurationGeneratedFile);
+                            pathJSONTopology = args[1];
+                            multipleAgentConfigurationFiles = Boolean.valueOf(args[2]);
+                            addComments = Boolean.valueOf(args[3]);
+                            computeTreeAsGraph = Boolean.valueOf(args[4]);
+                            ratioCommonProperty = Double.valueOf(args[5]);
+                            pathConfigurationGeneratedFile = args[6];
+
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("Parameter pathJSONTopology: " + pathJSONTopology);
+                                logger.debug("Parameter multipleAgentConfigurationFiles: " + multipleAgentConfigurationFiles);
+                                logger.debug("Parameter addComments: " + addComments);
+                                logger.debug("Parameter computeTreeAsGraph: " + computeTreeAsGraph);
+                                logger.debug("Parameter ratioCommonProperty: " + ratioCommonProperty);
+                                logger.debug("Parameter pathPropertiesGeneratedFile: " + pathConfigurationGeneratedFile);
+                            }
+                            FlumeTopologyPropertiesGenerator flumeTopologyPropertiesGenerator = new FlumeTopologyPropertiesGenerator();
+
+                            FlumeTopologyPropertiesGenerator.setPathJSONTopology(pathJSONTopology);
+                            FlumeTopologyPropertiesGenerator.setMultipleAgentConfigurationFiles(multipleAgentConfigurationFiles);
+                            FlumeTopologyPropertiesGenerator.setAddComments(addComments);
+                            FlumeTopologyPropertiesGenerator.setComputeTreeAsGraph(computeTreeAsGraph);
+                            FlumeTopologyPropertiesGenerator.setRatioCommonProperty(ratioCommonProperty);
+                            FlumeTopologyPropertiesGenerator.setPathConfigurationGeneratedFile(pathConfigurationGeneratedFile);
+
+                            flumeTopologyPropertiesGenerator.generateInputProperties();
+
+                        } catch (NumberFormatException nfe) {
+                            logger.error(getErrorMessage(4), nfe);
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("******* END CONFIGURATOR BUILDER PROCESS *****************");
+                            }
                         }
-                        FlumeTopologyPropertiesGenerator flumeTopologyPropertiesGenerator = new FlumeTopologyPropertiesGenerator();
-
-                        FlumeTopologyPropertiesGenerator.setPathJSONTopology(pathJSONTopology);
-                        FlumeTopologyPropertiesGenerator.setMultipleAgentConfigurationFiles(multipleAgentConfigurationFiles);
-                        FlumeTopologyPropertiesGenerator.setAddComments(addComments);
-                        FlumeTopologyPropertiesGenerator.setComputeTreeAsGraph(computeTreeAsGraph);
-                        FlumeTopologyPropertiesGenerator.setRatioCommonProperty(ratioCommonProperty);
-                        FlumeTopologyPropertiesGenerator.setPathConfigurationGeneratedFile(pathConfigurationGeneratedFile);
-
-                        flumeTopologyPropertiesGenerator.generateInputProperties();
 
                     } else if (args.length == 8) {
 
-                        pathJSONTopology = args[1];
-                        multipleAgentConfigurationFiles = Boolean.valueOf(args[2]);
-                        addComments = Boolean.valueOf(args[3]);
-                        computeTreeAsGraph = Boolean.valueOf(args[4]);
-                        ratioCommonProperty = Double.valueOf(args[5]);
-                        pathConfigurationGeneratedFile = args[6];
-                        generateBaseConfigurationFiles = true;
-                        pathBasePropertiesGeneratedFile = args[7];
+                        try {
 
-                        if (logger.isDebugEnabled()) {
-                            logger.debug("Parameter pathJSONTopology: " + pathJSONTopology);
-                            logger.debug("Parameter multipleAgentConfigurationFiles: " + multipleAgentConfigurationFiles);
-                            logger.debug("Parameter addComments: " + addComments);
-                            logger.debug("Parameter computeTreeAsGraph: " + computeTreeAsGraph);
-                            logger.debug("Parameter ratioCommonProperty: " + ratioCommonProperty);
-                            logger.debug("Parameter pathPropertiesGeneratedFile: " + pathConfigurationGeneratedFile);
-                            logger.debug("Parameter pathBasePropertiesGeneratedFile: " + pathBasePropertiesGeneratedFile);
+                            pathJSONTopology = args[1];
+                            multipleAgentConfigurationFiles = Boolean.valueOf(args[2]);
+                            addComments = Boolean.valueOf(args[3]);
+                            computeTreeAsGraph = Boolean.valueOf(args[4]);
+                            ratioCommonProperty = Double.valueOf(args[5]);
+                            pathConfigurationGeneratedFile = args[6];
+                            generateBaseConfigurationFiles = true;
+                            pathBasePropertiesGeneratedFile = args[7];
+
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("Parameter pathJSONTopology: " + pathJSONTopology);
+                                logger.debug("Parameter multipleAgentConfigurationFiles: " + multipleAgentConfigurationFiles);
+                                logger.debug("Parameter addComments: " + addComments);
+                                logger.debug("Parameter computeTreeAsGraph: " + computeTreeAsGraph);
+                                logger.debug("Parameter ratioCommonProperty: " + ratioCommonProperty);
+                                logger.debug("Parameter pathPropertiesGeneratedFile: " + pathConfigurationGeneratedFile);
+                                logger.debug("Parameter pathBasePropertiesGeneratedFile: " + pathBasePropertiesGeneratedFile);
+                            }
+
+                            FlumeTopologyPropertiesGenerator flumeTopologyPropertiesGenerator = new FlumeTopologyPropertiesGenerator();
+
+                            FlumeTopologyPropertiesGenerator.setPathJSONTopology(pathJSONTopology);
+                            FlumeTopologyPropertiesGenerator.setMultipleAgentConfigurationFiles(multipleAgentConfigurationFiles);
+                            FlumeTopologyPropertiesGenerator.setAddComments(addComments);
+                            FlumeTopologyPropertiesGenerator.setComputeTreeAsGraph(computeTreeAsGraph);
+                            FlumeTopologyPropertiesGenerator.setRatioCommonProperty(ratioCommonProperty);
+                            FlumeTopologyPropertiesGenerator.setPathConfigurationGeneratedFile(pathConfigurationGeneratedFile);
+                            FlumeTopologyPropertiesGenerator.setGenerateBaseConfigurationFiles(generateBaseConfigurationFiles);
+                            FlumeTopologyPropertiesGenerator.setPathBasePropertiesGeneratedFile(pathBasePropertiesGeneratedFile);
+
+                            flumeTopologyPropertiesGenerator.generateInputProperties();
+
+                        } catch (NumberFormatException nfe) {
+                            logger.error(getErrorMessage(4), nfe);
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("******* END CONFIGURATOR BUILDER PROCESS *****************");
+                            }
                         }
-
-                        FlumeTopologyPropertiesGenerator flumeTopologyPropertiesGenerator = new FlumeTopologyPropertiesGenerator();
-
-                        FlumeTopologyPropertiesGenerator.setPathJSONTopology(pathJSONTopology);
-                        FlumeTopologyPropertiesGenerator.setMultipleAgentConfigurationFiles(multipleAgentConfigurationFiles);
-                        FlumeTopologyPropertiesGenerator.setAddComments(addComments);
-                        FlumeTopologyPropertiesGenerator.setComputeTreeAsGraph(computeTreeAsGraph);
-                        FlumeTopologyPropertiesGenerator.setRatioCommonProperty(ratioCommonProperty);
-                        FlumeTopologyPropertiesGenerator.setPathConfigurationGeneratedFile(pathConfigurationGeneratedFile);
-                        FlumeTopologyPropertiesGenerator.setGenerateBaseConfigurationFiles(generateBaseConfigurationFiles);
-                        FlumeTopologyPropertiesGenerator.setPathBasePropertiesGeneratedFile(pathBasePropertiesGeneratedFile);
-
-                        flumeTopologyPropertiesGenerator.generateInputProperties();
 
                     } else {
                         logger.error(getErrorMessage(4));
@@ -381,13 +411,13 @@ public class ConfiguratorBuilder {
                         pathFlumeProperties = args[1];
                         withComments = Boolean.valueOf(args[2]);
                         generatePositionCoordinates = Boolean.valueOf(args[3]);
-                        pathJSONFlumeTopologyGeneratedFile = args[4];
+                        pathDraw2DFlumeTopologyGeneratedFile = args[4];
 
                         if (logger.isDebugEnabled()) {
                             logger.debug("Parameter pathFlumeProperties: " + pathFlumeProperties);
                             logger.debug("Parameter withComments: " + withComments);
                             logger.debug("Parameter generatePositionCoordinates: " + generatePositionCoordinates);
-                            logger.debug("Parameter pathJSONFlumeTopologyGeneratedFile: " + pathJSONFlumeTopologyGeneratedFile);
+                            logger.debug("Parameter pathDraw2DFlumeTopologyGeneratedFile: " + pathDraw2DFlumeTopologyGeneratedFile);
                         }
 
                         FlumeTopologyReversePropertiesGenerator flumeTopologyReversePropertiesGenerator = new FlumeTopologyReversePropertiesGenerator();
@@ -395,9 +425,55 @@ public class ConfiguratorBuilder {
                         FlumeTopologyReversePropertiesGenerator.setPathFlumeProperties(pathFlumeProperties);
                         FlumeTopologyReversePropertiesGenerator.setWithComments(withComments);
                         FlumeTopologyReversePropertiesGenerator.setGeneratePositionCoordinates(generatePositionCoordinates);
-                        FlumeTopologyReversePropertiesGenerator.setPathDraw2DFlumeTopologyGeneratedFile(pathJSONFlumeTopologyGeneratedFile);
+                        FlumeTopologyReversePropertiesGenerator.setPathDraw2DFlumeTopologyGeneratedFile(pathDraw2DFlumeTopologyGeneratedFile);
 
                         flumeTopologyReversePropertiesGenerator.generateDraw2DFlumeTopology();
+
+                    } else if (args.length > 5) {
+
+                        try {
+
+                            pathFlumeProperties = args[1];
+                            withComments = Boolean.valueOf(args[2]);
+                            generatePositionCoordinates = Boolean.valueOf(args[3]);
+                            pathDraw2DFlumeTopologyGeneratedFile = args[4];
+
+
+                            for (int i = 5; i < args.length; i++) {
+                                int alternativeOptimizationPermutationAgent = Integer.valueOf(args[i]);
+                                if (alternativeOptimizationPermutationAgent <= 0) {
+                                    int agentIndex = i - 5;
+                                    throw new NumberFormatException("The alternative optimization permutation number for agent at index " + agentIndex + " must be greater than zero");
+                                }
+                                alternativeOptimizationPermutationAgentList.add(alternativeOptimizationPermutationAgent);
+                            }
+
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("Parameter pathFlumeProperties: " + pathFlumeProperties);
+                                logger.debug("Parameter withComments: " + withComments);
+                                logger.debug("Parameter generatePositionCoordinates: " + generatePositionCoordinates);
+                                logger.debug("Parameter pathDraw2DFlumeTopologyGeneratedFile: " + pathDraw2DFlumeTopologyGeneratedFile);
+                                for (int i = 0; i < alternativeOptimizationPermutationAgentList.size(); i++) {
+                                    logger.debug("Parameter alternative optimization permutation number for agent (index " + i + "): " + alternativeOptimizationPermutationAgentList.get(i));
+                                }
+                            }
+
+                            FlumeTopologyReversePropertiesGenerator flumeTopologyReversePropertiesGenerator = new FlumeTopologyReversePropertiesGenerator();
+
+                            FlumeTopologyReversePropertiesGenerator.setPathFlumeProperties(pathFlumeProperties);
+                            FlumeTopologyReversePropertiesGenerator.setWithComments(withComments);
+                            FlumeTopologyReversePropertiesGenerator.setGeneratePositionCoordinates(generatePositionCoordinates);
+                            FlumeTopologyReversePropertiesGenerator.setPathDraw2DFlumeTopologyGeneratedFile(pathDraw2DFlumeTopologyGeneratedFile);
+                            FlumeTopologyReversePropertiesGenerator.setAlternativeOptimizationPermutationAgentList(alternativeOptimizationPermutationAgentList);
+
+                            flumeTopologyReversePropertiesGenerator.generateDraw2DFlumeTopology();
+
+                        } catch (NumberFormatException nfe) {
+                            logger.error(getErrorMessage(5), nfe);
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("******* END CONFIGURATOR BUILDER PROCESS *****************");
+                            }
+                        }
 
                     } else {
                         logger.error(getErrorMessage(5));

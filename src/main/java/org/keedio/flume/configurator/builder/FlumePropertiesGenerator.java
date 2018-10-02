@@ -1340,6 +1340,12 @@ public class FlumePropertiesGenerator {
                 }
             }
 
+        } catch (NumberFormatException nfe) {
+            logger.error(getErrorMessage(2), nfe);
+            if (logger.isDebugEnabled()) {
+                logger.debug("******* END FLUME PROPERTIES GENERATOR PROCESS  *****************");
+            }
+
         } catch (Exception e) {
             logger.error(getErrorMessage(1), e);
             if (logger.isDebugEnabled()) {

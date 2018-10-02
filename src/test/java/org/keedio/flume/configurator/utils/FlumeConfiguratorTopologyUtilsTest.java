@@ -33,6 +33,7 @@ public class FlumeConfiguratorTopologyUtilsTest {
     private static List<String> listSharedSourcesGraphAgent1;
     private static List<String> listSharedSourcesGraphAgent2;
     private static Map<String, Map<String,List<String>>> sourcesChannelsRelationsMap;
+    private static Map<String, Map<String,List<String>>> sourcesSinkGroupsRelationsMap;
 
     private static Map<String, IGraph> flumeGraphTopology;
     private static DefaultMutableTreeNode flumeTopologyTreeRootNode;
@@ -113,6 +114,34 @@ public class FlumeConfiguratorTopologyUtilsTest {
 
         sourcesChannelsRelationsMap.put("agent1", sourcesChannelsRelationsMap_Agent1);
         sourcesChannelsRelationsMap.put("agent2", sourcesChannelsRelationsMap_Agent2);
+
+        sourcesSinkGroupsRelationsMap = new HashMap<>();
+        Map<String,List<String>> sourcesSinkGroupsRelationsMap_Agent1 = new HashMap<>();
+        Map<String,List<String>> sourcesSinkGroupsRelationsMap_Agent2= new HashMap<>();
+
+        List<String> listSinkgroups_Source1 = new ArrayList<>();
+        List<String> listSinkgroups_Source2 = new ArrayList<>();
+        List<String> listSinkgroups_Source3 = new ArrayList<>();
+        List<String> listSinkgroups_Source4 = new ArrayList<>();
+        List<String> listSinkgroups_Source5 = new ArrayList<>();
+        List<String> listSinkgroups_Source6 = new ArrayList<>();
+
+        listSinkgroups_Source1.add("sinkgroup1");
+        listSinkgroups_Source2.add("sinkgroup1");
+        listSinkgroups_Source3.add("sinkgroup1");
+        listSinkgroups_Source4.add("sinkgroup2");
+        listSinkgroups_Source5.add("sinkgroup2");
+        listSinkgroups_Source6.add("sinkgroup2");
+
+        sourcesSinkGroupsRelationsMap_Agent1.put("source1",listSinkgroups_Source1);
+        sourcesSinkGroupsRelationsMap_Agent1.put("source2",listSinkgroups_Source2);
+        sourcesSinkGroupsRelationsMap_Agent1.put("source3",listSinkgroups_Source3);
+        sourcesSinkGroupsRelationsMap_Agent2.put("source4",listSinkgroups_Source4);
+        sourcesSinkGroupsRelationsMap_Agent2.put("source5",listSinkgroups_Source5);
+        sourcesSinkGroupsRelationsMap_Agent2.put("source6",listSinkgroups_Source6);
+
+        sourcesSinkGroupsRelationsMap.put("agent1", sourcesSinkGroupsRelationsMap_Agent1);
+        sourcesSinkGroupsRelationsMap.put("agent2", sourcesSinkGroupsRelationsMap_Agent2);
 
         //Create agents graphs
         flumeGraphTopology = new LinkedHashMap<>();
@@ -1009,6 +1038,44 @@ public class FlumeConfiguratorTopologyUtilsTest {
 
     }
 
+
+    @Test
+    public void testGetSetFirstPartProperties() {
+
+        String propertyName1 = "elem1_part1.part2";
+        String propertyValue1 = "value1";
+        String propertyName2 = "elem1_part1.part2";
+        String propertyValue2 = "value2";
+        String propertyName3 = "elem2_part1.part2";
+        String propertyValue3 = "value3";
+
+        Properties properties = new Properties();
+
+        Set<String> setFirstPartProperties = FlumeConfiguratorTopologyUtils.getSetFirstPartProperties(properties);
+        Assert.assertTrue("The result of the getSetFirstPartProperties method is not correct", setFirstPartProperties.isEmpty());
+        Assert.assertEquals("The result of the getSetFirstPartProperties method is not correct", setFirstPartProperties.size(), 0);
+
+
+        properties.put(propertyName1, propertyValue1);
+
+        setFirstPartProperties = FlumeConfiguratorTopologyUtils.getSetFirstPartProperties(properties);
+        Assert.assertFalse("The result of the getSetFirstPartProperties method is not correct", setFirstPartProperties.isEmpty());
+        Assert.assertEquals("The result of the getSetFirstPartProperties method is not correct", setFirstPartProperties.size(), 1);
+
+        properties.put(propertyName2, propertyValue2);
+
+        setFirstPartProperties = FlumeConfiguratorTopologyUtils.getSetFirstPartProperties(properties);
+        Assert.assertFalse("The result of the getSetFirstPartProperties method is not correct", setFirstPartProperties.isEmpty());
+        Assert.assertEquals("The result of the getSetFirstPartProperties method is not correct", setFirstPartProperties.size(), 1);
+
+        properties.put(propertyName3, propertyValue3);
+
+        setFirstPartProperties = FlumeConfiguratorTopologyUtils.getSetFirstPartProperties(properties);
+        Assert.assertFalse("The result of the getSetFirstPartProperties method is not correct", setFirstPartProperties.isEmpty());
+        Assert.assertEquals("The result of the getSetFirstPartProperties method is not correct", setFirstPartProperties.size(), 2);
+    }
+
+
     @Test
     public void testGetTailPartProperty() {
 
@@ -1703,7 +1770,7 @@ public class FlumeConfiguratorTopologyUtilsTest {
 
 
     @Test
-    public void testGetCorrectSourcesPermutations() {
+    public void testGetSharedSourcesPermutations() {
 
         String agent1_Name = "agent1";
         String agent2_Name = "agent2";
@@ -1718,39 +1785,39 @@ public class FlumeConfiguratorTopologyUtilsTest {
         List<String> completeSharedSourcesList_Agent1 = FlumeConfiguratorTopologyUtils.getCompleteSharedSourcesList(mapSharedChannelsSourcesRelation_Agent1);
         List<String> completeSharedSourcesList_Agent2 = FlumeConfiguratorTopologyUtils.getCompleteSharedSourcesList(mapSharedChannelsSourcesRelation_Agent2);
 
-        Collection<List<String>> correctSourcesPermutations = FlumeConfiguratorTopologyUtils.getCorrectSourcesPermutations (null, null);
-        Assert.assertNotNull("The result of the getCorrectSourcesPermutations method is not correct",correctSourcesPermutations);
-        Assert.assertTrue("The result of the getCorrectSourcesPermutations method is not correct",correctSourcesPermutations.isEmpty());
+        Collection<List<String>> correctSourcesPermutations = FlumeConfiguratorTopologyUtils.getSharedSourcesPermutations(null, null);
+        Assert.assertNotNull("The result of the getSharedSourcesPermutations method is not correct",correctSourcesPermutations);
+        Assert.assertTrue("The result of the getSharedSourcesPermutations method is not correct",correctSourcesPermutations.isEmpty());
 
-        correctSourcesPermutations = FlumeConfiguratorTopologyUtils.getCorrectSourcesPermutations (completeSharedSourcesList_Agent1, null);
-        Assert.assertNotNull("The result of the getCorrectSourcesPermutations method is not correct",correctSourcesPermutations);
-        Assert.assertTrue("The result of the getCorrectSourcesPermutations method is not correct",correctSourcesPermutations.isEmpty());
+        correctSourcesPermutations = FlumeConfiguratorTopologyUtils.getSharedSourcesPermutations(completeSharedSourcesList_Agent1, null);
+        Assert.assertNotNull("The result of the getSharedSourcesPermutations method is not correct",correctSourcesPermutations);
+        Assert.assertTrue("The result of the getSharedSourcesPermutations method is not correct",correctSourcesPermutations.isEmpty());
 
-        correctSourcesPermutations = FlumeConfiguratorTopologyUtils.getCorrectSourcesPermutations (null, mapSharedChannelsSourcesRelation_Agent1);
-        Assert.assertNotNull("The result of the getCorrectSourcesPermutations method is not correct",correctSourcesPermutations);
-        Assert.assertTrue("The result of the getCorrectSourcesPermutations method is not correct",correctSourcesPermutations.isEmpty());
+        correctSourcesPermutations = FlumeConfiguratorTopologyUtils.getSharedSourcesPermutations(null, mapSharedChannelsSourcesRelation_Agent1);
+        Assert.assertNotNull("The result of the getSharedSourcesPermutations method is not correct",correctSourcesPermutations);
+        Assert.assertTrue("The result of the getSharedSourcesPermutations method is not correct",correctSourcesPermutations.isEmpty());
 
-        correctSourcesPermutations = FlumeConfiguratorTopologyUtils.getCorrectSourcesPermutations (completeSharedSourcesList_Agent1, mapSharedChannelsSourcesRelation_Agent1);
-        Assert.assertNotNull("The result of the getCorrectSourcesPermutations method is not correct",correctSourcesPermutations);
-        Assert.assertFalse("The result of the getCorrectSourcesPermutations method is not correct",correctSourcesPermutations.isEmpty());
-        Assert.assertEquals("The result of the getCorrectSourcesPermutations method is not correct",correctSourcesPermutations.size(), 2);
+        correctSourcesPermutations = FlumeConfiguratorTopologyUtils.getSharedSourcesPermutations(completeSharedSourcesList_Agent1, mapSharedChannelsSourcesRelation_Agent1);
+        Assert.assertNotNull("The result of the getSharedSourcesPermutations method is not correct",correctSourcesPermutations);
+        Assert.assertFalse("The result of the getSharedSourcesPermutations method is not correct",correctSourcesPermutations.isEmpty());
+        Assert.assertEquals("The result of the getSharedSourcesPermutations method is not correct",correctSourcesPermutations.size(), 2);
 
         for (List<String> sourcePermutation : correctSourcesPermutations) {
-            Assert.assertEquals("The result of the getCorrectSourcesPermutations method is not correct",sourcePermutation.size(), 2);
+            Assert.assertEquals("The result of the getSharedSourcesPermutations method is not correct",sourcePermutation.size(), 2);
             for(String sourceName : sourcePermutation) {
-                Assert.assertTrue("The result of the getCorrectSourcesPermutations method is not correct",sourceName.equals(agent1_shared_channel_source1) || sourceName.equals(agent1_shared_channel_source2) );
+                Assert.assertTrue("The result of the getSharedSourcesPermutations method is not correct",sourceName.equals(agent1_shared_channel_source1) || sourceName.equals(agent1_shared_channel_source2) );
             }
         }
 
-        correctSourcesPermutations = FlumeConfiguratorTopologyUtils.getCorrectSourcesPermutations (completeSharedSourcesList_Agent2, mapSharedChannelsSourcesRelation_Agent2);
-        Assert.assertNotNull("The result of the getCorrectSourcesPermutations method is not correct",correctSourcesPermutations);
-        Assert.assertFalse("The result of the getCorrectSourcesPermutations method is not correct",correctSourcesPermutations.isEmpty());
-        Assert.assertEquals("The result of the getCorrectSourcesPermutations method is not correct",correctSourcesPermutations.size(), 2);
+        correctSourcesPermutations = FlumeConfiguratorTopologyUtils.getSharedSourcesPermutations(completeSharedSourcesList_Agent2, mapSharedChannelsSourcesRelation_Agent2);
+        Assert.assertNotNull("The result of the getSharedSourcesPermutations method is not correct",correctSourcesPermutations);
+        Assert.assertFalse("The result of the getSharedSourcesPermutations method is not correct",correctSourcesPermutations.isEmpty());
+        Assert.assertEquals("The result of the getSharedSourcesPermutations method is not correct",correctSourcesPermutations.size(), 2);
 
         for (List<String> sourcePermutation : correctSourcesPermutations) {
-            Assert.assertEquals("The result of the getCorrectSourcesPermutations method is not correct",sourcePermutation.size(), 2);
+            Assert.assertEquals("The result of the getSharedSourcesPermutations method is not correct",sourcePermutation.size(), 2);
             for(String sourceName : sourcePermutation) {
-                Assert.assertTrue("The result of the getCorrectSourcesPermutations method is not correct",sourceName.equals(agent2_shared_channel_source4) || sourceName.equals(agent2_shared_channel_source5) );
+                Assert.assertTrue("The result of the getSharedSourcesPermutations method is not correct",sourceName.equals(agent2_shared_channel_source4) || sourceName.equals(agent2_shared_channel_source5) );
             }
         }
     }
@@ -1921,6 +1988,55 @@ public class FlumeConfiguratorTopologyUtilsTest {
 
 
     @Test
+    public void testGetSourceDescendantsTypeList() {
+
+        String agent1_Name = "agent1";
+        String source1_ID = "4ba63761-5d62-9aa1-0986-0e9d8cfeed21";
+        String source1_channel1_name = "channel1";
+        String source1_sink1_name = "sink1";
+        String source1_sinkgroup1_name = "sinkgroup1";
+
+        IGraph agent1_graph = flumeGraphTopology.get(agent1_Name);
+        FlumeTopology source1_flume_topology_element = FlumeConfiguratorTopologyUtils.getFlumeTopologyElement(flumeTopologyListGraph, source1_ID);
+
+        List<String> sourceDescendantsTypeList = FlumeConfiguratorTopologyUtils.getSourceDescendantsTypeList(null, null, null);
+        Assert.assertNotNull("The result of the getSourceDescendantsTypeList method is not correct",sourceDescendantsTypeList);
+        Assert.assertTrue("The result of the getSourceDescendantsTypeList method is not correct",sourceDescendantsTypeList.isEmpty());
+
+        sourceDescendantsTypeList = FlumeConfiguratorTopologyUtils.getSourceDescendantsTypeList(source1_flume_topology_element, null, null);
+        Assert.assertNotNull("The result of the getSourceDescendantsTypeList method is not correct",sourceDescendantsTypeList);
+        Assert.assertTrue("The result of the getSourceDescendantsTypeList method is not correct",sourceDescendantsTypeList.isEmpty());
+
+        sourceDescendantsTypeList = FlumeConfiguratorTopologyUtils.getSourceDescendantsTypeList(null, agent1_graph, null);
+        Assert.assertNotNull("The result of the getSourceDescendantsTypeList method is not correct",sourceDescendantsTypeList);
+        Assert.assertTrue("The result of the getSourceDescendantsTypeList method is not correct",sourceDescendantsTypeList.isEmpty());
+
+        sourceDescendantsTypeList = FlumeConfiguratorTopologyUtils.getSourceDescendantsTypeList(null, null, FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL);
+        Assert.assertNotNull("The result of the getSourceDescendantsTypeList method is not correct",sourceDescendantsTypeList);
+        Assert.assertTrue("The result of the getSourceDescendantsTypeList method is not correct",sourceDescendantsTypeList.isEmpty());
+
+        sourceDescendantsTypeList = FlumeConfiguratorTopologyUtils.getSourceDescendantsTypeList(source1_flume_topology_element, agent1_graph, FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL);
+        Assert.assertNotNull("The result of the getSourceDescendantsTypeList method is not correct",sourceDescendantsTypeList);
+        Assert.assertFalse("The result of the getSourceDescendantsTypeList method is not correct",sourceDescendantsTypeList.isEmpty());
+        Assert.assertEquals("The result of the getSourceDescendantsTypeList method is not correct",sourceDescendantsTypeList.size(), 1);
+        Assert.assertEquals("The result of the getSourceDescendantsTypeList method is not correct",sourceDescendantsTypeList.get(0), source1_channel1_name);
+
+        sourceDescendantsTypeList = FlumeConfiguratorTopologyUtils.getSourceDescendantsTypeList(source1_flume_topology_element, agent1_graph, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK);
+        Assert.assertNotNull("The result of the getSourceDescendantsTypeList method is not correct",sourceDescendantsTypeList);
+        Assert.assertFalse("The result of the getSourceDescendantsTypeList method is not correct",sourceDescendantsTypeList.isEmpty());
+        Assert.assertEquals("The result of the getSourceDescendantsTypeList method is not correct",sourceDescendantsTypeList.size(), 1);
+        Assert.assertEquals("The result of the getSourceDescendantsTypeList method is not correct",sourceDescendantsTypeList.get(0), source1_sink1_name);
+
+        sourceDescendantsTypeList = FlumeConfiguratorTopologyUtils.getSourceDescendantsTypeList(source1_flume_topology_element, agent1_graph, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP);
+        Assert.assertNotNull("The result of the getSourceDescendantsTypeList method is not correct",sourceDescendantsTypeList);
+        Assert.assertFalse("The result of the getSourceDescendantsTypeList method is not correct",sourceDescendantsTypeList.isEmpty());
+        Assert.assertEquals("The result of the getSourceDescendantsTypeList method is not correct",sourceDescendantsTypeList.size(), 1);
+        Assert.assertEquals("The result of the getSourceDescendantsTypeList method is not correct",sourceDescendantsTypeList.get(0), source1_sinkgroup1_name);
+    }
+
+
+
+    @Test
     public void testGetMapSourcesInterceptorsRelation() {
 
         String agent1_Name = "agent1";
@@ -1985,7 +2101,7 @@ public class FlumeConfiguratorTopologyUtilsTest {
         }
     }
 
-
+/*
     @Test
     public void testGetOptimalSourcesPermutation() {
 
@@ -2005,8 +2121,8 @@ public class FlumeConfiguratorTopologyUtilsTest {
         List<String> completeSharedSourcesList_Agent1 = FlumeConfiguratorTopologyUtils.getCompleteSharedSourcesList(mapSharedChannelsSourcesRelation_Agent1);
         List<String> completeSharedSourcesList_Agent2 = FlumeConfiguratorTopologyUtils.getCompleteSharedSourcesList(mapSharedChannelsSourcesRelation_Agent2);
 
-        Collection<List<String>> correctSourcesPermutations_Agent1 = FlumeConfiguratorTopologyUtils.getCorrectSourcesPermutations (completeSharedSourcesList_Agent1, mapSharedChannelsSourcesRelation_Agent1);
-        Collection<List<String>> correctSourcesPermutations_Agent2 = FlumeConfiguratorTopologyUtils.getCorrectSourcesPermutations (completeSharedSourcesList_Agent2, mapSharedChannelsSourcesRelation_Agent2);
+        Collection<List<String>> correctSourcesPermutations_Agent1 = FlumeConfiguratorTopologyUtils.getSharedSourcesPermutations (completeSharedSourcesList_Agent1, mapSharedChannelsSourcesRelation_Agent1, false);
+        Collection<List<String>> correctSourcesPermutations_Agent2 = FlumeConfiguratorTopologyUtils.getSharedSourcesPermutations (completeSharedSourcesList_Agent2, mapSharedChannelsSourcesRelation_Agent2, false);
 
         Map<String,Integer> mapChannelSourcesNumberRelation_Agent1 = FlumeConfiguratorTopologyUtils.getMapChannelSourcesNumberRelation(completeSharedSourcesList_Agent1, agent1_graph, flumeTopologyListGraph);
         Map<String,Integer> mapChannelSourcesNumberRelation_Agent2 = FlumeConfiguratorTopologyUtils.getMapChannelSourcesNumberRelation(completeSharedSourcesList_Agent2, agent2_graph, flumeTopologyListGraph);
@@ -2042,7 +2158,7 @@ public class FlumeConfiguratorTopologyUtilsTest {
         Assert.assertTrue("The result of the getMapSourcesInterceptorsRelation method is not correct",optimalSourcesPermutation.get(0).equals(agent2_shared_channel_source4) || optimalSourcesPermutation.get(0).equals(agent2_shared_channel_source5));
 
     }
-
+*/
     @Test
     public void testExistSinkGroupSlice() {
 
@@ -2054,6 +2170,43 @@ public class FlumeConfiguratorTopologyUtilsTest {
 
         Assert.assertTrue("The result of the existSinkGroupSlice method is not correct",existSinkGroupSlice_Agent1);
         Assert.assertTrue("The result of the existSinkGroupSlice method is not correct",existSinkGroupSlice_Agent2);
+
+    }
+
+
+    @Test
+    public void testExistSliceType() {
+
+        String agent1_Name = "agent1";
+        String agent2_Name = "agent2";
+
+        boolean existSliceSource_Agent1 = FlumeConfiguratorTopologyUtils.existSliceType(flumeGraphTopology, agent1_Name, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE);
+        boolean existSliceInterceptor_Agent1 = FlumeConfiguratorTopologyUtils.existSliceType(flumeGraphTopology, agent1_Name, FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR);
+        boolean existSliceSelector_Agent1 = FlumeConfiguratorTopologyUtils.existSliceType(flumeGraphTopology, agent1_Name, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SELECTOR);
+        boolean existSliceChannel_Agent1 = FlumeConfiguratorTopologyUtils.existSliceType(flumeGraphTopology, agent1_Name, FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL);
+        boolean existSliceSink_Agent1 = FlumeConfiguratorTopologyUtils.existSliceType(flumeGraphTopology, agent1_Name, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK);
+        boolean existSliceSinkgroup_Agent1 = FlumeConfiguratorTopologyUtils.existSliceType(flumeGraphTopology, agent1_Name, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP);
+
+        Assert.assertTrue("The result of the existSinkGroupSlice method is not correct",existSliceSource_Agent1);
+        Assert.assertTrue("The result of the existSinkGroupSlice method is not correct",existSliceInterceptor_Agent1);
+        Assert.assertFalse("The result of the existSinkGroupSlice method is not correct",existSliceSelector_Agent1);
+        Assert.assertTrue("The result of the existSinkGroupSlice method is not correct",existSliceChannel_Agent1);
+        Assert.assertTrue("The result of the existSinkGroupSlice method is not correct",existSliceSink_Agent1);
+        Assert.assertTrue("The result of the existSinkGroupSlice method is not correct",existSliceSinkgroup_Agent1);
+
+        boolean existSliceSource_Agent2 = FlumeConfiguratorTopologyUtils.existSliceType(flumeGraphTopology, agent2_Name, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE);
+        boolean existSliceInterceptor_Agent2 = FlumeConfiguratorTopologyUtils.existSliceType(flumeGraphTopology, agent2_Name, FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR);
+        boolean existSliceSelector_Agent2 = FlumeConfiguratorTopologyUtils.existSliceType(flumeGraphTopology, agent2_Name, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SELECTOR);
+        boolean existSliceChannel_Agent2 = FlumeConfiguratorTopologyUtils.existSliceType(flumeGraphTopology, agent2_Name, FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL);
+        boolean existSliceSink_Agent2 = FlumeConfiguratorTopologyUtils.existSliceType(flumeGraphTopology, agent2_Name, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK);
+        boolean existSliceSinkgroup_Agent2 = FlumeConfiguratorTopologyUtils.existSliceType(flumeGraphTopology, agent2_Name, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP);
+
+        Assert.assertTrue("The result of the existSinkGroupSlice method is not correct",existSliceSource_Agent2);
+        Assert.assertTrue("The result of the existSinkGroupSlice method is not correct",existSliceInterceptor_Agent2);
+        Assert.assertFalse("The result of the existSinkGroupSlice method is not correct",existSliceSelector_Agent2);
+        Assert.assertTrue("The result of the existSinkGroupSlice method is not correct",existSliceChannel_Agent2);
+        Assert.assertTrue("The result of the existSinkGroupSlice method is not correct",existSliceSink_Agent2);
+        Assert.assertTrue("The result of the existSinkGroupSlice method is not correct",existSliceSinkgroup_Agent2);
 
     }
 
@@ -2131,6 +2284,43 @@ public class FlumeConfiguratorTopologyUtilsTest {
 
 
     @Test
+    public void testGetMapSharedSinkGroupsSourcesRelation() {
+
+        String agent1_Name = "agent1";
+        String agent2_Name = "agent2";
+        String sinkgroup_Name_agent1 = "sinkgroup1";
+        String sinkgroup_Name_agent2 = "sinkgroup2";
+
+        List<String> completeSharedSourcesList_Agent1 = new ArrayList<>();
+        List<String> completeSharedSourcesList_Agent2 = new ArrayList<>();
+
+        Map<String, List<String>> sourcesSinkGroupsRelationsMap_Agent1 = sourcesSinkGroupsRelationsMap.get(agent1_Name);
+        Map<String, List<String>> sourcesSinkGroupsRelationsMap_Agent2 = sourcesSinkGroupsRelationsMap.get(agent2_Name);
+
+        for (String sourceName : sourcesSinkGroupsRelationsMap_Agent1.keySet()) {
+            completeSharedSourcesList_Agent1.add(sourceName);
+        }
+
+        for (String sourceName : sourcesSinkGroupsRelationsMap_Agent2.keySet()) {
+            completeSharedSourcesList_Agent2.add(sourceName);
+        }
+
+        Map<String,List<String>> mapSharedSinkGroupsSourcesRelation_Agent1 = FlumeConfiguratorTopologyUtils.getMapSharedSinkGroupsSourcesRelation(completeSharedSourcesList_Agent1, sourcesSinkGroupsRelationsMap_Agent1);
+        Map<String,List<String>> mapSharedSinkGroupsSourcesRelation_Agent2 = FlumeConfiguratorTopologyUtils.getMapSharedSinkGroupsSourcesRelation(completeSharedSourcesList_Agent2, sourcesSinkGroupsRelationsMap_Agent2);
+
+        Assert.assertNotNull("The result of the getMapSharedSinkGroupsSourcesRelation method is not correct",mapSharedSinkGroupsSourcesRelation_Agent1);
+        Assert.assertEquals("The result of the getMapSharedSinkGroupsSourcesRelation method is not correct",mapSharedSinkGroupsSourcesRelation_Agent1.size(), 1);
+        Assert.assertNotNull("The result of the getMapSharedSinkGroupsSourcesRelation method is not correct", mapSharedSinkGroupsSourcesRelation_Agent1.get(sinkgroup_Name_agent1));
+        Assert.assertEquals("The result of the getMapSharedSinkGroupsSourcesRelation method is not correct",mapSharedSinkGroupsSourcesRelation_Agent1.get(sinkgroup_Name_agent1).size(), 3);
+
+        Assert.assertNotNull("The result of the getMapSharedSinkGroupsSourcesRelation method is not correct",mapSharedSinkGroupsSourcesRelation_Agent2);
+        Assert.assertEquals("The result of the getMapSharedSinkGroupsSourcesRelation method is not correct",mapSharedSinkGroupsSourcesRelation_Agent2.size(), 1);
+        Assert.assertNotNull("The result of the getMapSharedSinkGroupsSourcesRelation method is not correct", mapSharedSinkGroupsSourcesRelation_Agent2.get(sinkgroup_Name_agent2));
+        Assert.assertEquals("The result of the getMapSharedSinkGroupsSourcesRelation method is not correct",mapSharedSinkGroupsSourcesRelation_Agent2.get(sinkgroup_Name_agent2).size(), 3);
+
+    }
+
+    @Test
     public void testGetFirstAncestorByType() {
 
         try {
@@ -2164,5 +2354,248 @@ public class FlumeConfiguratorTopologyUtilsTest {
             Assert.fail("An error has occurred [testGetFirstAncestorByType] method");
             logger.error("An error has occurred [testGetFirstAncestorByType] method", e);
         }
+
     }
+
+
+    @Test
+    public void testisSelectorChannelReferenceFlumeConfigurationProperty() {
+
+        String propertySelectorChannelReferenceName = "agent1.sources.source1_1.selector.mapping.CA";
+        String propertyNoSelectorChannelReferenceName = "agent1.sources.source1_1.interceptor.i1";
+
+        boolean isSelectorChannelReferenceFlumeConfigurationProperty =
+                FlumeConfiguratorTopologyUtils.isSelectorChannelReferenceFlumeConfigurationProperty(propertySelectorChannelReferenceName);
+
+        Assert.assertTrue("The result of the isSelectorChannelReferenceFlumeConfigurationProperty method is not correct",isSelectorChannelReferenceFlumeConfigurationProperty);
+
+        isSelectorChannelReferenceFlumeConfigurationProperty =
+                FlumeConfiguratorTopologyUtils.isSelectorChannelReferenceFlumeConfigurationProperty(propertyNoSelectorChannelReferenceName);
+
+        Assert.assertFalse("The result of the isSelectorChannelReferenceFlumeConfigurationProperty method is not correct",isSelectorChannelReferenceFlumeConfigurationProperty);
+
+    }
+
+
+    @Test
+    public void testGetElementAveragePosition() {
+
+        String agent1_Name = "agent1";
+        String agentSearchedID = "cbbd2d42-b905-4c17-b385-dbd33bb9871e";
+        String source1SearchedID = "4ba63761-5d62-9aa1-0986-0e9d8cfeed21";
+        String source2SearchedID = "6cfae647-d552-5642-7947-547181a67a3c";
+        String source3SearchedID = "6d3f87eb-7483-472a-87e2-17f9712047eb";
+        String sink1SearchedID = "dc5de583-21d6-4a28-5b7a-0223aefb1ffd";
+        String sink2SearchedID =  "6e0cc3b5-ced2-41f3-90d9-6ba589d3cf7a";
+        String sinkgroup1SearchedID = "70c8433e-ab52-44c3-9894-72fa4fef53f6";
+        String sinkgroup2SearchedID = "bef668c5-baa1-47d7-a83b-9f2ff450fe2f";
+        String source1_Y_position = "100";
+        String source2_Y_position = "300";
+        String source3_Y_position = "900";
+        String sink1_Y_position = "100";
+        String sink2_Y_position = "900";
+        String sinkgroup2_Y_position = "500";
+        int agent1_expected_Y_position = 500;
+        int sinkgroup1_expected_Y_position = 500;
+        int sinkgroup1_expected_non_empty_Y_position = 600;
+
+        IGraph agent1_graph = flumeGraphTopology.get(agent1_Name);
+
+        FlumeTopology flumeTopologyAgentElement = FlumeConfiguratorTopologyUtils.getFlumeTopologyElement(flumeTopologyListGraph, agentSearchedID);
+        FlumeTopology flumeTopologySource1Element = FlumeConfiguratorTopologyUtils.getFlumeTopologyElement(flumeTopologyListGraph, source1SearchedID);
+        FlumeTopology flumeTopologySource2Element = FlumeConfiguratorTopologyUtils.getFlumeTopologyElement(flumeTopologyListGraph, source2SearchedID);
+        FlumeTopology flumeTopologySource3Element = FlumeConfiguratorTopologyUtils.getFlumeTopologyElement(flumeTopologyListGraph, source3SearchedID);
+        FlumeTopology flumeTopologySink1Element = FlumeConfiguratorTopologyUtils.getFlumeTopologyElement(flumeTopologyListGraph, sink1SearchedID);
+        FlumeTopology flumeTopologySink2Element = FlumeConfiguratorTopologyUtils.getFlumeTopologyElement(flumeTopologyListGraph, sink2SearchedID);
+        FlumeTopology flumeTopologySinkgroup1Element = FlumeConfiguratorTopologyUtils.getFlumeTopologyElement(flumeTopologyListGraph, sinkgroup1SearchedID);
+        FlumeTopology flumeTopologySinkgroup2Element = FlumeConfiguratorTopologyUtils.getFlumeTopologyElement(flumeTopologyListGraph, sinkgroup2SearchedID);
+
+        Assert.assertNull("The result of the getElementAveragePosition method is not correct", flumeTopologyAgentElement.getY());
+        Assert.assertNull("The result of the getElementAveragePosition method is not correct", flumeTopologySource1Element.getY());
+        Assert.assertNull("The result of the getElementAveragePosition method is not correct", flumeTopologySource2Element.getY());
+        Assert.assertNull("The result of the getElementAveragePosition method is not correct", flumeTopologySource3Element.getY());
+        Assert.assertNull("The result of the getElementAveragePosition method is not correct", flumeTopologySink1Element.getY());
+        Assert.assertNull("The result of the getElementAveragePosition method is not correct", flumeTopologySink2Element.getY());
+        Assert.assertNull("The result of the getElementAveragePosition method is not correct", flumeTopologySinkgroup1Element.getY());
+        Assert.assertNull("The result of the getElementAveragePosition method is not correct", flumeTopologySinkgroup2Element.getY());
+
+        int elementAverageAgentPosition = FlumeConfiguratorTopologyUtils.getElementAveragePosition(agent1_graph, flumeTopologyListGraph, flumeTopologyAgentElement, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE);
+        int elementAverageSinkgroupPosition = FlumeConfiguratorTopologyUtils.getElementAveragePosition(agent1_graph, flumeTopologyListGraph, flumeTopologySinkgroup1Element, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK);
+
+        Assert.assertEquals("The result of the getElementAveragePosition method is not correct", elementAverageAgentPosition, -1);
+        Assert.assertEquals("The result of the getElementAveragePosition method is not correct", elementAverageSinkgroupPosition, -1);
+
+        //The position is empty
+        flumeTopologySource1Element.setY(source1_Y_position);
+        flumeTopologySource2Element.setY(source2_Y_position);
+        flumeTopologySource3Element.setY(source3_Y_position);
+
+        elementAverageAgentPosition = FlumeConfiguratorTopologyUtils.getElementAveragePosition(agent1_graph, flumeTopologyListGraph, flumeTopologyAgentElement, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE);
+        Assert.assertEquals("The result of the getElementAveragePosition method is not correct", elementAverageAgentPosition, agent1_expected_Y_position);
+
+        //The position is empty
+        flumeTopologySink1Element.setY(sink1_Y_position);
+        flumeTopologySink2Element.setY(sink2_Y_position);
+
+        elementAverageSinkgroupPosition = FlumeConfiguratorTopologyUtils.getElementAveragePosition(agent1_graph, flumeTopologyListGraph, flumeTopologySinkgroup1Element, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK);
+        Assert.assertEquals("The result of the getElementAveragePosition method is not correct", elementAverageSinkgroupPosition, sinkgroup1_expected_Y_position);
+
+        //The position is not empty
+        flumeTopologySinkgroup2Element.setY(sinkgroup2_Y_position);
+        elementAverageSinkgroupPosition = FlumeConfiguratorTopologyUtils.getElementAveragePosition(agent1_graph, flumeTopologyListGraph, flumeTopologySinkgroup1Element, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK);
+        Assert.assertEquals("The result of the getElementAveragePosition method is not correct", elementAverageSinkgroupPosition, sinkgroup1_expected_non_empty_Y_position);
+
+    }
+
+
+    @Test
+    public void testInsertOrderedList() {
+
+        String element1 = "e1";
+        String element2 = "e2";
+        String element3 = "e3";
+        String element4 = "e4";
+
+        List<String> orderedList = new ArrayList();
+
+        Map<String, Integer> map_min_Y_Source_Coordinate = new HashMap<>();
+        Map<String, Integer> map_max_Y_Source_Coordinate = new HashedMap<>();
+
+        map_min_Y_Source_Coordinate.put(element1, 20);
+        map_min_Y_Source_Coordinate.put(element2, 10);
+        map_min_Y_Source_Coordinate.put(element3, 20);
+        map_min_Y_Source_Coordinate.put(element4, 20);
+
+        map_max_Y_Source_Coordinate.put(element1, 350);
+        map_max_Y_Source_Coordinate.put(element2, 400);
+        map_max_Y_Source_Coordinate.put(element3, 250);
+        map_max_Y_Source_Coordinate.put(element4, 550);
+
+        Assert.assertEquals("The result of the insertOrderedList method is not correct", orderedList.size(), 0);
+
+        //Insert at Empry list
+        orderedList = FlumeConfiguratorTopologyUtils.insertOrderedList(orderedList, element1, map_min_Y_Source_Coordinate, map_max_Y_Source_Coordinate);
+
+        Assert.assertEquals("The result of the insertOrderedList method is not correct", orderedList.size(), 1);
+        Assert.assertEquals("The result of the insertOrderedList method is not correct", orderedList.get(0), element1);
+
+        //Insert an element with min lower than first element of the list
+        orderedList = FlumeConfiguratorTopologyUtils.insertOrderedList(orderedList, element2, map_min_Y_Source_Coordinate, map_max_Y_Source_Coordinate);
+
+        Assert.assertEquals("The result of the insertOrderedList method is not correct", orderedList.size(), 2);
+        Assert.assertEquals("The result of the insertOrderedList method is not correct", orderedList.get(0), element2);
+        Assert.assertEquals("The result of the insertOrderedList method is not correct", orderedList.get(1), element1);
+
+        //Insert an element with min bigger then first and second elements and max lower than max bigger than first and lower than second
+        orderedList = FlumeConfiguratorTopologyUtils.insertOrderedList(orderedList, element3, map_min_Y_Source_Coordinate, map_max_Y_Source_Coordinate);
+
+        Assert.assertEquals("The result of the insertOrderedList method is not correct", orderedList.size(), 3);
+        Assert.assertEquals("The result of the insertOrderedList method is not correct", orderedList.get(0), element2);
+        Assert.assertEquals("The result of the insertOrderedList method is not correct", orderedList.get(1), element3);
+        Assert.assertEquals("The result of the insertOrderedList method is not correct", orderedList.get(2), element1);
+
+        //Insert an element with min bigger than all elements except last and max bigger than all elements
+        orderedList = FlumeConfiguratorTopologyUtils.insertOrderedList(orderedList, element4, map_min_Y_Source_Coordinate, map_max_Y_Source_Coordinate);
+
+        Assert.assertEquals("The result of the insertOrderedList method is not correct", orderedList.size(), 4);
+        Assert.assertEquals("The result of the insertOrderedList method is not correct", orderedList.get(0), element2);
+        Assert.assertEquals("The result of the insertOrderedList method is not correct", orderedList.get(1), element3);
+        Assert.assertEquals("The result of the insertOrderedList method is not correct", orderedList.get(2), element1);
+        Assert.assertEquals("The result of the insertOrderedList method is not correct", orderedList.get(3), element4);
+    }
+
+    @Test
+    public void testGetSharedSourcesGroups() {
+
+        String agent1_Name = "agent1";
+
+        Map<String, List<String>> mapSharedChannelsSourcesRelation_Agent1 = FlumeConfiguratorTopologyUtils.getMapSharedChannelsSourcesRelation(listSharedSourcesGraphAgent1, sourcesChannelsRelationsMap, agent1_Name);
+
+        Map<String, List<String>> sharedSourcesGroups = FlumeConfiguratorTopologyUtils.getSharedSourcesGroups(null);
+        Assert.assertNotNull("The result of the getSharedSourcesGroups method is not correct", sharedSourcesGroups);
+        Assert.assertEquals("The result of the getSharedSourcesGroups method is not correct", sharedSourcesGroups.size(), 0);
+
+        sharedSourcesGroups = FlumeConfiguratorTopologyUtils.getSharedSourcesGroups(mapSharedChannelsSourcesRelation_Agent1);
+        Assert.assertNotNull("The result of the getSharedSourcesGroups method is not correct", sharedSourcesGroups);
+        Assert.assertEquals("The result of the getSharedSourcesGroups method is not correct", sharedSourcesGroups.size(), 1);
+
+        for (String sourceGroupName : sharedSourcesGroups.keySet()) {
+            Assert.assertTrue("The result of the getSharedSourcesGroups method is not correct", sourceGroupName.startsWith(FlumeConfiguratorConstants.SOURCES_GROUP_PREFIX_NAME));
+            List<String> sourceGroupSourcesList = sharedSourcesGroups.get(sourceGroupName);
+            Assert.assertNotNull("The result of the getSharedSourcesGroups method is not correct", sourceGroupSourcesList);
+            Assert.assertTrue("The result of the getSharedSourcesGroups method is not correct", sourceGroupSourcesList.size() > 0);
+        }
+    }
+
+
+    @Test
+    public void testGetSourcesNumberReferencedByMap() {
+
+        String agent1_Name = "agent1";
+
+        Map<String, List<String>> mapSharedChannelsSourcesRelation_Agent1 = FlumeConfiguratorTopologyUtils.getMapSharedChannelsSourcesRelation(listSharedSourcesGraphAgent1, sourcesChannelsRelationsMap, agent1_Name);
+        List<String> completeSharedSourcesList_Agent1 = FlumeConfiguratorTopologyUtils.getCompleteSharedSourcesList(mapSharedChannelsSourcesRelation_Agent1);
+
+        int sourcesNumberReferencedByMap = FlumeConfiguratorTopologyUtils.getSourcesNumberReferencedByMap(null, null);
+        Assert.assertEquals("The result of the getSourcesNumberReferencedByMap method is not correct", sourcesNumberReferencedByMap, 0);
+
+        sourcesNumberReferencedByMap = FlumeConfiguratorTopologyUtils.getSourcesNumberReferencedByMap(completeSharedSourcesList_Agent1, null);
+        Assert.assertEquals("The result of the getSourcesNumberReferencedByMap method is not correct", sourcesNumberReferencedByMap, 0);
+
+        sourcesNumberReferencedByMap = FlumeConfiguratorTopologyUtils.getSourcesNumberReferencedByMap(null, mapSharedChannelsSourcesRelation_Agent1);
+        Assert.assertEquals("The result of the getSourcesNumberReferencedByMap method is not correct", sourcesNumberReferencedByMap, 0);
+
+        sourcesNumberReferencedByMap = FlumeConfiguratorTopologyUtils.getSourcesNumberReferencedByMap(completeSharedSourcesList_Agent1, mapSharedChannelsSourcesRelation_Agent1);
+        Assert.assertEquals("The result of the getSourcesNumberReferencedByMap method is not correct", sourcesNumberReferencedByMap, 2);
+
+    }
+
+    @Test
+    public void testPrueba() {
+
+        try {
+
+            String[] ch1 = {"sc1", "sc2", "sc3", "sc4"};
+            String[] ch2 = {"sc5", "sc6", "sc7", "sc8"};
+            String[] ch3 = {"sc9", "sc10", "sc11", "sc12", "sc13"};
+            String[] ch4 = {"sc13", "sc14", "sc15", "sc16", "sc17"};
+            String[] ch5 = {"sc17", "sc18", "sc19", "sc20", "sc21"};
+            String[] ch6 = {"sc21", "sc22", "sc23", "sc24", "sc9"};
+
+
+            /*
+            String[] ch1 = {"sc1", "sc2", "sc3", "sc4", "sc5"};
+            String[] ch2 = {"sc5", "sc6", "sc7", "sc8"};
+            String[] ch3 = {"sc9", "sc10", "sc11", "sc12", "sc13"};
+            String[] ch4 = {"sc13", "sc14", "sc15", "sc16"};
+*/
+
+
+            List<String> arr1 = Arrays.asList(ch1);
+            List<String> arr2 = Arrays.asList(ch2);
+            List<String> arr3 = Arrays.asList(ch3);
+            List<String> arr4 = Arrays.asList(ch4);
+            List<String> arr5 = Arrays.asList(ch5);
+            List<String> arr6 = Arrays.asList(ch6);
+
+            Map<String, List<String>> mapChannels = new HashedMap<>();
+            mapChannels.put("ch1", arr1);
+            mapChannels.put("ch2", arr2);
+            mapChannels.put("ch3", arr3);
+            mapChannels.put("ch4", arr4);
+            mapChannels.put("ch5", arr5);
+            mapChannels.put("ch6", arr6);
+
+
+            FlumeConfiguratorTopologyUtils.getSharedSourcesGroups(mapChannels);
+            System.out.println("X");
+
+        } catch (Exception e) {
+            Assert.fail("An error has occurred [testGetFirstAncestorByType] method");
+            logger.error("An error has occurred [testGetFirstAncestorByType] method", e);
+        }
+
+    }
+
+
 }

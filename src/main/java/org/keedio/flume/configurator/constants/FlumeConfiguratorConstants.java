@@ -26,6 +26,7 @@ public class FlumeConfiguratorConstants {
     public static final String SINKGROUPS_PROPERTY = "sinkgroups";
     public static final String INTERCEPTORS_PROPERTY = "interceptors";
     public static final String SELECTOR_PROPERTY = "selector";
+    public static final String SELECTOR_PROPERTY_SUFIX = "_selector";
     public static final String TYPE_PROPERTY = "type";
     public static final String MAPPING_PROPERTY = "mapping";
     public static final String DEFAULT_PROPERTY = "default";
@@ -34,6 +35,7 @@ public class FlumeConfiguratorConstants {
     public static final String PROCESSOR_TYPE_PROPERTY = "processor.type";
     public static final String COMMENT_PROPERTY_PREFIX = "comment";
     public static final String COMMENT_PREFIX = "# ";
+    public static final String SOURCES_GROUP_PREFIX_NAME = "sourcesGroup_";
 
 
 
@@ -96,6 +98,7 @@ public class FlumeConfiguratorConstants {
 
     public static final int ELEMENT_PROPERTY_PART_INDEX = 3;
     public static final int INTERCEPTOR_PROPERTY_PART_INDEX = 5;
+    public static final int SOURCE_SELECTOR_PROPERTY_PART_INDEX = 4;
     public static final int SOURCE_INTERCEPTORS_PART_INDEX = 4;
     public static final int SOURCE_CHANNELS_PART_INDEX = 4;
     public static final int SINK_CHANNEL_PART_INDEX = 4;
@@ -113,6 +116,7 @@ public class FlumeConfiguratorConstants {
     public static final String DRAW2D_CHANNEL_TYPE = "draw2d.Channel";
     public static final String DRAW2D_SINK_TYPE = "draw2d.Sink";
     public static final String DRAW2D_SINKGROUP_TYPE = "draw2d.Sinkgroup";
+    public static final String DRAW2D_SELECTOR_TYPE = "draw2d.Selector";
     public static final String DRAW2D_INTERCEPTOR_TYPE = "draw2d.Interceptor";
 
 
@@ -132,6 +136,7 @@ public class FlumeConfiguratorConstants {
 
     public static final String CANVAS_AGENT_BGCOLOR = "#0000FF";
     public static final String CANVAS_SOURCE_BGCOLOR = "#FFB266";
+    public static final String CANVAS_SELECTOR_BGCOLOR = "#FFFF00";
     public static final String CANVAS_INTERCEPTOR_BGCOLOR = "#99FFFF";
     public static final String CANVAS_CHANNEL_BGCOLOR = "#99FF99";
     public static final String CANVAS_SINK_BGCOLOR = "#FF99FF";
@@ -156,6 +161,17 @@ public class FlumeConfiguratorConstants {
     public static final String FLUME_CONFIGURATION_KEY = "FLUMEConfiguration";
 
     public static final int FIXED_SLICES_NUMBER = 4;
+    public static final int MAX_NUMBER_SOURCES_FOR_PERMUTATIONS = 10;
+    public static final int MAX_NUMBER_CHANNELS_FOR_PERMUTATIONS = 10;
+    public static final long MAX_NUMBER_CARTESIAN_PRODUCT_NUMBER = 10000000L;
+
+    public static final int FACTOR_CHANNEL_GROUPING_DEGREE = 100;
+    public static final int FACTOR_SINKGROUP_GROUPING_DEGREE = 1;
+    public static final int FACTOR_OUTSIDIND_DEGREE = 10;
+
+
+
+
 
 
     private FlumeConfiguratorConstants() {

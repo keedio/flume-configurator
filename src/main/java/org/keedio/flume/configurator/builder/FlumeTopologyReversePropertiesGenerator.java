@@ -8,7 +8,6 @@ import org.keedio.flume.configurator.topology.GraphFactory;
 import org.keedio.flume.configurator.topology.IGraph;
 import org.keedio.flume.configurator.topology.JSONStringSerializer;
 import org.keedio.flume.configurator.utils.FlumeConfiguratorTopologyUtils;
-import org.keedio.flume.configurator.utils.FlumeConfiguratorUtils;
 import org.keedio.flume.configurator.validator.FlumeConfigurationValidator;
 import org.slf4j.LoggerFactory;
 
@@ -28,99 +27,106 @@ public class FlumeTopologyReversePropertiesGenerator {
     private static String pathDraw2DFlumeTopologyGeneratedFile;
     private static boolean withComments = false;
     private static boolean generatePositionCoordinates = true;
+    private static List<Integer> alternativeOptimizationPermutationAgentList = new ArrayList<>();
 
 
-    private Map<String, FlumeLinesProperties> mapFlumeLinesProperties = new LinkedHashMap<>();
+    private Map<String, FlumeLinesProperties> flumeLinesPropertiesMap = new LinkedHashMap<>();
     private FlumeLinesProperties flumeLinesProperties = new FlumeLinesProperties();
     private List<FlumeTopology> flumeTopologyList = new ArrayList<>();
     private List<FlumeTopologyConnection> flumeTopologyConnectionList = new ArrayList<>();
 
-    private List<FlumeTopology> listTopologyConnections = new ArrayList<>();
+    private List<FlumeTopology> topologyConnectionsList = new ArrayList<>();
     private Map<String, IGraph> flumeGraphTopology = new LinkedHashMap<>();
 
+    private boolean existIndependentSources = false;
 
-    boolean existIndependentSources = false;
 
     /**
      * @param pathFlumeProperties the pathFlumeProperties to set
      */
-    public static void setPathFlumeProperties(String pathFlumeProperties) {
+    static void setPathFlumeProperties(String pathFlumeProperties) {
         FlumeTopologyReversePropertiesGenerator.pathFlumeProperties = pathFlumeProperties;
     }
 
     /**
      * @param pathDraw2DFlumeTopologyGeneratedFile the pathDraw2DFlumeTopologyGeneratedFile to set
      */
-    public static void setPathDraw2DFlumeTopologyGeneratedFile(String pathDraw2DFlumeTopologyGeneratedFile) {
+    static void setPathDraw2DFlumeTopologyGeneratedFile(String pathDraw2DFlumeTopologyGeneratedFile) {
         FlumeTopologyReversePropertiesGenerator.pathDraw2DFlumeTopologyGeneratedFile = pathDraw2DFlumeTopologyGeneratedFile;
     }
 
     /**
      * @param withComments the withComments to set
      */
-    public static void setWithComments(boolean withComments) {
+    static void setWithComments(boolean withComments) {
         FlumeTopologyReversePropertiesGenerator.withComments = withComments;
     }
 
     /**
      * @return generatePositionCoordinates
      */
-    public static boolean isGeneratePositionCoordinates() {
+    static boolean isGeneratePositionCoordinates() {
         return generatePositionCoordinates;
     }
 
     /**
      * @param generatePositionCoordinates the generatePositionCoordinates to set
      */
-    public static void setGeneratePositionCoordinates(boolean generatePositionCoordinates) {
+    static void setGeneratePositionCoordinates(boolean generatePositionCoordinates) {
         FlumeTopologyReversePropertiesGenerator.generatePositionCoordinates = generatePositionCoordinates;
     }
 
+    /**
+     * @param alternativeOptimizationPermutationAgentList the alternativeOptimizationPermutationAgentList to set
+     */
+    public static void setAlternativeOptimizationPermutationAgentList(List<Integer> alternativeOptimizationPermutationAgentList) {
+        FlumeTopologyReversePropertiesGenerator.alternativeOptimizationPermutationAgentList = alternativeOptimizationPermutationAgentList;
+    }
 
     /**
-     * @return mapFlumeLinesProperties
+     * @return flumeLinesPropertiesMap
      */
-    public Map<String, FlumeLinesProperties> getMapFlumeLinesProperties() {
-        return mapFlumeLinesProperties;
+    Map<String, FlumeLinesProperties> getFlumeLinesPropertiesMap() {
+        return flumeLinesPropertiesMap;
     }
 
     /**
      * @return flumeLinesProperties
      */
-    public FlumeLinesProperties getFlumeLinesProperties() {
+    FlumeLinesProperties getFlumeLinesProperties() {
         return flumeLinesProperties;
     }
 
     /**
      * @return flumeTopologyList
      */
-    public List<FlumeTopology> getFlumeTopologyList() {
+    List<FlumeTopology> getFlumeTopologyList() {
         return flumeTopologyList;
     }
 
     /**
-     * @return listTopologyConnections
+     * @return topologyConnectionsList
      */
-    public List<FlumeTopology> getListTopologyConnections() {
-        return listTopologyConnections;
+    List<FlumeTopology> getTopologyConnectionsList() {
+        return topologyConnectionsList;
     }
 
     /**
      * @return flumeTopologyConnectionList
      */
-    public List<FlumeTopologyConnection> getFlumeTopologyConnectionList() {
+    List<FlumeTopologyConnection> getFlumeTopologyConnectionList() {
         return flumeTopologyConnectionList;
     }
 
     /**
      * @return flumeGraphTopology
      */
-    public Map<String, IGraph> getFlumeGraphTopology() {
+    Map<String, IGraph> getFlumeGraphTopology() {
         return flumeGraphTopology;
     }
 
     /**
-     * Create the initisl structures
+     * Create the initial structures
      */
     private void createInitialStructures() {
 
@@ -128,11 +134,11 @@ public class FlumeTopologyReversePropertiesGenerator {
             logger.debug("BEGIN createInitialStructures");
         }
 
-        mapFlumeLinesProperties = new LinkedHashMap<>();
+        flumeLinesPropertiesMap = new LinkedHashMap<>();
         flumeLinesProperties = new FlumeLinesProperties();
         flumeTopologyList = new ArrayList<>();
         flumeTopologyConnectionList = new ArrayList<>();
-        listTopologyConnections = new ArrayList<>();
+        topologyConnectionsList = new ArrayList<>();
         flumeGraphTopology = new LinkedHashMap<>();
 
 
@@ -144,7 +150,7 @@ public class FlumeTopologyReversePropertiesGenerator {
     /**
      * Load the properties file(s)
      *
-     * @throws IOException
+     * @throws IOException if the file cannot be read
      */
     private void loadFlumePropertiesFile() throws IOException {
 
@@ -179,7 +185,6 @@ public class FlumeTopologyReversePropertiesGenerator {
                     if (withComments) {
                         //Obtain lines of the file
                         try (Stream<String> stream = Files.lines(filePath)) {
-                            //stream.forEach(System.out::println);
                             lines = stream.collect(Collectors.toCollection(ArrayList::new));
                         }
                     }
@@ -187,7 +192,7 @@ public class FlumeTopologyReversePropertiesGenerator {
                     flumeLinesProperties.setProperties(properties);
                     flumeLinesProperties.setLines(lines);
 
-                    mapFlumeLinesProperties.put(filePath.getFileName().toString(), flumeLinesProperties);
+                    flumeLinesPropertiesMap.put(filePath.getFileName().toString(), flumeLinesProperties);
                 }
             }
 
@@ -210,7 +215,7 @@ public class FlumeTopologyReversePropertiesGenerator {
             flumeLinesProperties.setProperties(properties);
             flumeLinesProperties.setLines(lines);
 
-            mapFlumeLinesProperties.put(flumePropertiesFile.getName(), flumeLinesProperties);
+            flumeLinesPropertiesMap.put(flumePropertiesFile.getName(), flumeLinesProperties);
 
         }
 
@@ -230,21 +235,20 @@ public class FlumeTopologyReversePropertiesGenerator {
         }
 
         flumeLinesProperties = new FlumeLinesProperties();
-        List<String> lines = flumeLinesProperties.getLines();
         LinkedProperties properties = flumeLinesProperties.getProperties();
         LinkedProperties propertiesCheck = new LinkedProperties();
 
-        Set<String> setAgentNames = new HashSet<>();
-        Set<String> setSourceNames = new HashSet<>();
-        Set<String> setInterceptorNames = new HashSet<>();
-        Set<String> setChannelNames = new HashSet<>();
-        Set<String> setSinkNames = new HashSet<>();
-        Set<String> setSinkGroupNames = new HashSet<>();
-        Set<String> setAllNames = new HashSet<>();
+        Set<String> agentNamesSet = new HashSet<>();
+        Set<String> sourceNamesSet = new HashSet<>();
+        Set<String> interceptorNamesSet = new HashSet<>();
+        Set<String> channelNamesSet = new HashSet<>();
+        Set<String> sinkNamesSet = new HashSet<>();
+        Set<String> sinkGroupNamesSet = new HashSet<>();
+        Set<String> allNamesSet = new HashSet<>();
 
 
-        for (String agentKey : mapFlumeLinesProperties.keySet()) {
-            FlumeLinesProperties flumeLinesPropertiesAgent = mapFlumeLinesProperties.get(agentKey);
+        for (String agentKey : flumeLinesPropertiesMap.keySet()) {
+            FlumeLinesProperties flumeLinesPropertiesAgent = flumeLinesPropertiesMap.get(agentKey);
 
             List<String> linesAgent = flumeLinesPropertiesAgent.getLines();
             LinkedProperties propertiesAgent = flumeLinesPropertiesAgent.getProperties();
@@ -257,15 +261,15 @@ public class FlumeTopologyReversePropertiesGenerator {
             //Detect unique names for agents
             Set<String> agentNames = FlumeConfiguratorTopologyUtils.getSetFirstPartProperties(propertiesAgent);
             for (String agentName : agentNames) {
-                if (!setAgentNames.contains(agentName)) {
-                    setAgentNames.add(agentName);
+                if (!agentNamesSet.contains(agentName)) {
+                    agentNamesSet.add(agentName);
                 } else {
                     //There is another agent with the same name
                     throw new FlumeConfiguratorException("There is another agent with the same name (" + agentName + ") File: " + agentKey);
                 }
 
-                if (!setAllNames.contains(agentName)) {
-                    setAllNames.add(agentName);
+                if (!allNamesSet.contains(agentName)) {
+                    allNamesSet.add(agentName);
                 } else {
                     //There is two elements with the same name
                     throw new FlumeConfiguratorException("There is another element with the same name (" + agentName + ") File: " + agentKey);
@@ -280,15 +284,15 @@ public class FlumeTopologyReversePropertiesGenerator {
                 String[] sourceNamesArray = sourceNames.split(FlumeConfiguratorConstants.WHITE_SPACE_REGEX);
 
                 for (String sourceName : sourceNamesArray) {
-                    if (!setSourceNames.contains(sourceName)) {
-                        setSourceNames.add(sourceName);
+                    if (!sourceNamesSet.contains(sourceName)) {
+                        sourceNamesSet.add(sourceName);
                     } else {
                         //There is another source with the same name
                         throw new FlumeConfiguratorException("There is another source with the same name (" + sourceName + ") File: " + agentKey);
                     }
 
-                    if (!setAllNames.contains(sourceName)) {
-                        setAllNames.add(sourceName);
+                    if (!allNamesSet.contains(sourceName)) {
+                        allNamesSet.add(sourceName);
                     } else {
                         //There is two elements with the same name
                         throw new FlumeConfiguratorException("There is another element with the same name (" + sourceName + ") File: " + agentKey);
@@ -303,15 +307,15 @@ public class FlumeTopologyReversePropertiesGenerator {
                 String[] interceptorNamesArray = interceptorNames.split(FlumeConfiguratorConstants.WHITE_SPACE_REGEX);
 
                 for (String interceptorName : interceptorNamesArray) {
-                    if (!setInterceptorNames.contains(interceptorName)) {
-                        setInterceptorNames.add(interceptorName);
+                    if (!interceptorNamesSet.contains(interceptorName)) {
+                        interceptorNamesSet.add(interceptorName);
                     } else {
                         //There is another interceptor with the same name
                         throw new FlumeConfiguratorException("There is another interceptor with the same name (" + interceptorName + ") File: " + agentKey);
                     }
 
-                    if (!setAllNames.contains(interceptorName)) {
-                        setAllNames.add(interceptorName);
+                    if (!allNamesSet.contains(interceptorName)) {
+                        allNamesSet.add(interceptorName);
                     } else {
                         //There is two elements with the same name
                         throw new FlumeConfiguratorException("There is another element with the same name  (" + interceptorName + ") File: " + agentKey);
@@ -327,15 +331,15 @@ public class FlumeTopologyReversePropertiesGenerator {
                 String[] channelNamesArray = channelNames.split(FlumeConfiguratorConstants.WHITE_SPACE_REGEX);
 
                 for (String channelName : channelNamesArray) {
-                    if (!setChannelNames.contains(channelName)) {
-                        setChannelNames.add(channelName);
+                    if (!channelNamesSet.contains(channelName)) {
+                        channelNamesSet.add(channelName);
                     } else {
                         //There is another channel with the same name
                         throw new FlumeConfiguratorException("There is another channel with the same name (" + channelName + ") File: " + agentKey);
                     }
 
-                    if (!setAllNames.contains(channelName)) {
-                        setAllNames.add(channelName);
+                    if (!allNamesSet.contains(channelName)) {
+                        allNamesSet.add(channelName);
                     } else {
                         //There is two elements with the same name
                         throw new FlumeConfiguratorException("There is another element with the same name (" + channelName + ") File: " + agentKey);
@@ -351,15 +355,15 @@ public class FlumeTopologyReversePropertiesGenerator {
                 String[] sinkNamesArray = sinkNames.split(FlumeConfiguratorConstants.WHITE_SPACE_REGEX);
 
                 for (String sinkName : sinkNamesArray) {
-                    if (!setSinkNames.contains(sinkName)) {
-                        setSinkNames.add(sinkName);
+                    if (!sinkNamesSet.contains(sinkName)) {
+                        sinkNamesSet.add(sinkName);
                     } else {
                         //There is another sink with the same name
                         throw new FlumeConfiguratorException("There is another sink with the same name (" + sinkName + ") File: " + agentKey);
                     }
 
-                    if (!setAllNames.contains(sinkName)) {
-                        setAllNames.add(sinkName);
+                    if (!allNamesSet.contains(sinkName)) {
+                        allNamesSet.add(sinkName);
                     } else {
                         //There is two elements with the same name
                         throw new FlumeConfiguratorException("There is another element with the same name (" + sinkName + ") File: " + agentKey);
@@ -375,15 +379,15 @@ public class FlumeTopologyReversePropertiesGenerator {
                 String[] sinkGroupNamesArray = sinkGroupNames.split(FlumeConfiguratorConstants.WHITE_SPACE_REGEX);
 
                 for (String sinkGroupName : sinkGroupNamesArray) {
-                    if (!setSinkGroupNames.contains(sinkGroupName)) {
-                        setSinkNames.add(sinkGroupName);
+                    if (!sinkGroupNamesSet.contains(sinkGroupName)) {
+                        sinkGroupNamesSet.add(sinkGroupName);
                     } else {
                         //There is another sinkgroup with the same name
                         throw new FlumeConfiguratorException("There is another sinkgroup with the same name (" + sinkGroupName + ") File: " + agentKey);
                     }
 
-                    if (!setAllNames.contains(sinkGroupName)) {
-                        setAllNames.add(sinkGroupName);
+                    if (!allNamesSet.contains(sinkGroupName)) {
+                        allNamesSet.add(sinkGroupName);
                     } else {
                         //There is two elements with the same name
                         throw new FlumeConfiguratorException("There is another element with the same name (" + sinkGroupName + ") File: " + agentKey);
@@ -468,33 +472,70 @@ public class FlumeTopologyReversePropertiesGenerator {
 
         LinkedProperties properties = flumeLinesProperties.getProperties();
 
-        LinkedProperties propertiesWithPart = FlumeConfiguratorTopologyUtils.getPropertiesWithPart(properties, propertyPart, propertyIndex, true);
 
-        String key;
-        for (Object keyObject : propertiesWithPart.keySet()) {
-            key = (String) keyObject;
-            String propertyValue = propertiesWithPart.getProperty(key);
-            if (propertyValue != null && !"".equals(propertyValue)) {
-                String[] elements = propertyValue.split(FlumeConfiguratorConstants.WHITE_SPACE_REGEX);
-                for (String elementName : elements) {
-                    FlumeTopology flumeTopologyAgent = new FlumeTopology();
-                    flumeTopologyAgent.setType(topologyType);
-                    flumeTopologyAgent.setId(UUID.randomUUID().toString());
+        if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_SELECTOR.equals(topologyType)) {
+            //The selectors creation is different (not exist a list of named selectors on properties)
 
-                    //Add flumeType property
-                    flumeTopologyAgent.getData().put(FlumeConfiguratorConstants.FLUME_TYPE_PROPERTY, topologyType);
-                    //Add elementTopologyName property
-                    flumeTopologyAgent.getData().put(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME, elementName);
-                    if (withComments) {
-                        flumeTopologyAgent.getData().put(FlumeConfiguratorTopologyUtils.getCommentPropertyName(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME), "");
-                    }
+            Set<String> sourcesWithSelectorSet = new HashSet<>();
 
-                    flumeTopologyList.add(flumeTopologyAgent);
-                }
+            LinkedProperties propertiesWithPart = FlumeConfiguratorTopologyUtils.getPropertiesWithPart(properties, propertyPart, propertyIndex, false);
+
+            String key;
+            for (Object keyObject : propertiesWithPart.keySet()) {
+                key = (String) keyObject;
+
+                String selectorSource = FlumeConfiguratorTopologyUtils.getPropertyPart(key, FlumeConfiguratorConstants.ELEMENT_PROPERTY_PART_INDEX);
+
+                sourcesWithSelectorSet.add(selectorSource);
             }
 
-        }
+            //Create selector elements from set of sources with selector
+            for (String sourceWithSelectorName : sourcesWithSelectorSet) {
 
+                FlumeTopology flumeTopologyAgent = new FlumeTopology();
+                flumeTopologyAgent.setType(topologyType);
+                flumeTopologyAgent.setId(UUID.randomUUID().toString());
+
+                //Add flumeType property
+                flumeTopologyAgent.getData().put(FlumeConfiguratorConstants.FLUME_TYPE_PROPERTY, topologyType);
+                //Add elementTopologyName property
+                String selectorName = sourceWithSelectorName + FlumeConfiguratorConstants.SELECTOR_PROPERTY_SUFIX;
+                flumeTopologyAgent.getData().put(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME, selectorName);
+                if (withComments) {
+                    flumeTopologyAgent.getData().put(FlumeConfiguratorTopologyUtils.getCommentPropertyName(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME), "");
+                }
+
+                flumeTopologyList.add(flumeTopologyAgent);
+            }
+
+
+        } else {
+            LinkedProperties propertiesWithPart = FlumeConfiguratorTopologyUtils.getPropertiesWithPart(properties, propertyPart, propertyIndex, true);
+
+            String key;
+            for (Object keyObject : propertiesWithPart.keySet()) {
+                key = (String) keyObject;
+                String propertyValue = propertiesWithPart.getProperty(key);
+                if (propertyValue != null && !"".equals(propertyValue)) {
+                    String[] elements = propertyValue.split(FlumeConfiguratorConstants.WHITE_SPACE_REGEX);
+                    for (String elementName : elements) {
+                        FlumeTopology flumeTopologyAgent = new FlumeTopology();
+                        flumeTopologyAgent.setType(topologyType);
+                        flumeTopologyAgent.setId(UUID.randomUUID().toString());
+
+                        //Add flumeType property
+                        flumeTopologyAgent.getData().put(FlumeConfiguratorConstants.FLUME_TYPE_PROPERTY, topologyType);
+                        //Add elementTopologyName property
+                        flumeTopologyAgent.getData().put(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME, elementName);
+                        if (withComments) {
+                            flumeTopologyAgent.getData().put(FlumeConfiguratorTopologyUtils.getCommentPropertyName(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME), "");
+                        }
+
+                        flumeTopologyList.add(flumeTopologyAgent);
+                    }
+                }
+            }
+        }
 
         if (logger.isDebugEnabled()) {
             logger.debug("END generateFlumeTopologyElements");
@@ -530,14 +571,15 @@ public class FlumeTopologyReversePropertiesGenerator {
                     propertyName = (String) keyObject;
 
                     String sourcesPart = FlumeConfiguratorTopologyUtils.getPropertyPart(propertyName, FlumeConfiguratorConstants.SOURCES_LIST_PROPERTY_PART_INDEX);
+                    String sourcesSelectorPart = FlumeConfiguratorTopologyUtils.getPropertyPart(propertyName, FlumeConfiguratorConstants.SOURCE_SELECTOR_PROPERTY_PART_INDEX);
                     String sourcesInterceptorsPart = FlumeConfiguratorTopologyUtils.getPropertyPart(propertyName, FlumeConfiguratorConstants.SOURCE_INTERCEPTORS_PART_INDEX);
                     String sourcesChannelsPart = FlumeConfiguratorTopologyUtils.getPropertyPart(propertyName, FlumeConfiguratorConstants.SOURCE_CHANNELS_PART_INDEX);
 
                     if (FlumeConfiguratorConstants.SOURCES_PROPERTY.equals(sourcesPart)
+                            && !FlumeConfiguratorConstants.SELECTOR_PROPERTY.equals(sourcesSelectorPart)
                             && !FlumeConfiguratorConstants.INTERCEPTORS_PROPERTY.equals(sourcesInterceptorsPart)
                             && !FlumeConfiguratorConstants.CHANNELS_PROPERTY.equals(sourcesChannelsPart)) {
                         //The property is valid
-
                         addElementProperty(flumeTopologyElement, propertyName, FlumeConfiguratorConstants.ELEMENT_PROPERTY_PART_INDEX);
                     }
                 }
@@ -547,10 +589,12 @@ public class FlumeTopologyReversePropertiesGenerator {
                     propertyName = (String) keyObject;
 
                     String sourcesPart = FlumeConfiguratorTopologyUtils.getPropertyPart(propertyName, FlumeConfiguratorConstants.SOURCES_LIST_PROPERTY_PART_INDEX);
+                    String sourcesSelectorPart = FlumeConfiguratorTopologyUtils.getPropertyPart(propertyName, FlumeConfiguratorConstants.SOURCE_SELECTOR_PROPERTY_PART_INDEX);
                     String sourcesInterceptorsPart = FlumeConfiguratorTopologyUtils.getPropertyPart(propertyName, FlumeConfiguratorConstants.SOURCE_INTERCEPTORS_PART_INDEX);
                     String sourcesChannelsPart = FlumeConfiguratorTopologyUtils.getPropertyPart(propertyName, FlumeConfiguratorConstants.SOURCE_CHANNELS_PART_INDEX);
 
                     if (FlumeConfiguratorConstants.SOURCES_PROPERTY.equals(sourcesPart)
+                            && !FlumeConfiguratorConstants.SELECTOR_PROPERTY.equals(sourcesSelectorPart)
                             && !FlumeConfiguratorConstants.INTERCEPTORS_PROPERTY.equals(sourcesInterceptorsPart)
                             && !FlumeConfiguratorConstants.CHANNELS_PROPERTY.equals(sourcesChannelsPart)) {
 
@@ -668,6 +712,47 @@ public class FlumeTopologyReversePropertiesGenerator {
                     }
                 }
 
+            } else if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_SELECTOR.equals(type)) {
+
+                LinkedProperties selectorProperties = FlumeConfiguratorTopologyUtils.getPropertiesWithPart(properties, FlumeConfiguratorConstants.SELECTOR_PROPERTY, FlumeConfiguratorConstants.SOURCE_SELECTOR_PROPERTY_PART_INDEX, false);
+
+                //Get the name of the source from the name of the element
+                String sourceName = elementName.substring(0,elementName.indexOf(FlumeConfiguratorConstants.SELECTOR_PROPERTY_SUFIX));
+
+                LinkedProperties sourceSelectorProperties = FlumeConfiguratorTopologyUtils.getPropertiesWithPart(selectorProperties, sourceName, FlumeConfiguratorConstants.ELEMENT_PROPERTY_PART_INDEX, false);
+
+                //Add type property first
+                LinkedProperties sourceSelectorTypeProperty = FlumeConfiguratorTopologyUtils.getPropertiesWithPart(sourceSelectorProperties, FlumeConfiguratorConstants.TYPE_PROPERTY, FlumeConfiguratorConstants.SOURCE_SELECTOR_PROPERTY_PART_INDEX + 1, true);
+
+                String propertyName;
+                for (Object keyObject : sourceSelectorTypeProperty.keySet()) {
+                    propertyName = (String) keyObject;
+
+                    String sourcesPart = FlumeConfiguratorTopologyUtils.getPropertyPart(propertyName, FlumeConfiguratorConstants.SOURCES_LIST_PROPERTY_PART_INDEX);
+                    String selectorPart = FlumeConfiguratorTopologyUtils.getPropertyPart(propertyName, FlumeConfiguratorConstants.SOURCE_SELECTOR_PROPERTY_PART_INDEX);
+
+                    if (FlumeConfiguratorConstants.SOURCES_PROPERTY.equals(sourcesPart)
+                        && FlumeConfiguratorConstants.SELECTOR_PROPERTY.equals(selectorPart)) {
+
+                        //The property is valid
+                        addElementProperty(flumeTopologyElement, propertyName, FlumeConfiguratorConstants.SOURCE_SELECTOR_PROPERTY_PART_INDEX);
+                    }
+                }
+
+                for (Object keyObject : sourceSelectorProperties.keySet()) {
+                    propertyName = (String) keyObject;
+
+                    String sourcesPart = FlumeConfiguratorTopologyUtils.getPropertyPart(propertyName, FlumeConfiguratorConstants.SOURCES_LIST_PROPERTY_PART_INDEX);
+                    String selectorPart = FlumeConfiguratorTopologyUtils.getPropertyPart(propertyName, FlumeConfiguratorConstants.SOURCE_SELECTOR_PROPERTY_PART_INDEX);
+
+                    if (FlumeConfiguratorConstants.SOURCES_PROPERTY.equals(sourcesPart)
+                        && FlumeConfiguratorConstants.SELECTOR_PROPERTY.equals(selectorPart)) {
+
+                        //The property is valid
+                        addElementProperty(flumeTopologyElement, propertyName, FlumeConfiguratorConstants.SOURCE_SELECTOR_PROPERTY_PART_INDEX);
+                    }
+                }
+
             } else if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR.equals(type)) {
 
                 LinkedProperties elementProperties = FlumeConfiguratorTopologyUtils.getPropertiesWithPart(properties, elementName, FlumeConfiguratorConstants.INTERCEPTOR_PROPERTY_PART_INDEX, false);
@@ -725,11 +810,24 @@ public class FlumeTopologyReversePropertiesGenerator {
             logger.debug("BEGIN addElementProperty");
         }
 
+        LinkedProperties elementProperties;
         LinkedProperties properties = flumeLinesProperties.getProperties();
         List<String> lines = flumeLinesProperties.getLines();
 
         String elementName = flumeTopologyElement.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
-        LinkedProperties elementProperties = FlumeConfiguratorTopologyUtils.getPropertiesWithPart(properties, elementName, partIndex, false);
+
+        if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_SELECTOR.equals(flumeTopologyElement.getType())) {
+            LinkedProperties selectorProperties = FlumeConfiguratorTopologyUtils.getPropertiesWithPart(properties, FlumeConfiguratorConstants.SELECTOR_PROPERTY, FlumeConfiguratorConstants.SOURCE_SELECTOR_PROPERTY_PART_INDEX, false);
+
+            //Get the name of the source from the name of the element
+            String sourceName = elementName.substring(0,elementName.indexOf(FlumeConfiguratorConstants.SELECTOR_PROPERTY_SUFIX));
+
+            elementProperties = FlumeConfiguratorTopologyUtils.getPropertiesWithPart(selectorProperties, sourceName, FlumeConfiguratorConstants.ELEMENT_PROPERTY_PART_INDEX, false);
+
+        } else {
+            elementProperties = FlumeConfiguratorTopologyUtils.getPropertiesWithPart(properties, elementName, partIndex, false);
+        }
+
         Map<String, String> flumeTopologyElementProperties = flumeTopologyElement.getData();
 
         //Get the property
@@ -737,7 +835,7 @@ public class FlumeTopologyReversePropertiesGenerator {
         String flumeTopologyPropertyValue = elementProperties.getProperty(propertyName);
 
         //Add property
-        if (flumeTopologyPropertyName != null && !"".equals(flumeTopologyPropertyName)) {
+        if (!flumeTopologyPropertyName.isEmpty()) {
 
             if (flumeTopologyPropertyValue != null && !"".equals(flumeTopologyPropertyValue)) {
                 flumeTopologyElementProperties.put(flumeTopologyPropertyName, flumeTopologyPropertyValue);
@@ -865,7 +963,7 @@ public class FlumeTopologyReversePropertiesGenerator {
             logger.debug("Create sources to channels / interceptors to channels connections");
         }
 
-        //SOURCES TO CHANNELS CONNECTIONS / INTERCEPTORS TO CHANNELS CONNECTIONS
+        //SOURCES TO CHANNELS CONNECTIONS / INTERCEPTORS TO CHANNELS CONNECTIONS / SELECTORS TO CHANNELS CONNECTIONS / INTERCEPTORS TO SELECTOR CONNECTIONS
         LinkedProperties channelsPart = FlumeConfiguratorTopologyUtils.getPropertiesWithPart(properties, FlumeConfiguratorConstants.CHANNELS_PROPERTY, FlumeConfiguratorConstants.SOURCE_CHANNELS_PART_INDEX, true);
 
         for (Object keyObject : channelsPart.keySet()) {
@@ -877,10 +975,38 @@ public class FlumeTopologyReversePropertiesGenerator {
                 String sourceName = FlumeConfiguratorTopologyUtils.getPropertyPart(key, FlumeConfiguratorConstants.ELEMENT_PROPERTY_PART_INDEX);
                 String sourceFlumeTopologyID = FlumeConfiguratorTopologyUtils.getFlumeTopologyId(flumeTopologyList, sourceName);
 
-                //Get the last interceptor or the source (if exists)
+                //Get the last interceptor of the source (if exists)
                 String lastInterceptorName = FlumeConfiguratorTopologyUtils.getLastInterceptorNameFromSource(properties, sourceName);
                 String lastInterceptorFlumeTopologyID = FlumeConfiguratorTopologyUtils.getFlumeTopologyId(flumeTopologyList, lastInterceptorName);
 
+                //Get selector of the source (if exists)
+                String selectorName = sourceName + FlumeConfiguratorConstants.SELECTOR_PROPERTY_SUFIX;
+                String selectorFlumeTopologyID = FlumeConfiguratorTopologyUtils.getFlumeTopologyId(flumeTopologyList, selectorName);
+
+
+                //Create connections between last interceptor / source and selector (if exist)
+                if (!selectorFlumeTopologyID.isEmpty()) {
+                    if (!lastInterceptorFlumeTopologyID.isEmpty()) {
+                        //Create connection between last interceptor and selector
+                        FlumeTopology flumeTopologyConnection = new FlumeTopology();
+                        flumeTopologyConnection.setType(FlumeConfiguratorConstants.FLUME_TOPOLOGY_CONNECTION);
+                        flumeTopologyConnection.setId(UUID.randomUUID().toString());
+                        flumeTopologyConnection.setSourceConnection(lastInterceptorFlumeTopologyID);
+                        flumeTopologyConnection.setTargetConnection(selectorFlumeTopologyID);
+
+                        flumeTopologyList.add(flumeTopologyConnection);
+
+                    } else {
+                        //Create connection between source and selector
+                        FlumeTopology flumeTopologyConnection = new FlumeTopology();
+                        flumeTopologyConnection.setType(FlumeConfiguratorConstants.FLUME_TOPOLOGY_CONNECTION);
+                        flumeTopologyConnection.setId(UUID.randomUUID().toString());
+                        flumeTopologyConnection.setSourceConnection(sourceFlumeTopologyID);
+                        flumeTopologyConnection.setTargetConnection(selectorFlumeTopologyID);
+
+                        flumeTopologyList.add(flumeTopologyConnection);
+                    }
+                }
 
                 //Get the channels of the source
                 String[] channels = propertyValue.split(FlumeConfiguratorConstants.WHITE_SPACE_REGEX);
@@ -889,16 +1015,16 @@ public class FlumeTopologyReversePropertiesGenerator {
 
                     String channelFlumeTopologyID = FlumeConfiguratorTopologyUtils.getFlumeTopologyId(flumeTopologyList, channelName);
 
-                    if (lastInterceptorFlumeTopologyID.isEmpty()) {
-                        //Connect the source with the channel
+                    if (!selectorFlumeTopologyID.isEmpty()) {
+                        //Connect the selector with the channel
                         FlumeTopology flumeTopologyConnection = new FlumeTopology();
                         flumeTopologyConnection.setType(FlumeConfiguratorConstants.FLUME_TOPOLOGY_CONNECTION);
                         flumeTopologyConnection.setId(UUID.randomUUID().toString());
-                        flumeTopologyConnection.setSourceConnection(sourceFlumeTopologyID);
+                        flumeTopologyConnection.setSourceConnection(selectorFlumeTopologyID);
                         flumeTopologyConnection.setTargetConnection(channelFlumeTopologyID);
 
                         flumeTopologyList.add(flumeTopologyConnection);
-                    } else {
+                    } else if (!lastInterceptorFlumeTopologyID.isEmpty()) {
                         //Connect the last interceptor of the source with the channel
                         FlumeTopology flumeTopologyConnection = new FlumeTopology();
                         flumeTopologyConnection.setType(FlumeConfiguratorConstants.FLUME_TOPOLOGY_CONNECTION);
@@ -907,8 +1033,16 @@ public class FlumeTopologyReversePropertiesGenerator {
                         flumeTopologyConnection.setTargetConnection(channelFlumeTopologyID);
 
                         flumeTopologyList.add(flumeTopologyConnection);
-                    }
+                    } else {
+                        //Connect the source with the channel
+                        FlumeTopology flumeTopologyConnection = new FlumeTopology();
+                        flumeTopologyConnection.setType(FlumeConfiguratorConstants.FLUME_TOPOLOGY_CONNECTION);
+                        flumeTopologyConnection.setId(UUID.randomUUID().toString());
+                        flumeTopologyConnection.setSourceConnection(sourceFlumeTopologyID);
+                        flumeTopologyConnection.setTargetConnection(channelFlumeTopologyID);
 
+                        flumeTopologyList.add(flumeTopologyConnection);
+                    }
                 }
             }
         }
@@ -991,45 +1125,36 @@ public class FlumeTopologyReversePropertiesGenerator {
     /**
      * Generate a graph of the topology and export it (dot format)
      */
-    public void generateGraph() {
+    private void generateGraph() {
 
         if (logger.isDebugEnabled()) {
             logger.debug("BEGIN generateGraph");
         }
 
-        String graphDotFormat = null;
+        String graphDotFormat;
 
         boolean withAgentNodes = false;
-        boolean isTreeCompliant = false;
-        Map<String, FlumeTopology> mapTopology = new LinkedHashMap<>();
-        List<FlumeTopology> listTopologyAgents = new ArrayList<>();
-        List<FlumeTopology> listTopologySources = new ArrayList<>();
-        List<FlumeTopology> listTopologyInterceptors = new ArrayList<>();
-        Set<String> agentsList = new LinkedHashSet<>();
-
+        Map<String, FlumeTopology> topologyMap = new LinkedHashMap<>();
+        List<FlumeTopology> topologyAgentsList = new ArrayList<>();
 
         for (FlumeTopology flumeTopology : flumeTopologyList) {
             String topologyID = flumeTopology.getId();
             String topologyType = flumeTopology.getType();
             if (!FlumeConfiguratorConstants.FLUME_TOPOLOGY_CONNECTION.equals(topologyType)) {
                 //Add all elements from topology but connections
-                mapTopology.put(topologyID, flumeTopology);
+                topologyMap.put(topologyID, flumeTopology);
             }
 
             if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_AGENT.equals(topologyType)) {
-                listTopologyAgents.add(flumeTopology);
+                topologyAgentsList.add(flumeTopology);
                 withAgentNodes = true;
-            } else if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE.equals(topologyType)) {
-                listTopologySources.add(flumeTopology);
-            } else if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR.equals(topologyType)) {
-                listTopologyInterceptors.add(flumeTopology);
             } else if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_CONNECTION.equals(topologyType)) {
-                listTopologyConnections.add(flumeTopology);
+                topologyConnectionsList.add(flumeTopology);
             }
         }
 
         //Get the agents
-        for (FlumeTopology agent : listTopologyAgents) {
+        for (FlumeTopology agent : topologyAgentsList) {
 
             String agentName = agent.getAgentName();
 
@@ -1043,9 +1168,9 @@ public class FlumeTopologyReversePropertiesGenerator {
         }
 
         //Create nodes for all elements in topology (except Agents).
-        for (String flumeTopologyElementId : mapTopology.keySet()) {
-            IGraph graphAgent = null;
-            FlumeTopology flumeTopologyElement = mapTopology.get(flumeTopologyElementId);
+        for (String flumeTopologyElementId : topologyMap.keySet()) {
+            IGraph graphAgent;
+            FlumeTopology flumeTopologyElement = topologyMap.get(flumeTopologyElementId);
             String flumeTopologyElementName = flumeTopologyElement.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
 
             String flumeTopologyElementType = flumeTopologyElement.getType();
@@ -1053,7 +1178,7 @@ public class FlumeTopologyReversePropertiesGenerator {
             if (!FlumeConfiguratorConstants.FLUME_TOPOLOGY_AGENT.equals(flumeTopologyElementType)) {
 
                 //Get the agent graph
-                String agentName = FlumeConfiguratorTopologyUtils.getGraphAgentFromConnections(flumeTopologyElementId, listTopologyConnections, flumeTopologyList, withAgentNodes);
+                String agentName = FlumeConfiguratorTopologyUtils.getGraphAgentFromConnections(flumeTopologyElementId, topologyConnectionsList, flumeTopologyList, withAgentNodes);
 
                 if ((agentName != null) && (!"".equals(agentName))) {
 
@@ -1072,7 +1197,7 @@ public class FlumeTopologyReversePropertiesGenerator {
         }
 
         //Create edges for the rest of vertex
-        for (FlumeTopology connection : listTopologyConnections) {
+        for (FlumeTopology connection : topologyConnectionsList) {
             String sourceConnection = connection.getSourceConnection();
             String targetConnection = connection.getTargetConnection();
 
@@ -1080,8 +1205,8 @@ public class FlumeTopologyReversePropertiesGenerator {
             FlumeTopology flumeTopologyTargetConnectionElement = FlumeConfiguratorTopologyUtils.getFlumeTopologyElement(flumeTopologyList, sourceConnection);
 
 
-            String sourceAgentName = FlumeConfiguratorTopologyUtils.getGraphAgentFromConnections(sourceConnection, listTopologyConnections, flumeTopologyList, withAgentNodes);
-            String targetAgentName = FlumeConfiguratorTopologyUtils.getGraphAgentFromConnections(targetConnection, listTopologyConnections, flumeTopologyList, withAgentNodes);
+            String sourceAgentName = FlumeConfiguratorTopologyUtils.getGraphAgentFromConnections(sourceConnection, topologyConnectionsList, flumeTopologyList, withAgentNodes);
+            String targetAgentName = FlumeConfiguratorTopologyUtils.getGraphAgentFromConnections(targetConnection, topologyConnectionsList, flumeTopologyList, withAgentNodes);
 
             if (sourceAgentName == null || targetAgentName == null) {
                 String sourceName = "";
@@ -1092,7 +1217,6 @@ public class FlumeTopologyReversePropertiesGenerator {
                 if (flumeTopologyTargetConnectionElement != null) {
                     targetName = flumeTopologyTargetConnectionElement.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
                 }
-
                 throw new FlumeConfiguratorException("sourceConnectionNode " + sourceName + " [" + sourceConnection + "] or targetConnectionNode  " + targetName + " [" + targetConnection + "] are not present on node's pool");
             } else if (!sourceAgentName.equals(targetAgentName)) {
                 throw new FlumeConfiguratorException("Edge between nodes from different agents is not possible");
@@ -1132,18 +1256,18 @@ public class FlumeTopologyReversePropertiesGenerator {
             logger.debug("BEGIN generatePropertiesDraw2D");
         }
 
-        Map<String, Map<String, List<String>>> sourcesRelationsMap = new HashMap<>();
-        Map<String, List<String>> independentSourcesMap = new HashMap<>();
-        Map<String, List<String>> sharedSourcesMap = new HashMap<>();
+        Map<String, Map<String, List<String>>> sourcesRelationsMap = new TreeMap<>();
+        Map<String, List<String>> independentSourcesMap = new TreeMap<>();
+        Map<String, List<String>> sharedSourcesMap = new TreeMap<>();
         Map<String, List<FlumeTopology>> sinkGroupsMap = new HashMap<>();
-        Set<String> sourcesSharedSinkGroupWithSharedSourceSet = new HashSet<>();
-        List<String> sourcesSharedSinkGroupWithSharedSourceList = new ArrayList<>();
+        Set<String> sourcesSharedSinkGroupWithSharedSourceSet;
+        List<String> sourcesSharedSinkGroupWithSharedSourceList;
 
         if (generatePositionCoordinates) {
             //Detect relations between sources
             for (String agentName : flumeGraphTopology.keySet()) {
 
-                sourcesRelationsMap.put(agentName, new HashMap());
+                sourcesRelationsMap.put(agentName, new HashMap<>());
 
                 IGraph agentGraph = flumeGraphTopology.get(agentName);
 
@@ -1182,9 +1306,7 @@ public class FlumeTopologyReversePropertiesGenerator {
 
                                         if (!sourceName.equals(channelAncestorSourceName)) {
                                             logger.debug("The source " + sourceName + " has a channel with a different source: " + channelAncestorSourceName);
-                                            //The channel has a different source
-                                            //Add the shared channel
-                                            //sourcesRelationsMap.get(agentName).get(sourceName).add(channelAncestorSourceName);
+                                            //The channel has a different source. Add the shared channel
                                             sourcesRelationsMap.get(agentName).get(sourceName).add(channelName);
                                         }
                                     }
@@ -1217,13 +1339,23 @@ public class FlumeTopologyReversePropertiesGenerator {
 
             //Draw elements
             boolean isFirstAgent = true;
-            for (String agentName : independentSourcesMap.keySet()) {
+
+            String[] agentNamesArray = independentSourcesMap.keySet().toArray(new String[independentSourcesMap.keySet().size()]);
+
+            //for (String agentName : independentSourcesMap.keySet()) {
+            for (int agentIndex=0; agentIndex<agentNamesArray.length; agentIndex++) {
+                String agentName = agentNamesArray[agentIndex];
 
                 IGraph agentGraph = flumeGraphTopology.get(agentName);
 
                 int numberSlicesAgent = FlumeConfiguratorTopologyUtils.calculateSlicesNumber(flumeGraphTopology, agentName);
                 int sliceWidthAgent = (FlumeConfiguratorConstants.CANVAS_PX_WIDTH - FlumeConfiguratorConstants.CANVAS_HORIZONTAL_MARGIN_PX * 2) / numberSlicesAgent;
                 int fixedSlicesNumber = FlumeConfiguratorConstants.FIXED_SLICES_NUMBER;
+                int selectorNumber = 0;
+                if (FlumeConfiguratorTopologyUtils.existSliceType(flumeGraphTopology, agentName, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SELECTOR)) {
+                    fixedSlicesNumber++;
+                    selectorNumber=1;
+                }
                 if (FlumeConfiguratorTopologyUtils.existSinkGroupSlice(flumeGraphTopology, agentName)) {
                     fixedSlicesNumber++;
                 }
@@ -1234,16 +1366,19 @@ public class FlumeTopologyReversePropertiesGenerator {
                 int agentsSlice = FlumeConfiguratorConstants.CANVAS_HORIZONTAL_MARGIN_PX;
                 int sourcesSlice = agentsSlice + sliceWidthAgent;
                 int firstInterceptorSlice = sourcesSlice + sliceWidthAgent;
-                int channelSlice = firstInterceptorSlice + (maxInterceptorsNumber * sliceWidthAgent);
+                int selectorSlice = firstInterceptorSlice + (maxInterceptorsNumber * sliceWidthAgent);
+
+                int channelSlice = selectorSlice + (selectorNumber * sliceWidthAgent);
                 int sinkSlice = channelSlice + sliceWidthAgent;
                 int sinkGroupSlice = sinkSlice + sliceWidthAgent;
 
-                logger.debug("Agents slice (y coordinate) agent: " + agentName + " = " + agentsSlice + "px");
-                logger.debug("Sources slice (y coordinate) agent: " + agentName + " = " + sourcesSlice + "px");
-                logger.debug("First Interceptor slice (y coordinate) agent: " + agentName + " = " + firstInterceptorSlice + "px");
-                logger.debug("Channels slice (y coordinate) agent: " + agentName + " = " + channelSlice + "px");
-                logger.debug("Sinks slice (y coordinate) agent: " + agentName + " = " + sinkSlice + "px");
-                logger.debug("Sinkgroups slice (y coordinate) agent: " + agentName + " = " + sinkGroupSlice + "px");
+                logger.debug("Agents slice (x coordinate) agent: " + agentName + " = " + agentsSlice + "px");
+                logger.debug("Sources slice (x coordinate) agent: " + agentName + " = " + sourcesSlice + "px");
+                logger.debug("First Interceptor slice (x coordinate) agent: " + agentName + " = " + firstInterceptorSlice + "px");
+                logger.debug("Selector slice (x coordinate) agent: " + agentName + " = " + selectorSlice + "px");
+                logger.debug("Channels slice (x coordinate) agent: " + agentName + " = " + channelSlice + "px");
+                logger.debug("Sinks slice (x coordinate) agent: " + agentName + " = " + sinkSlice + "px");
+                logger.debug("Sinkgroups slice (x coordinate) agent: " + agentName + " = " + sinkGroupSlice + "px");
 
 
                 int initial_Agent_Y_coordinate = FlumeConfiguratorTopologyUtils.getNextYCoordinate(FlumeConfiguratorTopologyUtils.getMaxYCoordinate(flumeTopologyList), isFirstAgent)
@@ -1253,22 +1388,22 @@ public class FlumeTopologyReversePropertiesGenerator {
 
                 //Draw Agent
                 assignFlumeTopologyElementPositionCoordinates(agentName, FlumeConfiguratorConstants.FLUME_TOPOLOGY_AGENT, agentsSlice, sourcesSlice, firstInterceptorSlice,
-                        channelSlice, sinkSlice, sinkGroupSlice, isFirstAgent, 0, sliceWidthAgent);
+                        selectorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstAgent, 0, sliceWidthAgent);
 
                 isFirstAgent = false;
 
 
                 //Process fully independent sources
-                sourcesSharedSinkGroupWithSharedSourceSet = processIndependentSources(agentGraph, independentSourcesMap, agentName, agentsSlice, sourcesSlice, firstInterceptorSlice, channelSlice, sinkSlice, sinkGroupSlice, sliceWidthAgent);
+                sourcesSharedSinkGroupWithSharedSourceSet = processIndependentSources(agentGraph, independentSourcesMap, agentName, agentsSlice, sourcesSlice, firstInterceptorSlice, selectorSlice, channelSlice, sinkSlice, sinkGroupSlice, sliceWidthAgent);
 
                 //Process shared sources
-                processSharedSources(agentGraph, sourcesRelationsMap, sharedSourcesMap, agentName, agentsSlice, sourcesSlice, firstInterceptorSlice, channelSlice, sinkSlice, sinkGroupSlice, sliceWidthAgent);
+                processSharedSources(agentGraph, sourcesRelationsMap, sharedSourcesMap, agentName, agentsSlice, sourcesSlice, firstInterceptorSlice, selectorSlice, channelSlice, sinkSlice, sinkGroupSlice, sliceWidthAgent, agentIndex);
 
                 //Convert set (independent sources that share sink groups with shared sources) to a list
-                sourcesSharedSinkGroupWithSharedSourceList = new ArrayList<String>(sourcesSharedSinkGroupWithSharedSourceSet);
+                sourcesSharedSinkGroupWithSharedSourceList = new ArrayList<>(sourcesSharedSinkGroupWithSharedSourceSet);
 
                 //Draw independent sources with shared sink group with shared sources
-                drawIndependentSources(agentGraph, sourcesSharedSinkGroupWithSharedSourceList, agentsSlice, sourcesSlice, firstInterceptorSlice,
+                drawIndependentSources(agentGraph, sourcesSharedSinkGroupWithSharedSourceList, agentsSlice, sourcesSlice, firstInterceptorSlice, selectorSlice,
                                         channelSlice, sinkSlice, sinkGroupSlice, sliceWidthAgent, false);
 
                 //Relocate sink groups position
@@ -1277,7 +1412,7 @@ public class FlumeTopologyReversePropertiesGenerator {
                 int final_Agent_Y_coordinate = FlumeConfiguratorTopologyUtils.getMaxYCoordinate(flumeTopologyList);
 
                 //Reassign Y coordinate to agent
-                int average_Agent_Y_Coordinate = initial_Agent_Y_coordinate + ((final_Agent_Y_coordinate - initial_Agent_Y_coordinate) / 2);
+                int average_Agent_Y_Coordinate = FlumeConfiguratorTopologyUtils.getElementAveragePosition(agentGraph, flumeTopologyList, flumeTopologyAgentElement, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE);
                 flumeTopologyAgentElement.setY(String.valueOf(average_Agent_Y_Coordinate));
 
                 if (logger.isDebugEnabled()) {
@@ -1306,6 +1441,7 @@ public class FlumeTopologyReversePropertiesGenerator {
      * @param agentsSlice           X-coordinate of the agent's slice
      * @param sourcesSlice          X-coordinate of the sources's slice
      * @param firstInterceptorSlice X-coordinate of the first interceptor slice
+     * @param selectorSlice          X-coordinate of the selector's slice
      * @param channelSlice          X-coordinate of the channel's slice
      * @param sinkSlice             X-coordinate of the sink's slice
      * @param sinkGroupSlice        X-coordinate of the sinkgroup's slice
@@ -1313,17 +1449,19 @@ public class FlumeTopologyReversePropertiesGenerator {
      * @return Set of independent sources that share sink group with a shared source
      */
     private Set<String> processIndependentSources(IGraph agentGraph, Map<String, List<String>> independentSourcesMap, String agentName, int agentsSlice, int sourcesSlice, int firstInterceptorSlice,
-                                                   int channelSlice, int sinkSlice, int sinkGroupSlice, int sliceWidthAgent) {
+                                                   int selectorSlice, int channelSlice, int sinkSlice, int sinkGroupSlice, int sliceWidthAgent) {
 
         if (logger.isDebugEnabled()) {
             logger.debug("BEGIN processIndependentSources");
         }
 
         Map<String, List<String>> sourcesSharedSinkGroupsRelationsMap = new HashMap<>();
-        Map<String, List<String>> sharedSinkGroupsSourcesRelationsMap = new HashMap<>();
-        List<String> sharedSinkGroupSources = new ArrayList<>();
-        Collection<List<String>> sourcesCorrectPermutations = null;
-        Set<String> sourcesSharedSinkGroupWithSharedSource = new HashSet<>();
+        Map<String, List<String>> sharedSinkGroupsSourcesRelationsMap;
+        List<String> sharedSinkGroupSourcesList = new ArrayList<>();
+        List<String> independentSinkGroupSourcesList = new ArrayList<>();
+        Set<String> sourcesSharedSinkGroupWithSharedSourceSet = new HashSet<>();
+        Map<String, List<String>> sharedSourcesGroupsMap;
+        List<String> optimalIndependentSourcesPermutation = new ArrayList<>();
 
         //Draw Sources
         List<String> independentSources = independentSourcesMap.get(agentName);
@@ -1363,8 +1501,7 @@ public class FlumeTopologyReversePropertiesGenerator {
 
                                 if (!sinkGroupName.equals(sinkGroupAncestorSourceName)) {
                                     logger.debug("The source " + sourceName + " has a sink group with a different source: " + sinkGroupAncestorSourceName);
-                                    //The channel has a different source
-                                    //Add the shared sinkGroup
+                                    //The channel has a different source. Add the shared sinkGroup
                                     sourcesSharedSinkGroupsRelationsMap.get(sourceName).add(sinkGroupName);
                                 }
                             }
@@ -1380,22 +1517,35 @@ public class FlumeTopologyReversePropertiesGenerator {
             List<String> sharedSinkGroupList = sourcesSharedSinkGroupsRelationsMap.get(sourceName);
             if (sharedSinkGroupList.size() > 0) {
                 //Source share sinkGroups with other sources
-                sharedSinkGroupSources.add(sourceName);
+                sharedSinkGroupSourcesList.add(sourceName);
+            } else {
+                independentSinkGroupSourcesList.add(sourceName);
             }
         }
 
 
+
+
         //Get shared sinkgroups and independent sources relation
-        sharedSinkGroupsSourcesRelationsMap = FlumeConfiguratorTopologyUtils.getMapSharedSinkGroupsSourcesRelation(sharedSinkGroupSources, sourcesSharedSinkGroupsRelationsMap);
+        sharedSinkGroupsSourcesRelationsMap = FlumeConfiguratorTopologyUtils.getMapSharedSinkGroupsSourcesRelation(sharedSinkGroupSourcesList, sourcesSharedSinkGroupsRelationsMap);
 
-        //Get correct sources permutations
-        sourcesCorrectPermutations = FlumeConfiguratorTopologyUtils.getCorrectSourcesPermutations(independentSources, sharedSinkGroupsSourcesRelationsMap);
+        //Detect groups of independents sources and sink groups
+        sharedSourcesGroupsMap = FlumeConfiguratorTopologyUtils.getSharedSourcesGroups(sharedSinkGroupsSourcesRelationsMap);
 
-        //Get one of the correct permutations (the first)
-        List<String> optimalPermutationIndependentSources = sourcesCorrectPermutations.iterator().next();
+        //Process fully independent sources
+        optimalIndependentSourcesPermutation.addAll(independentSinkGroupSourcesList);
+
+        //Process group
+        for (String sharedSourcesGroup : sharedSourcesGroupsMap.keySet()) {
+
+            List<String> sharedSourcesGroupSourcesList = sharedSourcesGroupsMap.get(sharedSourcesGroup);
+
+            optimalIndependentSourcesPermutation.addAll(sharedSourcesGroupSourcesList);
+
+        }
 
         //Remove independent sources that share sink group with a shared (channel) source
-        for (String independentSourceName : optimalPermutationIndependentSources) {
+        for (String independentSourceName : optimalIndependentSourcesPermutation) {
             //Shared sink group
             List<String> sharedSinkGroupList = sourcesSharedSinkGroupsRelationsMap.get(independentSourceName);
 
@@ -1414,7 +1564,7 @@ public class FlumeTopologyReversePropertiesGenerator {
                                 if (logger.isDebugEnabled()) {
                                     logger.debug("The source " + independentSourceName + " share a sink group (" + sharedSinkGroupName + ") with a shared (non independent) source (" + sourceName + ")");
                                 }
-                                sourcesSharedSinkGroupWithSharedSource.add(independentSourceName);
+                                sourcesSharedSinkGroupWithSharedSourceSet.add(independentSourceName);
                             }
                         }
                     }
@@ -1422,24 +1572,26 @@ public class FlumeTopologyReversePropertiesGenerator {
             }
         }
 
-        //Remove sources that shares a sink group with a source not independent (shared source)
-        Iterator<String> iterOptimalPermutationIndependentSources = optimalPermutationIndependentSources.iterator();
-        while (iterOptimalPermutationIndependentSources.hasNext()) {
-            String optimalPermutationIndependentSource = iterOptimalPermutationIndependentSources.next();
-            if (sourcesSharedSinkGroupWithSharedSource.contains(optimalPermutationIndependentSource)) {
-                iterOptimalPermutationIndependentSources.remove();
+        if (sourcesSharedSinkGroupWithSharedSourceSet.size() > 0) {
+            //Remove sources that shares a sink group with a source not independent (shared source)
+            Iterator<String> iterOptimalPermutationIndependentSources = optimalIndependentSourcesPermutation.iterator();
+
+            while (iterOptimalPermutationIndependentSources.hasNext()) {
+                String optimalPermutationIndependentSource = iterOptimalPermutationIndependentSources.next();
+                if (sourcesSharedSinkGroupWithSharedSourceSet.contains(optimalPermutationIndependentSource)) {
+                    iterOptimalPermutationIndependentSources.remove();
+                }
             }
         }
 
-
-        drawIndependentSources(agentGraph, optimalPermutationIndependentSources, agentsSlice, sourcesSlice, firstInterceptorSlice, channelSlice,
+        drawIndependentSources(agentGraph, optimalIndependentSourcesPermutation, agentsSlice, sourcesSlice, firstInterceptorSlice, selectorSlice, channelSlice,
                 sinkSlice, sinkGroupSlice, sliceWidthAgent, true);
 
         if (logger.isDebugEnabled()) {
             logger.debug("END processIndependentSources");
         }
 
-        return sourcesSharedSinkGroupWithSharedSource;
+        return sourcesSharedSinkGroupWithSharedSourceSet;
 
     }
 
@@ -1453,18 +1605,21 @@ public class FlumeTopologyReversePropertiesGenerator {
      * @param agentsSlice           X-coordinate of the agent's slice
      * @param sourcesSlice          X-coordinate of the sources's slice
      * @param firstInterceptorSlice X-coordinate of the first interceptor slice
+     * @param selectorSlice          X-coordinate of the selector's slice
      * @param channelSlice          X-coordinate of the channel's slice
      * @param sinkSlice             X-coordinate of the sink's slice
      * @param sinkGroupSlice        X-coordinate of the sinkgroup's slice
      * @param sliceWidthAgent       width of the slices
      * @param isFirstSource         true if the source is the first of the slica, false otherwise
      */
-    private void drawIndependentSources(IGraph agentGraph, List<String> sourcesList, int agentsSlice, int sourcesSlice, int firstInterceptorSlice,
+    private void drawIndependentSources(IGraph agentGraph, List<String> sourcesList, int agentsSlice, int sourcesSlice, int firstInterceptorSlice, int selectorSlice,
                                         int channelSlice, int sinkSlice, int sinkGroupSlice, int sliceWidthAgent, boolean isFirstSource) {
 
         if (logger.isDebugEnabled()) {
             logger.debug("BEGIN drawIndependentSources");
         }
+
+        List<String> channelsIDs;
 
         for (String independentSourceName : sourcesList) {
 
@@ -1472,7 +1627,7 @@ public class FlumeTopologyReversePropertiesGenerator {
             logger.debug("******* source initial_Source_Y_coordinate : " + independentSourceName + "= " + initial_Source_Y_coordinate);
 
             assignFlumeTopologyElementPositionCoordinates(independentSourceName, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE, agentsSlice, sourcesSlice,
-                    firstInterceptorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstSource, 0, sliceWidthAgent);
+                    firstInterceptorSlice, selectorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstSource, 0, sliceWidthAgent);
 
             isFirstSource = false;
 
@@ -1483,7 +1638,7 @@ public class FlumeTopologyReversePropertiesGenerator {
             List<String> sourceInterceptorsList = FlumeConfiguratorTopologyUtils.getSourceInterceptorsList(flumeTopologySourceElement, agentGraph);
 
             //Get the interceptors chain ordered
-            List<String> sourceInterceptorsOrderedList = FlumeConfiguratorTopologyUtils.orderSourceInterceptorsFromConnections(sourceInterceptorsList, flumeTopologySourceElement.getId(), listTopologyConnections, flumeTopologyList);
+            List<String> sourceInterceptorsOrderedList = FlumeConfiguratorTopologyUtils.orderSourceInterceptorsFromConnections(sourceInterceptorsList, flumeTopologySourceElement.getId(), topologyConnectionsList, flumeTopologyList);
 
             //Draw interceptors
             boolean isFirstInterceptor = true;
@@ -1492,24 +1647,38 @@ public class FlumeTopologyReversePropertiesGenerator {
             for (String interceptorName : sourceInterceptorsOrderedList) {
 
                 assignFlumeTopologyElementPositionCoordinates(interceptorName, FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR, agentsSlice, sourcesSlice,
-                        firstInterceptorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstInterceptor, interceptorNumber, sliceWidthAgent);
+                        firstInterceptorSlice, selectorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstInterceptor, interceptorNumber, sliceWidthAgent);
 
                 isFirstInterceptor = false;
                 interceptorNumber++;
                 lastInterceptorName = interceptorName;
             }
 
+            //Get selector of the source
+            List<String> sourceSelectorList = FlumeConfiguratorTopologyUtils.getSourceDescendantsTypeList(flumeTopologySourceElement, agentGraph, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SELECTOR);
 
-            List<String> channelsIDs = new ArrayList<String>();
+            //Draw selector
+            boolean isFirstSelector = true;
+            String selectorName = "";
+            if (sourceSelectorList.size() > 0) {
+                selectorName = sourceSelectorList.get(0);
+                assignFlumeTopologyElementPositionCoordinates(selectorName, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SELECTOR, agentsSlice, sourcesSlice,
+                        firstInterceptorSlice, selectorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstSelector, interceptorNumber, sliceWidthAgent);
+            }
+
+
             //Draw channels
-            if (sourceInterceptorsOrderedList.size() == 0) {
-                //Source without interceptors
-                channelsIDs = FlumeConfiguratorTopologyUtils.getAllTargetConnections(independentSourceID, listTopologyConnections);
-            } else {
+            if (sourceSelectorList.size() > 0) {
+                //Source with selector
+                String selectorID = FlumeConfiguratorTopologyUtils.getFlumeTopologyId(flumeTopologyList, selectorName);
+                channelsIDs = FlumeConfiguratorTopologyUtils.getAllTargetConnections(selectorID, topologyConnectionsList);
+            } else if (sourceInterceptorsOrderedList.size() > 0) {
                 //Source with interceptors
-
                 String lastInterceptorID = FlumeConfiguratorTopologyUtils.getFlumeTopologyId(flumeTopologyList, lastInterceptorName);
-                channelsIDs = FlumeConfiguratorTopologyUtils.getAllTargetConnections(lastInterceptorID, listTopologyConnections);
+                channelsIDs = FlumeConfiguratorTopologyUtils.getAllTargetConnections(lastInterceptorID, topologyConnectionsList);
+            } else {
+                //Source without interceptors
+                channelsIDs = FlumeConfiguratorTopologyUtils.getAllTargetConnections(independentSourceID, topologyConnectionsList);
             }
 
 
@@ -1525,14 +1694,13 @@ public class FlumeTopologyReversePropertiesGenerator {
                     String channelName = flumeTopologyChannelElement.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
 
                     assignFlumeTopologyElementPositionCoordinates(channelName, FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL, agentsSlice, sourcesSlice,
-                            firstInterceptorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstChannel, interceptorNumber, sliceWidthAgent);
+                            firstInterceptorSlice, selectorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstChannel, interceptorNumber, sliceWidthAgent);
 
                     isFirstChannel = false;
 
 
                     //Draw sinks
-                    List<String> sinksIDs = new ArrayList<String>();
-                    sinksIDs = FlumeConfiguratorTopologyUtils.getAllTargetConnections(channelID, listTopologyConnections);
+                    List<String> sinksIDs = FlumeConfiguratorTopologyUtils.getAllTargetConnections(channelID, topologyConnectionsList);
 
                     boolean isFirstSink = true;
                     for (String sinkID : sinksIDs) {
@@ -1544,14 +1712,12 @@ public class FlumeTopologyReversePropertiesGenerator {
                             String sinkName = flumeTopologySinkElement.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
 
                             assignFlumeTopologyElementPositionCoordinates(sinkName, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK, agentsSlice, sourcesSlice,
-                                    firstInterceptorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstSink, interceptorNumber, sliceWidthAgent);
+                                    firstInterceptorSlice, selectorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstSink, interceptorNumber, sliceWidthAgent);
 
                             isFirstSink = false;
 
-
                             //Draw sinkgroups
-                            List<String> sinkGroupsIDs = new ArrayList<String>();
-                            sinkGroupsIDs = FlumeConfiguratorTopologyUtils.getAllTargetConnections(sinkID, listTopologyConnections);
+                            List<String> sinkGroupsIDs = FlumeConfiguratorTopologyUtils.getAllTargetConnections(sinkID, topologyConnectionsList);
 
                             boolean isFirstSinkGroup = true;
                             for (String sinkGroupID : sinkGroupsIDs) {
@@ -1563,7 +1729,7 @@ public class FlumeTopologyReversePropertiesGenerator {
                                     String sinkGroupName = flumeTopologySinkGroupElement.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
 
                                     assignFlumeTopologyElementPositionCoordinates(sinkGroupName, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP, agentsSlice, sourcesSlice,
-                                            firstInterceptorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstSinkGroup, interceptorNumber, sliceWidthAgent);
+                                            firstInterceptorSlice, selectorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstSinkGroup, interceptorNumber, sliceWidthAgent);
 
                                     isFirstSinkGroup = false;
                                 }
@@ -1574,7 +1740,7 @@ public class FlumeTopologyReversePropertiesGenerator {
                     int final_Channel_Y_coordinate = FlumeConfiguratorTopologyUtils.getMaxYCoordinate(flumeTopologyList);
 
                     //Reassign Y coordinate to channel
-                    int average_Channel_Y_Coordinate = initial_Channel_Y_coordinate + ((final_Channel_Y_coordinate - initial_Channel_Y_coordinate) / 2);
+                    int average_Channel_Y_Coordinate = FlumeConfiguratorTopologyUtils.getElementAveragePosition(agentGraph, flumeTopologyList, flumeTopologyChannelElement, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK);
                     flumeTopologyChannelElement.setY(String.valueOf(average_Channel_Y_Coordinate));
 
                     if (logger.isDebugEnabled()) {
@@ -1587,7 +1753,7 @@ public class FlumeTopologyReversePropertiesGenerator {
             logger.debug("******* source final_Source_Y_coordinate: " + independentSourceName + "= " + final_Source_Y_coordinate);
 
             //Reassign Y coordinate to source
-            int average_Source_Y_Coordinate = initial_Source_Y_coordinate + ((final_Source_Y_coordinate - initial_Source_Y_coordinate) / 2);
+            int average_Source_Y_Coordinate = FlumeConfiguratorTopologyUtils.getElementAveragePosition(agentGraph, flumeTopologyList, flumeTopologySourceElement, FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL);
             flumeTopologySourceElement.setY(String.valueOf(average_Source_Y_Coordinate));
 
             if (logger.isDebugEnabled()) {
@@ -1599,6 +1765,15 @@ public class FlumeTopologyReversePropertiesGenerator {
 
                 String interceptorID = FlumeConfiguratorTopologyUtils.getFlumeTopologyId(flumeTopologyList, interceptorName);
                 FlumeTopology flumeTopologyInterceptorElement = agentGraph.getVertex(interceptorID, true);
+
+                flumeTopologyInterceptorElement.setY(String.valueOf(average_Source_Y_Coordinate));
+
+            }
+
+            for (String sourceSelectorName : sourceSelectorList) {
+
+                String selectorID = FlumeConfiguratorTopologyUtils.getFlumeTopologyId(flumeTopologyList, sourceSelectorName);
+                FlumeTopology flumeTopologyInterceptorElement = agentGraph.getVertex(selectorID, true);
 
                 flumeTopologyInterceptorElement.setY(String.valueOf(average_Source_Y_Coordinate));
 
@@ -1623,24 +1798,31 @@ public class FlumeTopologyReversePropertiesGenerator {
      * @param agentsSlice X-coordinate of the agent's slice
      * @param sourcesSlice X-coordinate of the sources's slice
      * @param firstInterceptorSlice X-coordinate of the first interceptor slice
+     * @param selectorSlice X-coordinate of the selector's slice
      * @param channelSlice X-coordinate of the channel's slice
      * @param sinkSlice X-coordinate of the sink's slice
      * @param sinkGroupSlice X-coordinate of the sinkgroup's slice
      * @param sliceWidthAgent width of the slices
+     * @param agentIndex index of the agent
      */
     private void processSharedSources(IGraph agentGraph, Map<String, Map<String, List<String>>> sourcesRelationsMap , Map<String, List<String>> sharedSourcesMap, String agentName,
-                                           int agentsSlice, int sourcesSlice, int firstInterceptorSlice, int channelSlice, int sinkSlice, int sinkGroupSlice, int sliceWidthAgent) {
+                                           int agentsSlice, int sourcesSlice, int firstInterceptorSlice, int selectorSlice, int channelSlice, int sinkSlice, int sinkGroupSlice, int sliceWidthAgent,
+                                           int agentIndex) {
 
         if (logger.isDebugEnabled()) {
             logger.debug("BEGIN processSharedSources");
         }
 
-        Map<String, List<String>> mapSharedChannelsSourcesRelation = new HashMap<>();
-        List<String> completeSourcesList = new ArrayList<>();
-        Collection<List<String>> sourcesCorrectPermutations = null;
-        Map<String,Integer> mapChannelSourcesNumberRelation = null;
-        Map<String,List<String>> mapSourcesIndependentChannelsRelation = null;
-        Map<String,List<String>> mapSourcesInterceptorsRelation = null;
+        Map<String, List<String>> sharedChannelsSourcesRelationMap;
+        List<String> completeSourcesList;
+        Collection<List<String>> sourcesPermutations;
+        Map<String,Integer> channelSourcesNumberRelationMap;
+        Map<String,List<String>> sourcesIndependentChannelsRelationMap = null;
+        Map<String,List<String>> sourcesInterceptorsRelationMap;
+        Map<String,List<String>> sharedSinkGroupsSourcesRelationsMap;
+        List<String> optimalSourcesPermutation = new ArrayList<>();
+        List<String> optimalGroupSourcesPermutation;
+        Map<String, List<String>> sharedSourcesGroupsMap = null;
 
         //Get shared sources
         List<String> sharedSources = sharedSourcesMap.get(agentName);
@@ -1648,13 +1830,13 @@ public class FlumeTopologyReversePropertiesGenerator {
         if (sharedSources.size() > 0) {
 
             //Get shared channels and sources relation
-            mapSharedChannelsSourcesRelation = FlumeConfiguratorTopologyUtils.getMapSharedChannelsSourcesRelation(sharedSources, sourcesRelationsMap, agentName);
+            sharedChannelsSourcesRelationMap = FlumeConfiguratorTopologyUtils.getMapSharedChannelsSourcesRelation(sharedSources, sourcesRelationsMap, agentName);
 
             //Print map relations
-            for (String channelName : mapSharedChannelsSourcesRelation.keySet()) {
-                List<String> sourcesList = mapSharedChannelsSourcesRelation.get(channelName);
+            for (String channelName : sharedChannelsSourcesRelationMap.keySet()) {
+                List<String> sourcesList = sharedChannelsSourcesRelationMap.get(channelName);
                 StringBuilder sb = new StringBuilder();
-                sb.append("Sources of channel: " + channelName + " {");
+                sb.append("Sources of channel: ").append(channelName).append(" {");
 
 
                 Iterator<String> sourcesIt = sourcesList.iterator();
@@ -1672,35 +1854,115 @@ public class FlumeTopologyReversePropertiesGenerator {
 
 
             //Get complete shared sources list (from greatest size)
-            completeSourcesList = FlumeConfiguratorTopologyUtils.getCompleteSharedSourcesList(mapSharedChannelsSourcesRelation);
+            completeSourcesList = FlumeConfiguratorTopologyUtils.getCompleteSharedSourcesList(sharedChannelsSourcesRelationMap);
 
-/*
-            //Chack correct order
-            boolean isCorrectSourcerOrder = true;
-            for (String channelName : mapSharedChannelsSourcesRelation.keySet()) {
-                List<String> channelSourcesList = mapSharedChannelsSourcesRelation.get(channelName);
-                isCorrectSourcerOrder = isCorrectSourcerOrder && FlumeConfiguratorTopologyUtils.isCorrectOrderSublist(completeSourcesList, channelSourcesList);
+            boolean executeSourcesGroupsPermutations = false;
+
+            //Get number sources referenced by map
+            int sourcesNumberReferencedByMap = FlumeConfiguratorTopologyUtils.getSourcesNumberReferencedByMap(completeSourcesList, sharedChannelsSourcesRelationMap);
+
+            if (sourcesNumberReferencedByMap > FlumeConfiguratorConstants.MAX_NUMBER_SOURCES_FOR_PERMUTATIONS) {
+
+                executeSourcesGroupsPermutations = true;
+
+                //Number of sources too big for permutations. Detect groups of independents sources
+                sharedSourcesGroupsMap = FlumeConfiguratorTopologyUtils.getSharedSourcesGroups(sharedChannelsSourcesRelationMap);
+
+                //Check if all groups have a valid number of sources for permutations
+                for (String sharedSourceGroup : sharedSourcesGroupsMap.keySet()) {
+                    List<String> sourcesGroupList = sharedSourcesGroupsMap.get(sharedSourceGroup);
+                    if (sourcesGroupList.size() > FlumeConfiguratorConstants.MAX_NUMBER_SOURCES_FOR_PERMUTATIONS) {
+                        executeSourcesGroupsPermutations = false;
+                    }
+                }
             }
-*/
 
-            //Get correct sources permutations
-            sourcesCorrectPermutations = FlumeConfiguratorTopologyUtils.getCorrectSourcesPermutations(completeSourcesList, mapSharedChannelsSourcesRelation);
+            if (executeSourcesGroupsPermutations) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Execution of groups of sources");
+                }
 
-            //Get channel sources number relation
-            mapChannelSourcesNumberRelation = FlumeConfiguratorTopologyUtils.getMapChannelSourcesNumberRelation(completeSourcesList, agentGraph, flumeTopologyList);
 
-            //Get sources independent channels relation
-            mapSourcesIndependentChannelsRelation = FlumeConfiguratorTopologyUtils.getMapSourcesIndependentChannelsRelation(completeSourcesList, agentGraph, flumeTopologyList, mapChannelSourcesNumberRelation);
+                for (String sharedSourcesGroup : sharedSourcesGroupsMap.keySet()) {
 
-            //Get sources interceptors relation
-            mapSourcesInterceptorsRelation = FlumeConfiguratorTopologyUtils.getMapSourcesInterceptorsRelation(agentGraph);
+                    //Generate permutation for the group of sources
+                    List<String> sharedSourcesGroupSourcesList = sharedSourcesGroupsMap.get(sharedSourcesGroup);
 
-            //Get optimal source permutation
-            List<String> optimalSourcesPermutation = FlumeConfiguratorTopologyUtils.getOptimalSourcesPermutation(sourcesCorrectPermutations, mapSourcesIndependentChannelsRelation, mapSourcesInterceptorsRelation);
+                    //Get sources permutations
+                    sourcesPermutations = FlumeConfiguratorTopologyUtils.getSharedSourcesPermutations(sharedSourcesGroupSourcesList, sharedChannelsSourcesRelationMap);
+
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Number of sources permutations generated: " + sourcesPermutations.size());
+                    }
+
+                    //Get channel sources number relation
+                    channelSourcesNumberRelationMap = FlumeConfiguratorTopologyUtils.getMapChannelSourcesNumberRelation(completeSourcesList, agentGraph, flumeTopologyList);
+
+                    //Get sources independent channels relation
+                    sourcesIndependentChannelsRelationMap = FlumeConfiguratorTopologyUtils.getMapSourcesIndependentChannelsRelation(completeSourcesList, agentGraph, flumeTopologyList, channelSourcesNumberRelationMap);
+
+                    //Get sources interceptors relation
+                    sourcesInterceptorsRelationMap = FlumeConfiguratorTopologyUtils.getMapSourcesInterceptorsRelation(agentGraph);
+
+                    //Get sources sinkgroups relation
+                    sharedSinkGroupsSourcesRelationsMap = FlumeConfiguratorTopologyUtils.getMapSharedSinkGroupsSourcesRelation(agentGraph, flumeTopologyList, completeSourcesList);
+
+                    //Get optimal sources permutation
+                    //optimalGroupSourcesPermutation = FlumeConfiguratorTopologyUtils.getOptimalSourcesPermutation(sourcesCorrectPermutations, mapSourcesIndependentChannelsRelation, mapSourcesInterceptorsRelation);
+                    optimalGroupSourcesPermutation = FlumeConfiguratorTopologyUtils.getOptimalSharedSourcesPermutation(agentGraph, flumeTopologyList, sourcesPermutations, sharedChannelsSourcesRelationMap,
+                                                        sourcesIndependentChannelsRelationMap, sourcesInterceptorsRelationMap, sharedSinkGroupsSourcesRelationsMap, alternativeOptimizationPermutationAgentList, agentIndex);
+
+                    //Add group permutation to total permutations
+                    optimalSourcesPermutation.addAll(optimalGroupSourcesPermutation);
+
+                }
+
+
+            } else {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Execution without groups of sources");
+                }
+
+                //Get sources permutations
+                sourcesPermutations = FlumeConfiguratorTopologyUtils.getSharedSourcesPermutations(completeSourcesList, sharedChannelsSourcesRelationMap);
+
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Number of sources permutations generated: " + sourcesPermutations.size());
+                }
+
+                //Get channel sources number relation
+                channelSourcesNumberRelationMap = FlumeConfiguratorTopologyUtils.getMapChannelSourcesNumberRelation(completeSourcesList, agentGraph, flumeTopologyList);
+
+                //Get sources independent channels relation
+                sourcesIndependentChannelsRelationMap = FlumeConfiguratorTopologyUtils.getMapSourcesIndependentChannelsRelation(completeSourcesList, agentGraph, flumeTopologyList, channelSourcesNumberRelationMap);
+
+                //Get sources interceptors relation
+                sourcesInterceptorsRelationMap = FlumeConfiguratorTopologyUtils.getMapSourcesInterceptorsRelation(agentGraph);
+
+                //Get sources sinkgroups relation
+                sharedSinkGroupsSourcesRelationsMap = FlumeConfiguratorTopologyUtils.getMapSharedSinkGroupsSourcesRelation(agentGraph, flumeTopologyList, completeSourcesList);
+
+                //Get optimal sources permutation
+                //optimalSourcesPermutation = FlumeConfiguratorTopologyUtils.getOptimalSourcesPermutation(sourcesCorrectPermutations, mapSourcesIndependentChannelsRelation, mapSourcesInterceptorsRelation);
+                optimalSourcesPermutation = FlumeConfiguratorTopologyUtils.getOptimalSharedSourcesPermutation(agentGraph, flumeTopologyList, sourcesPermutations, sharedChannelsSourcesRelationMap,
+                                                sourcesIndependentChannelsRelationMap, sourcesInterceptorsRelationMap, sharedSinkGroupsSourcesRelationsMap, alternativeOptimizationPermutationAgentList, agentIndex);
+
+                if (optimalSourcesPermutation == null) {
+                    //There is no optimal sources permutation. Take the complete sources list as optimal permutation
+                    if (logger.isWarnEnabled()) {
+                        logger.warn("There is no optimal sources permutation");
+                    }
+
+                    optimalSourcesPermutation = completeSourcesList;
+                }
+            }
+
+
+
 
             //Draw Sources
-            drawSharedSources(agentGraph, optimalSourcesPermutation, mapSharedChannelsSourcesRelation, mapSourcesIndependentChannelsRelation,
-                    agentsSlice, sourcesSlice, firstInterceptorSlice, channelSlice, sinkSlice, sinkGroupSlice, sliceWidthAgent, !existIndependentSources);
+            drawSharedSources(agentGraph, optimalSourcesPermutation, sharedChannelsSourcesRelationMap, sourcesIndependentChannelsRelationMap,
+                    agentsSlice, sourcesSlice, firstInterceptorSlice, selectorSlice, channelSlice, sinkSlice, sinkGroupSlice, sliceWidthAgent, !existIndependentSources);
 
         }
 
@@ -1717,20 +1979,21 @@ public class FlumeTopologyReversePropertiesGenerator {
      *
      * @param agentGraph graph of the agent
      * @param optimalSourcesPermutation optimal permutation of the shared sources
-     * @param mapSharedChannelsSourcesRelation relation between shared channels and sources of the agent
-     * @param mapSourcesIndependentChannelsRelation relation between shared sources and independent channels of the agent
+     * @param sharedChannelsSourcesRelationMap relation between shared channels and sources of the agent
+     * @param sourcesIndependentChannelsRelationMap relation between shared sources and independent channels of the agent
      * @param agentsSlice X-coordinate of the agent's slice
      * @param sourcesSlice X-coordinate of the sources's slice
      * @param firstInterceptorSlice X-coordinate of the first interceptor slice
+     * @param selectorSlice X-coordinate of the selector's slice
      * @param channelSlice X-coordinate of the channel's slice
      * @param sinkSlice X-coordinate of the sink's slice
      * @param sinkGroupSlice X-coordinate of the sinkgroup's slice
      * @param sliceWidthAgent width of the slices
      * @param isFirstSharedSource true if is the first source of the slice, false otherwise
      */
-    private void drawSharedSources(IGraph agentGraph, List<String> optimalSourcesPermutation, Map<String, List<String>> mapSharedChannelsSourcesRelation,
-                                   Map<String,List<String>> mapSourcesIndependentChannelsRelation, int agentsSlice, int sourcesSlice, int firstInterceptorSlice,
-                                   int channelSlice, int sinkSlice, int sinkGroupSlice, int sliceWidthAgent, boolean isFirstSharedSource) {
+    private void drawSharedSources(IGraph agentGraph, List<String> optimalSourcesPermutation, Map<String, List<String>> sharedChannelsSourcesRelationMap,
+                                   Map<String,List<String>> sourcesIndependentChannelsRelationMap, int agentsSlice, int sourcesSlice, int firstInterceptorSlice,
+                                   int selectorSlice, int channelSlice, int sinkSlice, int sinkGroupSlice, int sliceWidthAgent, boolean isFirstSharedSource) {
 
 
         if (logger.isDebugEnabled()) {
@@ -1738,6 +2001,7 @@ public class FlumeTopologyReversePropertiesGenerator {
         }
 
         List<String> channelsRecalculatedCoordinatesList = new ArrayList<>();
+        List<String> channelsIDs;
 
         for (int i = 0; i < optimalSourcesPermutation.size(); i++) {
 
@@ -1748,7 +2012,7 @@ public class FlumeTopologyReversePropertiesGenerator {
             logger.debug("******* source initial_Source_Y_coordinate : " + sharedSourceName + "= " + initial_Source_Y_coordinate);
 
             assignFlumeTopologyElementPositionCoordinates(sharedSourceName, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE, agentsSlice, sourcesSlice,
-                    firstInterceptorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstSharedSource, 0, sliceWidthAgent);
+                    firstInterceptorSlice, selectorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstSharedSource, 0, sliceWidthAgent);
 
             isFirstSharedSource = false;
 
@@ -1759,7 +2023,7 @@ public class FlumeTopologyReversePropertiesGenerator {
             List<String> sourceInterceptorsList = FlumeConfiguratorTopologyUtils.getSourceInterceptorsList(flumeTopologySourceElement, agentGraph);
 
             //Get the interceptors chain ordered
-            List<String> sourceInterceptorsOrderedList = FlumeConfiguratorTopologyUtils.orderSourceInterceptorsFromConnections(sourceInterceptorsList, flumeTopologySourceElement.getId(), listTopologyConnections, flumeTopologyList);
+            List<String> sourceInterceptorsOrderedList = FlumeConfiguratorTopologyUtils.orderSourceInterceptorsFromConnections(sourceInterceptorsList, flumeTopologySourceElement.getId(), topologyConnectionsList, flumeTopologyList);
 
             //Draw interceptors
             boolean isFirstInterceptor = true;
@@ -1768,37 +2032,52 @@ public class FlumeTopologyReversePropertiesGenerator {
             for (String interceptorName : sourceInterceptorsOrderedList) {
 
                 assignFlumeTopologyElementPositionCoordinates(interceptorName, FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR, agentsSlice, sourcesSlice,
-                        firstInterceptorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstInterceptor, interceptorNumber, sliceWidthAgent);
+                        firstInterceptorSlice, selectorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstInterceptor, interceptorNumber, sliceWidthAgent);
 
                 isFirstInterceptor = false;
                 interceptorNumber++;
                 lastInterceptorName = interceptorName;
             }
 
-            //Get all channels
-            List<String> channelsIDs = new ArrayList<String>();
-            //Draw channels
-            if (sourceInterceptorsOrderedList.size() == 0) {
-                //Source without interceptors
-                channelsIDs = FlumeConfiguratorTopologyUtils.getAllTargetConnections(sharedSourceID, listTopologyConnections);
-            } else {
-                //Source with interceptors
+            //Get selector of the source
+            List<String> sourceSelectorList = FlumeConfiguratorTopologyUtils.getSourceDescendantsTypeList(flumeTopologySourceElement, agentGraph, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SELECTOR);
 
-                String lastInterceptorID = FlumeConfiguratorTopologyUtils.getFlumeTopologyId(flumeTopologyList, lastInterceptorName);
-                channelsIDs = FlumeConfiguratorTopologyUtils.getAllTargetConnections(lastInterceptorID, listTopologyConnections);
+            //Draw selector
+            boolean isFirstSelector = true;
+            String selectorName = "";
+            if (sourceSelectorList.size() > 0) {
+                selectorName = sourceSelectorList.get(0);
+                assignFlumeTopologyElementPositionCoordinates(selectorName, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SELECTOR, agentsSlice, sourcesSlice,
+                        firstInterceptorSlice, selectorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstSelector, interceptorNumber, sliceWidthAgent);
             }
+
+
+            //Draw channels
+            if (sourceSelectorList.size() > 0) {
+                //Source with selector
+                String selectorID = FlumeConfiguratorTopologyUtils.getFlumeTopologyId(flumeTopologyList, selectorName);
+                channelsIDs = FlumeConfiguratorTopologyUtils.getAllTargetConnections(selectorID, topologyConnectionsList);
+            } else if (sourceInterceptorsOrderedList.size() > 0) {
+                //Source with interceptors
+                String lastInterceptorID = FlumeConfiguratorTopologyUtils.getFlumeTopologyId(flumeTopologyList, lastInterceptorName);
+                channelsIDs = FlumeConfiguratorTopologyUtils.getAllTargetConnections(lastInterceptorID, topologyConnectionsList);
+            } else {
+                //Source without interceptors
+                channelsIDs = FlumeConfiguratorTopologyUtils.getAllTargetConnections(sharedSourceID, topologyConnectionsList);
+            }
+
 
 
             //Get independent/shared channels lists
             List<String> sharedChannelList = new ArrayList<>();
-            List<String> independentChannelList = new ArrayList();
+            List<String> independentChannelList = new ArrayList<>();
             for (String channelID : channelsIDs) {
                 FlumeTopology flumeTopologyChannelElement = FlumeConfiguratorTopologyUtils.getFlumeTopologyElement(flumeTopologyList, channelID);
                 String channelName = flumeTopologyChannelElement.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
 
-                boolean isIndependenChannel = mapSourcesIndependentChannelsRelation.get(sharedSourceName).contains(channelName);
+                boolean isIndependentChannel = sourcesIndependentChannelsRelationMap.get(sharedSourceName).contains(channelName);
 
-                if (isIndependenChannel) {
+                if (isIndependentChannel) {
                     independentChannelList.add(channelID);
                 } else {
                     sharedChannelList.add(channelID);
@@ -1819,13 +2098,12 @@ public class FlumeTopologyReversePropertiesGenerator {
                         int initial_Channel_Y_coordinate = FlumeConfiguratorTopologyUtils.getNextYCoordinate(FlumeConfiguratorTopologyUtils.getMaxYCoordinate(flumeTopologyList), isFirstChannel);
 
                         assignFlumeTopologyElementPositionCoordinates(channelName, FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL, agentsSlice, sourcesSlice,
-                                firstInterceptorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstChannel, interceptorNumber, sliceWidthAgent);
+                                firstInterceptorSlice, selectorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstChannel, interceptorNumber, sliceWidthAgent);
 
                         isFirstChannel = false;
 
                         //Draw sinks
-                        List<String> sinksIDs = new ArrayList<String>();
-                        sinksIDs = FlumeConfiguratorTopologyUtils.getAllTargetConnections(channelID, listTopologyConnections);
+                        List<String> sinksIDs = FlumeConfiguratorTopologyUtils.getAllTargetConnections(channelID, topologyConnectionsList);
 
                         boolean isFirstSink = true;
                         for (String sinkID : sinksIDs) {
@@ -1837,13 +2115,12 @@ public class FlumeTopologyReversePropertiesGenerator {
                                 String sinkName = flumeTopologySinkElement.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
 
                                 assignFlumeTopologyElementPositionCoordinates(sinkName, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK, agentsSlice, sourcesSlice,
-                                        firstInterceptorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstSink, interceptorNumber, sliceWidthAgent);
+                                        firstInterceptorSlice, selectorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstSink, interceptorNumber, sliceWidthAgent);
 
                                 isFirstSink = false;
 
                                 //Draw sinkgroups
-                                List<String> sinkGroupsIDs = new ArrayList<String>();
-                                sinkGroupsIDs = FlumeConfiguratorTopologyUtils.getAllTargetConnections(sinkID, listTopologyConnections);
+                                List<String> sinkGroupsIDs = FlumeConfiguratorTopologyUtils.getAllTargetConnections(sinkID, topologyConnectionsList);
 
                                 boolean isFirstSinkGroup = true;
                                 for (String sinkGroupID: sinkGroupsIDs) {
@@ -1855,7 +2132,7 @@ public class FlumeTopologyReversePropertiesGenerator {
                                         String sinkGroupName = flumeTopologySinkGroupElement.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
 
                                         assignFlumeTopologyElementPositionCoordinates(sinkGroupName, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP, agentsSlice, sourcesSlice,
-                                                firstInterceptorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstSinkGroup, interceptorNumber, sliceWidthAgent);
+                                                firstInterceptorSlice, selectorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstSinkGroup, interceptorNumber, sliceWidthAgent);
 
                                         isFirstSinkGroup = false;
                                     }
@@ -1866,9 +2143,8 @@ public class FlumeTopologyReversePropertiesGenerator {
                         int final_Channel_Y_coordinate = FlumeConfiguratorTopologyUtils.getMaxYCoordinate(flumeTopologyList);
 
                         //Reassign Y coordinate to channel
-
                         if (!channelsRecalculatedCoordinatesList.contains(channelName)) {
-                            int average_Channel_Y_Coordinate = initial_Channel_Y_coordinate + ((final_Channel_Y_coordinate - initial_Channel_Y_coordinate) / 2);
+                            int average_Channel_Y_Coordinate = FlumeConfiguratorTopologyUtils.getElementAveragePosition(agentGraph, flumeTopologyList, flumeTopologyChannelElement, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK);
                             flumeTopologyChannelElement.setY(String.valueOf(average_Channel_Y_Coordinate));
                             channelsRecalculatedCoordinatesList.add(channelName);
                             if (logger.isDebugEnabled()) {
@@ -1889,13 +2165,12 @@ public class FlumeTopologyReversePropertiesGenerator {
                         int initial_Channel_Y_coordinate = FlumeConfiguratorTopologyUtils.getNextYCoordinate(FlumeConfiguratorTopologyUtils.getMaxYCoordinate(flumeTopologyList), isFirstChannel);
 
                         assignFlumeTopologyElementPositionCoordinates(channelName, FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL, agentsSlice, sourcesSlice,
-                                firstInterceptorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstChannel, interceptorNumber, sliceWidthAgent);
+                                firstInterceptorSlice, selectorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstChannel, interceptorNumber, sliceWidthAgent);
 
                         isFirstChannel = false;
 
                         //Draw sinks
-                        List<String> sinksIDs = new ArrayList<String>();
-                        sinksIDs = FlumeConfiguratorTopologyUtils.getAllTargetConnections(channelID, listTopologyConnections);
+                        List<String> sinksIDs = FlumeConfiguratorTopologyUtils.getAllTargetConnections(channelID, topologyConnectionsList);
 
                         boolean isFirstSink = true;
                         for (String sinkID : sinksIDs) {
@@ -1907,13 +2182,12 @@ public class FlumeTopologyReversePropertiesGenerator {
                                 String sinkName = flumeTopologySinkElement.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
 
                                 assignFlumeTopologyElementPositionCoordinates(sinkName, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK, agentsSlice, sourcesSlice,
-                                        firstInterceptorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstSink, interceptorNumber, sliceWidthAgent);
+                                        firstInterceptorSlice, selectorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstSink, interceptorNumber, sliceWidthAgent);
 
                                 isFirstSink = false;
 
                                 //Draw sinkgroups
-                                List<String> sinkGroupsIDs = new ArrayList<String>();
-                                sinkGroupsIDs = FlumeConfiguratorTopologyUtils.getAllTargetConnections(sinkID, listTopologyConnections);
+                                List<String> sinkGroupsIDs = FlumeConfiguratorTopologyUtils.getAllTargetConnections(sinkID, topologyConnectionsList);
 
                                 boolean isFirstSinkGroup = true;
                                 for (String sinkGroupID: sinkGroupsIDs) {
@@ -1925,7 +2199,7 @@ public class FlumeTopologyReversePropertiesGenerator {
                                         String sinkGroupName = flumeTopologySinkGroupElement.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
 
                                         assignFlumeTopologyElementPositionCoordinates(sinkGroupName, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP, agentsSlice, sourcesSlice,
-                                                firstInterceptorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstSinkGroup, interceptorNumber, sliceWidthAgent);
+                                                firstInterceptorSlice, selectorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstSinkGroup, interceptorNumber, sliceWidthAgent);
 
                                         isFirstSinkGroup = false;
                                     }
@@ -1936,9 +2210,8 @@ public class FlumeTopologyReversePropertiesGenerator {
                         int final_Channel_Y_coordinate = FlumeConfiguratorTopologyUtils.getMaxYCoordinate(flumeTopologyList);
 
                         //Reassign Y coordinate to channel
-
                         if (!channelsRecalculatedCoordinatesList.contains(channelName)) {
-                            int average_Channel_Y_Coordinate = initial_Channel_Y_coordinate + ((final_Channel_Y_coordinate - initial_Channel_Y_coordinate) / 2);
+                            int average_Channel_Y_Coordinate = FlumeConfiguratorTopologyUtils.getElementAveragePosition(agentGraph, flumeTopologyList, flumeTopologyChannelElement, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK);
                             flumeTopologyChannelElement.setY(String.valueOf(average_Channel_Y_Coordinate));
                             channelsRecalculatedCoordinatesList.add(channelName);
                             if (logger.isDebugEnabled()) {
@@ -1964,13 +2237,12 @@ public class FlumeTopologyReversePropertiesGenerator {
                         int initial_Channel_Y_coordinate = FlumeConfiguratorTopologyUtils.getNextYCoordinate(FlumeConfiguratorTopologyUtils.getMaxYCoordinate(flumeTopologyList), isFirstChannel);
 
                         assignFlumeTopologyElementPositionCoordinates(channelName, FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL, agentsSlice, sourcesSlice,
-                                firstInterceptorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstChannel, interceptorNumber, sliceWidthAgent);
+                                firstInterceptorSlice, selectorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstChannel, interceptorNumber, sliceWidthAgent);
 
                         isFirstChannel = false;
 
                         //Draw sinks
-                        List<String> sinksIDs = new ArrayList<String>();
-                        sinksIDs = FlumeConfiguratorTopologyUtils.getAllTargetConnections(channelID, listTopologyConnections);
+                        List<String> sinksIDs = FlumeConfiguratorTopologyUtils.getAllTargetConnections(channelID, topologyConnectionsList);
 
                         boolean isFirstSink = true;
                         for (String sinkID : sinksIDs) {
@@ -1982,13 +2254,12 @@ public class FlumeTopologyReversePropertiesGenerator {
                                 String sinkName = flumeTopologySinkElement.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
 
                                 assignFlumeTopologyElementPositionCoordinates(sinkName, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK, agentsSlice, sourcesSlice,
-                                        firstInterceptorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstSink, interceptorNumber, sliceWidthAgent);
+                                        firstInterceptorSlice, selectorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstSink, interceptorNumber, sliceWidthAgent);
 
                                 isFirstSink = false;
 
                                 //Draw sinkgroups
-                                List<String> sinkGroupsIDs = new ArrayList<String>();
-                                sinkGroupsIDs = FlumeConfiguratorTopologyUtils.getAllTargetConnections(sinkID, listTopologyConnections);
+                                List<String> sinkGroupsIDs = FlumeConfiguratorTopologyUtils.getAllTargetConnections(sinkID, topologyConnectionsList);
 
                                 boolean isFirstSinkGroup = true;
                                 for (String sinkGroupID: sinkGroupsIDs) {
@@ -2000,7 +2271,7 @@ public class FlumeTopologyReversePropertiesGenerator {
                                         String sinkGroupName = flumeTopologySinkGroupElement.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
 
                                         assignFlumeTopologyElementPositionCoordinates(sinkGroupName, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP, agentsSlice, sourcesSlice,
-                                                firstInterceptorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstSinkGroup, interceptorNumber, sliceWidthAgent);
+                                                firstInterceptorSlice, selectorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstSinkGroup, interceptorNumber, sliceWidthAgent);
 
                                         isFirstSinkGroup = false;
                                     }
@@ -2013,7 +2284,7 @@ public class FlumeTopologyReversePropertiesGenerator {
                         //Reassign Y coordinate to channel
 
                         if (!channelsRecalculatedCoordinatesList.contains(channelName)) {
-                            int average_Channel_Y_Coordinate = initial_Channel_Y_coordinate + ((final_Channel_Y_coordinate - initial_Channel_Y_coordinate) / 2);
+                            int average_Channel_Y_Coordinate = FlumeConfiguratorTopologyUtils.getElementAveragePosition(agentGraph, flumeTopologyList, flumeTopologyChannelElement, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK);
                             flumeTopologyChannelElement.setY(String.valueOf(average_Channel_Y_Coordinate));
                             channelsRecalculatedCoordinatesList.add(channelName);
                             if (logger.isDebugEnabled()) {
@@ -2033,13 +2304,12 @@ public class FlumeTopologyReversePropertiesGenerator {
                         int initial_Channel_Y_coordinate = FlumeConfiguratorTopologyUtils.getNextYCoordinate(FlumeConfiguratorTopologyUtils.getMaxYCoordinate(flumeTopologyList), isFirstChannel);
 
                         assignFlumeTopologyElementPositionCoordinates(channelName, FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL, agentsSlice, sourcesSlice,
-                                firstInterceptorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstChannel, interceptorNumber, sliceWidthAgent);
+                                firstInterceptorSlice, selectorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstChannel, interceptorNumber, sliceWidthAgent);
 
                         isFirstChannel = false;
 
                         //Draw sinks
-                        List<String> sinksIDs = new ArrayList<String>();
-                        sinksIDs = FlumeConfiguratorTopologyUtils.getAllTargetConnections(channelID, listTopologyConnections);
+                        List<String> sinksIDs = FlumeConfiguratorTopologyUtils.getAllTargetConnections(channelID, topologyConnectionsList);
 
                         boolean isFirstSink = true;
                         for (String sinkID : sinksIDs) {
@@ -2051,13 +2321,12 @@ public class FlumeTopologyReversePropertiesGenerator {
                                 String sinkName = flumeTopologySinkElement.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
 
                                 assignFlumeTopologyElementPositionCoordinates(sinkName, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK, agentsSlice, sourcesSlice,
-                                        firstInterceptorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstSink, interceptorNumber, sliceWidthAgent);
+                                        firstInterceptorSlice, selectorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstSink, interceptorNumber, sliceWidthAgent);
 
                                 isFirstSink = false;
 
                                 //Draw sinkgroups
-                                List<String> sinkGroupsIDs = new ArrayList<String>();
-                                sinkGroupsIDs = FlumeConfiguratorTopologyUtils.getAllTargetConnections(sinkID, listTopologyConnections);
+                                List<String> sinkGroupsIDs = FlumeConfiguratorTopologyUtils.getAllTargetConnections(sinkID, topologyConnectionsList);
 
                                 boolean isFirstSinkGroup = true;
                                 for (String sinkGroupID: sinkGroupsIDs) {
@@ -2069,7 +2338,7 @@ public class FlumeTopologyReversePropertiesGenerator {
                                         String sinkGroupName = flumeTopologySinkGroupElement.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
 
                                         assignFlumeTopologyElementPositionCoordinates(sinkGroupName, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP, agentsSlice, sourcesSlice,
-                                                firstInterceptorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstSinkGroup, interceptorNumber, sliceWidthAgent);
+                                                firstInterceptorSlice, selectorSlice, channelSlice, sinkSlice, sinkGroupSlice, isFirstSinkGroup, interceptorNumber, sliceWidthAgent);
 
                                         isFirstSinkGroup = false;
                                     }
@@ -2080,9 +2349,8 @@ public class FlumeTopologyReversePropertiesGenerator {
                         int final_Channel_Y_coordinate = FlumeConfiguratorTopologyUtils.getMaxYCoordinate(flumeTopologyList);
 
                         //Reassign Y coordinate to channel
-
                         if (!channelsRecalculatedCoordinatesList.contains(channelName)) {
-                            int average_Channel_Y_Coordinate = initial_Channel_Y_coordinate + ((final_Channel_Y_coordinate - initial_Channel_Y_coordinate) / 2);
+                            int average_Channel_Y_Coordinate = FlumeConfiguratorTopologyUtils.getElementAveragePosition(agentGraph, flumeTopologyList, flumeTopologyChannelElement, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK);
                             flumeTopologyChannelElement.setY(String.valueOf(average_Channel_Y_Coordinate));
                             channelsRecalculatedCoordinatesList.add(channelName);
                             if (logger.isDebugEnabled()) {
@@ -2096,8 +2364,9 @@ public class FlumeTopologyReversePropertiesGenerator {
             int final_Source_Y_coordinate = FlumeConfiguratorTopologyUtils.getMaxYCoordinate(flumeTopologyList);
             logger.debug("******* source final_Source_Y_coordinate: " + sharedSourceName + "= " + final_Source_Y_coordinate);
 
+
             //Reassign Y coordinate to channel
-            int average_Source_Y_Coordinate = initial_Source_Y_coordinate + ((final_Source_Y_coordinate - initial_Source_Y_coordinate) / 2);
+            int average_Source_Y_Coordinate = FlumeConfiguratorTopologyUtils.getElementAveragePosition(agentGraph, flumeTopologyList, flumeTopologySourceElement, FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL);
             flumeTopologySourceElement.setY(String.valueOf(average_Source_Y_Coordinate));
 
             if (logger.isDebugEnabled()) {
@@ -2114,122 +2383,222 @@ public class FlumeTopologyReversePropertiesGenerator {
 
             }
 
+            for (String sourceSelectorName : sourceSelectorList) {
+
+                String selectorID = FlumeConfiguratorTopologyUtils.getFlumeTopologyId(flumeTopologyList, sourceSelectorName);
+                FlumeTopology flumeTopologyInterceptorElement = agentGraph.getVertex(selectorID, true);
+
+                flumeTopologyInterceptorElement.setY(String.valueOf(average_Source_Y_Coordinate));
+
+            }
+
         }
 
 
         //Relocate shared channels
-        for (String channelName: mapSharedChannelsSourcesRelation.keySet()) {
-
-            String channelID = FlumeConfiguratorTopologyUtils.getFlumeTopologyId(flumeTopologyList, channelName);
-            FlumeTopology flumeTopologyChannelElement = agentGraph.getVertex(channelID, true);
-
-            List<String> channelSourcesList = mapSharedChannelsSourcesRelation.get(channelName);
-
-            int min_source_Y_coordinate = 0;
-            int max_source_Y_coordinate = 0;
-            boolean isFirstSource = true;
-            for (String channelSourceName: channelSourcesList) {
-
-                String channelSourceID = FlumeConfiguratorTopologyUtils.getFlumeTopologyId(flumeTopologyList, channelSourceName);
-                FlumeTopology flumeTopologySourceElement = agentGraph.getVertex(channelSourceID, true);
-                int source_Y_coordinate = Integer.valueOf(flumeTopologySourceElement.getY());
-
-                if (isFirstSource) {
-                    min_source_Y_coordinate = source_Y_coordinate;
-                    max_source_Y_coordinate = source_Y_coordinate;
-                    isFirstSource = false;
-                } else {
-                    if (source_Y_coordinate <= min_source_Y_coordinate) {
-                        min_source_Y_coordinate = source_Y_coordinate;
-                    } else if (source_Y_coordinate >= max_source_Y_coordinate) {
-                        max_source_Y_coordinate = source_Y_coordinate;
-                    }
-                }
-            }
-
-            int average_Channel_Y_Coordinate = min_source_Y_coordinate + ((max_source_Y_coordinate - min_source_Y_coordinate) / 2);
-            flumeTopologyChannelElement.setY(String.valueOf(average_Channel_Y_Coordinate));
-            if (logger.isDebugEnabled()) {
-                logger.debug("Flume topology element " + channelName + " NEW coordinates: {" + flumeTopologyChannelElement.getX() + "," + flumeTopologyChannelElement.getY() + "}");
-            }
-
-            List<String> sinksIDs = new ArrayList<String>();
-            sinksIDs = FlumeConfiguratorTopologyUtils.getAllTargetConnections(channelID, listTopologyConnections);
-
-            if (sinksIDs.size() % 2 == 0) {
-                //Odd number of sinks
-                int centralSupIndex = sinksIDs.size() / 2;
-                int centralInfIndex = centralSupIndex - 1;
-
-                int next_Y_Coordinate = FlumeConfiguratorTopologyUtils.getNextYCoordinate(average_Channel_Y_Coordinate, false);
-                int gap_Y_Coordinates = next_Y_Coordinate - average_Channel_Y_Coordinate;
-
-                int inital_Central_Sup_Y_Coordinate = average_Channel_Y_Coordinate + (gap_Y_Coordinates / 2);
-                int inital_Central_Inf_Y_Coordinate = average_Channel_Y_Coordinate - (gap_Y_Coordinates / 2);
-
-                for (int i = centralSupIndex; i < sinksIDs.size() ; i++) {
-
-                    String centralSupSinkID = sinksIDs.get(i);
-                    FlumeTopology flumeTopologyCentralSupSinkElement = agentGraph.getVertex(centralSupSinkID, true);
-
-                    int sink_Central_Sup_Y_Coordinate = inital_Central_Sup_Y_Coordinate + (gap_Y_Coordinates * (i - centralSupIndex));
-                    flumeTopologyCentralSupSinkElement.setY(String.valueOf(sink_Central_Sup_Y_Coordinate));
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Flume topology element " + channelName + " NEW coordinates: {" + flumeTopologyCentralSupSinkElement.getX() + "," + flumeTopologyCentralSupSinkElement.getY() + "}");
-                    }
-
-                    String centralInfSinkID = sinksIDs.get(sinksIDs.size() - i - 1);
-                    FlumeTopology flumeTopologyCentralInfSinkElement = agentGraph.getVertex(centralInfSinkID, true);
-
-                    int sink_Central_Inf_Y_Coordinate = inital_Central_Inf_Y_Coordinate - (gap_Y_Coordinates * (i - centralSupIndex));
-                    flumeTopologyCentralInfSinkElement.setY(String.valueOf(sink_Central_Inf_Y_Coordinate));
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Flume topology element " + channelName + " NEW coordinates: {" + flumeTopologyCentralInfSinkElement.getX() + "," + flumeTopologyCentralInfSinkElement.getY() + "}");
-                    }
-
-                }
-
-            } else {
-                //Even number of sinks
-
-                int centralIndex = sinksIDs.size() / 2;
-                String centralSinkID = sinksIDs.get(centralIndex);
-                FlumeTopology flumeTopologyCentralSinkElement = agentGraph.getVertex(centralSinkID, true);
-
-                flumeTopologyCentralSinkElement.setY(flumeTopologyChannelElement.getY());
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Flume topology element " + channelName + " NEW coordinates: {" + flumeTopologyCentralSinkElement.getX() + "," + flumeTopologyCentralSinkElement.getY() + "}");
-                }
-
-                int next_Y_Coordinate = FlumeConfiguratorTopologyUtils.getNextYCoordinate(average_Channel_Y_Coordinate, false);
-                int gap_Y_Coordinates = next_Y_Coordinate - average_Channel_Y_Coordinate;
-                for (int i = centralIndex + 1; i < sinksIDs.size() ; i++) {
-                    String afterCentralSinkID = sinksIDs.get(i);
-                    FlumeTopology flumeTopologyAfterCentralSinkElement = agentGraph.getVertex(afterCentralSinkID, true);
-
-                    int sink_After_Central_Y_Coordinate = average_Channel_Y_Coordinate + (gap_Y_Coordinates * (i - centralIndex));
-                    flumeTopologyAfterCentralSinkElement.setY(String.valueOf(sink_After_Central_Y_Coordinate));
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Flume topology element " + channelName + " NEW coordinates: {" + flumeTopologyAfterCentralSinkElement.getX() + "," + flumeTopologyAfterCentralSinkElement.getY() + "}");
-                    }
-
-                    String beforeCentralSinkID = sinksIDs.get(sinksIDs.size() - i - 1);
-                    FlumeTopology flumeTopologyBeforeCentralSinkElement = agentGraph.getVertex(beforeCentralSinkID, true);
-
-                    int sink_Before_Central_Y_Coordinate = average_Channel_Y_Coordinate - (gap_Y_Coordinates * (i - centralIndex));
-                    flumeTopologyBeforeCentralSinkElement.setY(String.valueOf(sink_Before_Central_Y_Coordinate));
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Flume topology element " + channelName + " NEW coordinates: {" + flumeTopologyBeforeCentralSinkElement.getX() + "," + flumeTopologyBeforeCentralSinkElement.getY() + "}");
-                    }
-                }
-            }
-        }
+        relocateSharedChannels(agentGraph, sharedChannelsSourcesRelationMap, sourcesIndependentChannelsRelationMap);
 
 
         if (logger.isDebugEnabled()) {
             logger.debug("END drawSharedSources");
         }
 
+    }
+
+
+    /**
+     * Relocate position coordinates of the shared channels
+     * @param agentGraph agentGraph graph of the agent
+     * @param sharedChannelsSourcesRelationMap map with relation between shared channels and sources
+     * @param sourcesIndependentChannelsRelationMap map with relation between independent channels and sources
+     */
+    private void relocateSharedChannels(IGraph agentGraph, Map<String, List<String>> sharedChannelsSourcesRelationMap, Map<String, List<String>> sourcesIndependentChannelsRelationMap) {
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("BEGIN relocateSharedChannels");
+        }
+
+        Map<String, Integer> mapChannel_min_Y_Source_Coordinate = new HashMap<>();
+        Map<String, Integer> mapChannel_max_Y_Source_Coordinate = new HashMap<>();
+        List<FlumeTopology> independentChannelsFlumeTopologyElements = new ArrayList<>();
+
+        //Get list of independent channels
+        for (String sourceName : sourcesIndependentChannelsRelationMap.keySet()) {
+            List<String> independentChannelsNamesList = sourcesIndependentChannelsRelationMap.get(sourceName);
+            for (String independentChannelName : independentChannelsNamesList) {
+                String independentChannelID = FlumeConfiguratorTopologyUtils.getFlumeTopologyId(flumeTopologyList, independentChannelName);
+                FlumeTopology flumeTopologyIndependentChannelElement = agentGraph.getVertex(independentChannelID, true);
+                if (!independentChannelsFlumeTopologyElements.contains(flumeTopologyIndependentChannelElement)) {
+                    independentChannelsFlumeTopologyElements.add(flumeTopologyIndependentChannelElement);
+                }
+            }
+        }
+
+
+        //Calculate number sources relationated with shared channels
+        Set<String> setSourcesSharedChannels = new HashSet<>();
+        for (String channelName: sharedChannelsSourcesRelationMap.keySet()) {
+            List<String> channelSourcesList = sharedChannelsSourcesRelationMap.get(channelName);
+            for (String channelSource : channelSourcesList) {
+                setSourcesSharedChannels.add(channelSource);
+            }
+        }
+
+        //Ordered channels in function of source order
+        for (String channelName: sharedChannelsSourcesRelationMap.keySet()) {
+            List<String> channelSourcesList = sharedChannelsSourcesRelationMap.get(channelName);
+            boolean isFirstSource = false;
+            int min_channelSource_Y_coordinate = 0;
+            int max_channelSource_Y_coordinate = 0;
+            for (String channelSource : channelSourcesList) {
+                String channelSourceID = FlumeConfiguratorTopologyUtils.getFlumeTopologyId(flumeTopologyList, channelSource);
+                FlumeTopology flumeTopologyChannelSourceElement = agentGraph.getVertex(channelSourceID, true);
+
+                if (flumeTopologyChannelSourceElement.getY() != null && !flumeTopologyChannelSourceElement.getY().isEmpty()) {
+                    int channelSource_Y_coordinate = Integer.valueOf(flumeTopologyChannelSourceElement.getY());
+
+                    if (isFirstSource) {
+                        min_channelSource_Y_coordinate = channelSource_Y_coordinate;
+                        max_channelSource_Y_coordinate = channelSource_Y_coordinate;
+                        isFirstSource = false;
+                    } else {
+                        if (channelSource_Y_coordinate <= min_channelSource_Y_coordinate) {
+                            min_channelSource_Y_coordinate = channelSource_Y_coordinate;
+                        } else if (channelSource_Y_coordinate >= max_channelSource_Y_coordinate) {
+                            max_channelSource_Y_coordinate = channelSource_Y_coordinate;
+                        }
+                    }
+                }
+            }
+
+            mapChannel_min_Y_Source_Coordinate.put(channelName, min_channelSource_Y_coordinate);
+            mapChannel_max_Y_Source_Coordinate.put(channelName, max_channelSource_Y_coordinate);
+        }
+
+        List<String> channelOrderedList = new ArrayList<>();
+        for (String channelName: sharedChannelsSourcesRelationMap.keySet()) {
+            channelOrderedList = FlumeConfiguratorTopologyUtils.insertOrderedList(channelOrderedList, channelName, mapChannel_min_Y_Source_Coordinate, mapChannel_max_Y_Source_Coordinate);
+        }
+
+
+        if (setSourcesSharedChannels.size() > sharedChannelsSourcesRelationMap.size()) {
+
+            //List<FlumeTopology> processedChannelsList = new ArrayList<>(independentChannelsFlumeTopologyElements);
+            List<FlumeTopology> processedChannelsList = new ArrayList<>();
+
+            for (String channelName: channelOrderedList) {
+
+                String channelID = FlumeConfiguratorTopologyUtils.getFlumeTopologyId(flumeTopologyList, channelName);
+                FlumeTopology flumeTopologyChannelElement = agentGraph.getVertex(channelID, true);
+
+                List<String> channelSourcesList = sharedChannelsSourcesRelationMap.get(channelName);
+
+                int min_source_Y_coordinate = 0;
+                int max_source_Y_coordinate = 0;
+                boolean isFirstSource = true;
+                for (String channelSourceName : channelSourcesList) {
+
+                    String channelSourceID = FlumeConfiguratorTopologyUtils.getFlumeTopologyId(flumeTopologyList, channelSourceName);
+                    FlumeTopology flumeTopologySourceElement = agentGraph.getVertex(channelSourceID, true);
+                    int source_Y_coordinate = Integer.valueOf(flumeTopologySourceElement.getY());
+
+                    if (isFirstSource) {
+                        min_source_Y_coordinate = source_Y_coordinate;
+                        max_source_Y_coordinate = source_Y_coordinate;
+                        isFirstSource = false;
+                    } else {
+                        if (source_Y_coordinate <= min_source_Y_coordinate) {
+                            min_source_Y_coordinate = source_Y_coordinate;
+                        } else if (source_Y_coordinate >= max_source_Y_coordinate) {
+                            max_source_Y_coordinate = source_Y_coordinate;
+                        }
+                    }
+                }
+
+                int average_Channel_Y_Coordinate = FlumeConfiguratorTopologyUtils.getElementAveragePosition(agentGraph, processedChannelsList, flumeTopologyChannelElement, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE);
+
+                flumeTopologyChannelElement.setY(String.valueOf(average_Channel_Y_Coordinate));
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Flume topology element " + channelName + " NEW coordinates: {" + flumeTopologyChannelElement.getX() + "," + flumeTopologyChannelElement.getY() + "}");
+                }
+
+                //Mark as proccessed channel
+                processedChannelsList.add(flumeTopologyChannelElement);
+
+                List<String> sinksIDs = FlumeConfiguratorTopologyUtils.getAllTargetConnections(channelID, topologyConnectionsList);
+
+                if (sinksIDs.size() % 2 == 0) {
+                    //Odd number of sinks
+                    int centralSupIndex = sinksIDs.size() / 2;
+
+                    int next_Y_Coordinate = FlumeConfiguratorTopologyUtils.getNextYCoordinate(average_Channel_Y_Coordinate, false);
+                    int gap_Y_Coordinates = next_Y_Coordinate - average_Channel_Y_Coordinate;
+
+                    int inital_Central_Sup_Y_Coordinate = average_Channel_Y_Coordinate + (gap_Y_Coordinates / 2);
+                    int inital_Central_Inf_Y_Coordinate = average_Channel_Y_Coordinate - (gap_Y_Coordinates / 2);
+
+                    for (int i = centralSupIndex; i < sinksIDs.size(); i++) {
+
+                        String centralSupSinkID = sinksIDs.get(i);
+                        FlumeTopology flumeTopologyCentralSupSinkElement = agentGraph.getVertex(centralSupSinkID, true);
+
+                        int sink_Central_Sup_Y_Coordinate = inital_Central_Sup_Y_Coordinate + (gap_Y_Coordinates * (i - centralSupIndex));
+                        flumeTopologyCentralSupSinkElement.setY(String.valueOf(sink_Central_Sup_Y_Coordinate));
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("Flume topology element " + channelName + " NEW coordinates: {" + flumeTopologyCentralSupSinkElement.getX() + "," + flumeTopologyCentralSupSinkElement.getY() + "}");
+                        }
+
+                        String centralInfSinkID = sinksIDs.get(sinksIDs.size() - i - 1);
+                        FlumeTopology flumeTopologyCentralInfSinkElement = agentGraph.getVertex(centralInfSinkID, true);
+
+                        int sink_Central_Inf_Y_Coordinate = inital_Central_Inf_Y_Coordinate - (gap_Y_Coordinates * (i - centralSupIndex));
+                        flumeTopologyCentralInfSinkElement.setY(String.valueOf(sink_Central_Inf_Y_Coordinate));
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("Flume topology element " + channelName + " NEW coordinates: {" + flumeTopologyCentralInfSinkElement.getX() + "," + flumeTopologyCentralInfSinkElement.getY() + "}");
+                        }
+
+                    }
+
+                } else {
+                    //Even number of sinks
+
+                    int centralIndex = sinksIDs.size() / 2;
+                    String centralSinkID = sinksIDs.get(centralIndex);
+                    FlumeTopology flumeTopologyCentralSinkElement = agentGraph.getVertex(centralSinkID, true);
+
+                    flumeTopologyCentralSinkElement.setY(flumeTopologyChannelElement.getY());
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Flume topology element " + channelName + " NEW coordinates: {" + flumeTopologyCentralSinkElement.getX() + "," + flumeTopologyCentralSinkElement.getY() + "}");
+                    }
+
+                    int next_Y_Coordinate = FlumeConfiguratorTopologyUtils.getNextYCoordinate(average_Channel_Y_Coordinate, false);
+                    int gap_Y_Coordinates = next_Y_Coordinate - average_Channel_Y_Coordinate;
+                    for (int i = centralIndex + 1; i < sinksIDs.size(); i++) {
+                        String afterCentralSinkID = sinksIDs.get(i);
+                        FlumeTopology flumeTopologyAfterCentralSinkElement = agentGraph.getVertex(afterCentralSinkID, true);
+
+                        int sink_After_Central_Y_Coordinate = average_Channel_Y_Coordinate + (gap_Y_Coordinates * (i - centralIndex));
+                        flumeTopologyAfterCentralSinkElement.setY(String.valueOf(sink_After_Central_Y_Coordinate));
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("Flume topology element " + channelName + " NEW coordinates: {" + flumeTopologyAfterCentralSinkElement.getX() + "," + flumeTopologyAfterCentralSinkElement.getY() + "}");
+                        }
+
+                        String beforeCentralSinkID = sinksIDs.get(sinksIDs.size() - i - 1);
+                        FlumeTopology flumeTopologyBeforeCentralSinkElement = agentGraph.getVertex(beforeCentralSinkID, true);
+
+                        int sink_Before_Central_Y_Coordinate = average_Channel_Y_Coordinate - (gap_Y_Coordinates * (i - centralIndex));
+                        flumeTopologyBeforeCentralSinkElement.setY(String.valueOf(sink_Before_Central_Y_Coordinate));
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("Flume topology element " + channelName + " NEW coordinates: {" + flumeTopologyBeforeCentralSinkElement.getX() + "," + flumeTopologyBeforeCentralSinkElement.getY() + "}");
+                        }
+                    }
+                }
+            }
+        }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("END relocateSharedChannels");
+        }
     }
 
 
@@ -2276,14 +2645,13 @@ public class FlumeTopologyReversePropertiesGenerator {
                         }
                     }
 
-                    int average_SinkGroup_Y_Coordinate = min_sink_Y_coordinate + ((max_sink_Y_coordinate - min_sink_Y_coordinate) / 2);
+                    int average_SinkGroup_Y_Coordinate = FlumeConfiguratorTopologyUtils.getElementAveragePosition(agentGraph, sinkGroupsList, flumeTopologySinkGroupElement, FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK);
+
                     flumeTopologySinkGroupElement.setY(String.valueOf(average_SinkGroup_Y_Coordinate));
                     if (logger.isDebugEnabled()) {
                         logger.debug("Flume topology element " + sinkGroupName + " NEW coordinates: {" + flumeTopologySinkGroupElement.getX() + "," + flumeTopologySinkGroupElement.getY() + "}");
                     }
-
                 }
-
             }
         }
 
@@ -2299,6 +2667,7 @@ public class FlumeTopologyReversePropertiesGenerator {
      * @param agentsSlice X-coordinate of the agent's slice
      * @param sourcesSlice X-coordinate of the source's slice
      * @param firstInterceptorSlice X-coordinate of the first interceptor slice
+     * @param selectorSlice X-coordinate of the selector slice
      * @param channelSlice X-coordinate of the channel's slice
      * @param sinkSlice X-coordinate of the sink's slice
      * @param sinkGroupSlice X-coordinate of the sinkgroup's slice
@@ -2307,7 +2676,7 @@ public class FlumeTopologyReversePropertiesGenerator {
      * @param sliceWidth width of the slices
      */
     private void assignFlumeTopologyElementPositionCoordinates(String elementName, String flumeTopologyType, int agentsSlice, int sourcesSlice,
-                                                       int firstInterceptorSlice,  int channelSlice, int sinkSlice, int sinkGroupSlice,
+                                                       int firstInterceptorSlice,  int selectorSlice, int channelSlice, int sinkSlice, int sinkGroupSlice,
                                                        boolean isFirstElementSlice, int interceptorNumberSlice, int sliceWidth) {
 
         if (logger.isDebugEnabled()) {
@@ -2327,6 +2696,8 @@ public class FlumeTopologyReversePropertiesGenerator {
             element_X_Coordinate = sourcesSlice;
         } else if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR.equals(flumeTopologyType)) {
             element_X_Coordinate = firstInterceptorSlice + ((interceptorNumberSlice - 1) * sliceWidth);
+        } else if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_SELECTOR.equals(flumeTopologyType)) {
+            element_X_Coordinate = selectorSlice;
         } else if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL.equals(flumeTopologyType)) {
             element_X_Coordinate = channelSlice;
         } else if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK.equals(flumeTopologyType)) {
@@ -2341,6 +2712,8 @@ public class FlumeTopologyReversePropertiesGenerator {
         } else if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE.equals(flumeTopologyType)) {
             element_Y_Coordinate = FlumeConfiguratorTopologyUtils.getNextYCoordinate(maxYCoordinate, isFirstElementSlice);
         } else if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR.equals(flumeTopologyType)) {
+            element_Y_Coordinate = maxYCoordinate;
+        } else if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_SELECTOR.equals(flumeTopologyType)) {
             element_Y_Coordinate = maxYCoordinate;
         } else if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL.equals(flumeTopologyType)) {
             element_Y_Coordinate = FlumeConfiguratorTopologyUtils.getNextYCoordinate(maxYCoordinate, isFirstElementSlice);
@@ -2405,6 +2778,8 @@ public class FlumeTopologyReversePropertiesGenerator {
                     flumeTopology.setBgColor(FlumeConfiguratorConstants.CANVAS_AGENT_BGCOLOR);
                 } else if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE.equals(flumeType)) {
                     flumeTopology.setBgColor(FlumeConfiguratorConstants.CANVAS_SOURCE_BGCOLOR);
+                } else if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_SELECTOR.equals(flumeType)) {
+                    flumeTopology.setBgColor(FlumeConfiguratorConstants.CANVAS_SELECTOR_BGCOLOR);
                 } else if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR.equals(flumeType)) {
                     flumeTopology.setBgColor(FlumeConfiguratorConstants.CANVAS_INTERCEPTOR_BGCOLOR);
                 } else if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL.equals(flumeType)) {
@@ -2423,7 +2798,7 @@ public class FlumeTopologyReversePropertiesGenerator {
 
 
                 //Create agentGroup property
-                String agentName = FlumeConfiguratorTopologyUtils.getGraphAgentFromConnections(flumeTopology.getId(), listTopologyConnections, flumeTopologyList, true);
+                String agentName = FlumeConfiguratorTopologyUtils.getGraphAgentFromConnections(flumeTopology.getId(), topologyConnectionsList, flumeTopologyList, true);
 
                 //Get index of agent
                 int agentIndex = -1;
@@ -2472,6 +2847,10 @@ public class FlumeTopologyReversePropertiesGenerator {
                 flumeTopology.setType(FlumeConfiguratorConstants.DRAW2D_BETWEEN_TYPE);
                 flumeTopology.setCssClass(FlumeConfiguratorConstants.DRAW2D_BETWEEN_CSS_CLASS);
                 //flumeTopology.setType(FlumeConfiguratorConstants.DRAW2D_SOURCE_TYPE);
+            } else if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_SELECTOR.equals(flumeType)) {
+                flumeTopology.setType(FlumeConfiguratorConstants.DRAW2D_BETWEEN_TYPE);
+                flumeTopology.setCssClass(FlumeConfiguratorConstants.DRAW2D_BETWEEN_CSS_CLASS);
+                //flumeTopology.setType(FlumeConfiguratorConstants.DRAW2D_SELECTOR_TYPE);
             } else if (FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR.equals(flumeType)) {
                 flumeTopology.setType(FlumeConfiguratorConstants.DRAW2D_BETWEEN_TYPE);
                 flumeTopology.setCssClass(FlumeConfiguratorConstants.DRAW2D_BETWEEN_CSS_CLASS);
@@ -2506,7 +2885,7 @@ public class FlumeTopologyReversePropertiesGenerator {
 
     /**
      * Write the Draw2D Flume topology file generated
-     * @throws IOException
+     * @throws IOException if the file cannot be written.
      */
     private void writeDraw2DFlumeTopologyFile() throws IOException {
 
@@ -2537,9 +2916,6 @@ public class FlumeTopologyReversePropertiesGenerator {
 
 
         //Create Draw2D Flume Topology content
-        //ObjectMapper objectMapper = new ObjectMapper();
-        //String draw2DTopology = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(flumeTopologyList);
-
         String draw2DTopology = JSONStringSerializer.toJSONString(flumeTopologyConnectionList);
 
         logger.info(draw2DTopology);
@@ -2606,6 +2982,9 @@ public class FlumeTopologyReversePropertiesGenerator {
 
                 //Generate Sinkgroups Flume topology elements
                 generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP, FlumeConfiguratorConstants.SINKGROUPS_PROPERTY, FlumeConfiguratorConstants.SINKGROUPS_LIST_PROPERTY_PART_INDEX);
+
+                //Generate Selectors Flume topology elements
+                generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SELECTOR, FlumeConfiguratorConstants.SELECTOR_PROPERTY, FlumeConfiguratorConstants.SOURCE_SELECTOR_PROPERTY_PART_INDEX);
 
                 //Generate Interceptors Flume topology elements
                 generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR, FlumeConfiguratorConstants.INTERCEPTORS_PROPERTY, FlumeConfiguratorConstants.INTERCEPTORS_LIST_PROPERTY_PART_INDEX);
@@ -2682,7 +3061,7 @@ public class FlumeTopologyReversePropertiesGenerator {
 
             if (withComments) {
                 String[] linesArray = flumePropertiesString.split(System.getProperty("line.separator"));
-                lines = new ArrayList(Arrays.asList(linesArray));
+                lines = new ArrayList<>(Arrays.asList(linesArray));
                 flumeLinesProperties.setLines(lines);
             }
 
@@ -2709,6 +3088,9 @@ public class FlumeTopologyReversePropertiesGenerator {
 
                 //Generate Sinkgroups Flume topology elements
                 generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP, FlumeConfiguratorConstants.SINKGROUPS_PROPERTY, FlumeConfiguratorConstants.SINKGROUPS_LIST_PROPERTY_PART_INDEX);
+
+                //Generate Selectors Flume topology elements
+                generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SELECTOR, FlumeConfiguratorConstants.SELECTOR_PROPERTY, FlumeConfiguratorConstants.SOURCE_SELECTOR_PROPERTY_PART_INDEX);
 
                 //Generate Interceptors Flume topology elements
                 generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR, FlumeConfiguratorConstants.INTERCEPTORS_PROPERTY, FlumeConfiguratorConstants.INTERCEPTORS_LIST_PROPERTY_PART_INDEX);
@@ -2805,6 +3187,9 @@ public class FlumeTopologyReversePropertiesGenerator {
                 //Generate Sinkgroups Flume topology elements
                 generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP, FlumeConfiguratorConstants.SINKGROUPS_PROPERTY, FlumeConfiguratorConstants.SINKGROUPS_LIST_PROPERTY_PART_INDEX);
 
+                //Generate Selectors Flume topology elements
+                generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SELECTOR, FlumeConfiguratorConstants.SELECTOR_PROPERTY, FlumeConfiguratorConstants.SOURCE_SELECTOR_PROPERTY_PART_INDEX);
+
                 //Generate Interceptors Flume topology elements
                 generateFlumeTopologyElements(FlumeConfiguratorConstants.FLUME_TOPOLOGY_INTERCEPTOR, FlumeConfiguratorConstants.INTERCEPTORS_PROPERTY, FlumeConfiguratorConstants.INTERCEPTORS_LIST_PROPERTY_PART_INDEX);
 
@@ -2858,7 +3243,7 @@ public class FlumeTopologyReversePropertiesGenerator {
      * @param errorCode error code
      * @return associated message to an error code
      */
-    public static String getErrorMessage(int errorCode) {
+    private static String getErrorMessage(int errorCode) {
 
         String error = "";
         StringBuilder sb = new StringBuilder(10000);
@@ -2887,6 +3272,14 @@ public class FlumeTopologyReversePropertiesGenerator {
             sb.append("                                 false -> The created Draw2D Flume topology configuration file doesn't include position coordinates for its elements");
             sb.append(FlumeConfiguratorConstants.NEW_LINE);
             sb.append("pathDraw2DFlumeTopologyGeneratedFile => Path of the created Draw2D Flume topology configuration file.May be a directory (the directory must be exist)");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            sb.append("alternativeOptimizationPermutationAgentList => (Optional parameter(s)) list with numbers of alternative best permutations of shared sources for the agent(s).");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            sb.append("                                 If the parameter(s) is not present for an agent, the alternative number by default is 1. Shared sources are sources that share the channel with another source");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            sb.append("                                 Example: 1 3 2 (the first agent show best calculated permutation of his shared sources, the second agent will show his third best permutation of his shared sources");
+            sb.append(FlumeConfiguratorConstants.NEW_LINE);
+            sb.append("                                 and the third agent will show his second best permutation of his shared sources. The agent number four and following will show their best permutation sources (alternative 1)");
         }
 
         return sb.toString();
@@ -2908,7 +3301,6 @@ public class FlumeTopologyReversePropertiesGenerator {
 
         try {
 
-
             if (args.length == 4) {
                 pathFlumeProperties = args[0];
                 withComments = Boolean.valueOf(args[1]);
@@ -2926,12 +3318,50 @@ public class FlumeTopologyReversePropertiesGenerator {
 
                 flumeTopologyReversePropertiesGenerator.generateDraw2DFlumeTopology();
 
+            } else if (args.length > 4) {
+                pathFlumeProperties = args[0];
+                withComments = Boolean.valueOf(args[1]);
+                generatePositionCoordinates = Boolean.valueOf(args[2]);
+                pathDraw2DFlumeTopologyGeneratedFile = args[3];
+
+
+                for (int i = 4; i < args.length; i++) {
+                    int alternativeOptimizationPermutationAgent = Integer.valueOf(args[i]);
+                    if (alternativeOptimizationPermutationAgent <= 0) {
+                        int agentIndex = i-4;
+                        throw new NumberFormatException("The alternative optimization permutation number for agent at index " + agentIndex + " must be greater than zero");
+                    }
+                    alternativeOptimizationPermutationAgentList.add(alternativeOptimizationPermutationAgent);
+                }
+
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Parameter pathFlumeProperties: " + pathFlumeProperties);
+                    logger.debug("Parameter withComments: " + withComments);
+                    logger.debug("Parameter generatePositionCoordinates: " + generatePositionCoordinates);
+                    logger.debug("Parameter pathDraw2DFlumeTopologyGeneratedFile: " + pathDraw2DFlumeTopologyGeneratedFile);
+                    for (int i=0; i<alternativeOptimizationPermutationAgentList.size(); i++) {
+                        logger.debug("Parameter alternative optimization permutation number for agent (index " + i + "): " + alternativeOptimizationPermutationAgentList.get(i));
+                    }
+                }
+
+                FlumeTopologyReversePropertiesGenerator flumeTopologyReversePropertiesGenerator = new FlumeTopologyReversePropertiesGenerator();
+
+                flumeTopologyReversePropertiesGenerator.generateDraw2DFlumeTopology();
+
+
             } else {
+
                 logger.error(getErrorMessage(2));
                 if (logger.isDebugEnabled()) {
                     logger.debug("******* DRAW2D FLUME TOPOLOGY GENERATOR PROCESS  *****************");
                 }
 
+            }
+
+        } catch (NumberFormatException nfe) {
+            logger.error(getErrorMessage(2), nfe);
+            if (logger.isDebugEnabled()) {
+                logger.debug("******* END DRAW2D FLUME TOPOLOGY GENERATOR PROCESS  *****************");
             }
 
         } catch (Exception e) {

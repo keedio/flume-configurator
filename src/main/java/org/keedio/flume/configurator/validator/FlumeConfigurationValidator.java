@@ -461,9 +461,10 @@ public class FlumeConfigurationValidator {
                     checkProperty = false;
                 }
 
-                //The interceptors  properties will be checked by another method
+                //The interceptors and selectors properties will be checked by another method
                 if ((FlumeConfiguratorTopologyUtils.getPropertyPartsNumber(keyProperty) >= 4) &&
-                     FlumeConfiguratorConstants.INTERCEPTORS_PROPERTY.equals(FlumeConfiguratorTopologyUtils.getPropertyPart(keyProperty, FlumeConfiguratorConstants.SOURCE_INTERCEPTORS_PART_INDEX))){
+                        (FlumeConfiguratorConstants.INTERCEPTORS_PROPERTY.equals(FlumeConfiguratorTopologyUtils.getPropertyPart(keyProperty, FlumeConfiguratorConstants.SOURCE_INTERCEPTORS_PART_INDEX)) ||
+                         FlumeConfiguratorConstants.SELECTOR_PROPERTY.equals(FlumeConfiguratorTopologyUtils.getPropertyPart(keyProperty, FlumeConfiguratorConstants.SOURCE_SELECTOR_PROPERTY_PART_INDEX)))){
                     checkProperty = false;
                 }
 
@@ -553,6 +554,113 @@ public class FlumeConfigurationValidator {
 
         if (logger.isDebugEnabled()) {
             logger.debug("END checkPropertiesFileElementsProperties");
+        }
+
+        return isPropertiesCheckFileOK;
+    }
+
+
+    /**
+     * Check selectors properties
+     * @param agentsList List with the agents list information
+     * @return boolean true if the selectors properties are correct false otherwise
+     */
+    private boolean checkPropertiesFileSelectorsProperties(List<String> agentsList) {
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("BEGIN checkPropertiesFileSelectorsProperties");
+        }
+
+        boolean isPropertiesCheckFileOK = true;
+
+        if (agentsList.size() == 0) {
+            isPropertiesCheckFileOK = false;
+            sbCheckErrors.append(FlumeConfiguratorConstants.CONFIGURATION_ERROR).append("There is no defined agents on properties").append(FlumeConfiguratorConstants.NEW_LINE);
+        } else {
+            //Get all selectors properties
+            LinkedProperties selectorsPropertiesList = FlumeConfiguratorTopologyUtils.getPropertiesWithPart(flumeConfigurationProperties, FlumeConfiguratorConstants.SELECTOR_PROPERTY, FlumeConfiguratorConstants.SOURCE_SELECTOR_PROPERTY_PART_INDEX, false);
+
+            for (Object keyObject : selectorsPropertiesList.keySet()) {
+
+                String keyProperty = (String) keyObject;
+                String valuesProperty = selectorsPropertiesList.getProperty(keyProperty);
+
+                if (logger.isDebugEnabled()) {
+                    logger.debug("CHECK property [" + keyProperty + "]");
+                }
+
+                String selectorAgent = FlumeConfiguratorTopologyUtils.getPropertyPart(keyProperty, FlumeConfiguratorConstants.AGENTS_PROPERTY_PART_INDEX);
+                String selectorSource = FlumeConfiguratorTopologyUtils.getPropertyPart(keyProperty, FlumeConfiguratorConstants.ELEMENT_PROPERTY_PART_INDEX);
+
+                if (FlumeConfiguratorTopologyUtils.getPropertyPartsNumber(keyProperty) == 4) {
+                    isPropertiesCheckFileOK = false;
+                    sbCheckErrors.append(FlumeConfiguratorConstants.CONFIGURATION_ERROR).append("The property [").append(keyProperty).append("] is not a valid selector property [").append(selectorAgent).append("]").append(FlumeConfiguratorConstants.NEW_LINE);
+                } else {
+                    //Check selector agent
+                    if (!agentsList.contains(selectorAgent)) {
+                        isPropertiesCheckFileOK = false;
+                        sbCheckErrors.append(FlumeConfiguratorConstants.CONFIGURATION_ERROR).append("The property [").append(keyProperty).append("] references a non declared agent [").append(selectorAgent).append("]").append(FlumeConfiguratorConstants.NEW_LINE);
+                    } else {
+                        //Check if the source references a correct source for the agent
+                        List<String> agentSourcesList = mapSources.get(selectorAgent);
+
+                        if (!agentSourcesList.contains(selectorSource)) {
+                            isPropertiesCheckFileOK = false;
+                            sbCheckErrors.append(FlumeConfiguratorConstants.CONFIGURATION_ERROR).append("The property [").append(keyProperty).append("] references a non declared source [").append(selectorSource).append("] for the agent [").append(selectorAgent).append("]").append(FlumeConfiguratorConstants.NEW_LINE);
+                        } else {
+
+                            //Check empty value for property
+                            if ("".equals(valuesProperty)) {
+                                isPropertiesCheckFileOK = false;
+                                sbCheckErrors.append(FlumeConfiguratorConstants.CONFIGURATION_ERROR).append("The property [").append(keyProperty).append("] has an empty value").append(FlumeConfiguratorConstants.NEW_LINE);
+                            } else if (FlumeConfiguratorTopologyUtils.isSelectorChannelReferenceFlumeConfigurationProperty(keyProperty)) {
+
+                                if (logger.isDebugEnabled()) {
+                                    logger.debug("CHECK channel reference selector property [" + keyProperty + "]");
+                                }
+
+                                String keyElementSubsetFind = FlumeConfiguratorUtils.constructFullPropertyName(selectorAgent, FlumeConfiguratorConstants.SOURCES_PROPERTY, selectorSource, false, FlumeConfiguratorConstants.CHANNELS_PROPERTY);
+
+                                //Check source with selector have multiple channels
+                                String sourceChannelsListStr = flumeConfigurationProperties.getProperty(keyElementSubsetFind);
+
+                                if (sourceChannelsListStr == null) {
+                                    isPropertiesCheckFileOK = false;
+                                    sbCheckErrors.append(FlumeConfiguratorConstants.CONFIGURATION_ERROR).append("The .channels property of the source [").append(selectorSource).append("]").append(" is not defihed").append(FlumeConfiguratorConstants.NEW_LINE);
+                                } else {
+                                    List<String> sourceChannelsList = Arrays.asList(FlumeConfiguratorUtils.splitWithoutSpacesOptionalKeepInternalSpaces(sourceChannelsListStr, true, FlumeConfiguratorConstants.WHITE_SPACE_REGEX));
+
+                                    if (sourceChannelsList.size() <= 1) {
+                                        isPropertiesCheckFileOK = false;
+                                        sbCheckErrors.append(FlumeConfiguratorConstants.CONFIGURATION_ERROR).append("The selector property [").append(keyProperty).append("] references a source [").append(selectorSource).append("]").append(" without defined multiple channels").append(FlumeConfiguratorConstants.NEW_LINE);
+                                    } else {
+
+                                        String[] valueArray = valuesProperty.split(FlumeConfiguratorConstants.WHITE_SPACE_REGEX);
+
+                                        for (String propertyValue : valueArray) {
+                                            //Check channel is correct for agent
+                                            if (mapChannels.get(selectorAgent) == null || !mapChannels.get(selectorAgent).contains(propertyValue)) {
+                                                isPropertiesCheckFileOK = false;
+                                                sbCheckErrors.append(FlumeConfiguratorConstants.CONFIGURATION_ERROR).append("The selector channel reference property [").append(keyProperty).append("] has a channel value [").append(propertyValue).append("] that it is not defined for agent [").append(selectorAgent).append("]").append(FlumeConfiguratorConstants.NEW_LINE);
+                                            }
+
+                                            if (!sourceChannelsList.contains(propertyValue)) {
+                                                isPropertiesCheckFileOK = false;
+                                                sbCheckErrors.append(FlumeConfiguratorConstants.CONFIGURATION_ERROR).append("The selector channel reference property [").append(keyProperty).append("] has a channel value [").append(propertyValue).append("] that is not declared as channels of the selector source  [").append(selectorSource).append("]").append(FlumeConfiguratorConstants.NEW_LINE);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("END checkPropertiesFileSelectorsProperties");
         }
 
         return isPropertiesCheckFileOK;
@@ -702,6 +810,9 @@ public class FlumeConfigurationValidator {
 
         // Check sinkgroups properties
         isPropertiesFileOK = isPropertiesFileOK && checkPropertiesFileElementsProperties(agentsList, FlumeConfiguratorConstants.SINKGROUPS_PROPERTY, mapSinkgroups);
+
+        //Check selectors properties
+        isPropertiesFileOK = isPropertiesFileOK && checkPropertiesFileSelectorsProperties(agentsList);
 
         //Check interceptors properties
         isPropertiesFileOK = isPropertiesFileOK && checkPropertiesFileInterceptorsProperties(agentsList);

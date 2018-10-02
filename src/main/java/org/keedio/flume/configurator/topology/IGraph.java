@@ -49,7 +49,6 @@ public interface IGraph {
      * @param <T> Type of the Edge
      * @return Edge
      */
-
      <T> T addGraphEdge(FlumeTopology sourceNode, FlumeTopology targetNode);
 
     /**
@@ -58,7 +57,7 @@ public interface IGraph {
      * @param withAgentNodes boolean indicating if there are real agent node/vertex
      * @return the vertex with the indicated id if exists, null otherwise
      */
-    <T> FlumeTopology getVertex(String vertexId, boolean withAgentNodes);
+    FlumeTopology getVertex(String vertexId, boolean withAgentNodes);
 
     /**
      * Export the graph to DOT format
@@ -120,6 +119,9 @@ public interface IGraph {
      * @return Set of descendants of the vertex
      */
     Set<FlumeTopology> getVertexDescendants(FlumeTopology vertex);
+
+
+    <T> List<T> getConnectedSets();
 
 
 

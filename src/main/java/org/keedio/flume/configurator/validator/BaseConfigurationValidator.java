@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import oracle.jrockit.jfr.StringConstantPool;
 import org.keedio.flume.configurator.constants.FlumeConfiguratorConstants;
 import org.keedio.flume.configurator.structures.LinkedProperties;
 import org.keedio.flume.configurator.utils.FlumeConfiguratorUtils;
@@ -528,7 +527,7 @@ public class BaseConfigurationValidator {
                         }
 
                     //Check selector common property that references channels (selector.mapping..., selector.optional... or selector.default) reference declared elements
-                    } else if (FlumeConfiguratorUtils.isSelectorChannelReferenceProperty(keyProperty)) {
+                    } else if (FlumeConfiguratorUtils.isSelectorChannelReferenceBaseConfigurationProperty(keyProperty)) {
 
                         //Get the list of agents of the channel(s) (the channels of this kind of properties can be multiple and separated by white spaces)
                         List<String> listChannels = Arrays.asList(FlumeConfiguratorUtils.splitWithoutSpacesOptional(valuesProperty,false,FlumeConfiguratorConstants.WHITE_SPACE_REGEX));
@@ -930,7 +929,7 @@ public class BaseConfigurationValidator {
                             }
 
                         //Check partial property of the selectors (property that reference channels) references declared elements
-                        } else if (FlumeConfiguratorUtils.isSelectorChannelReferenceProperty(keyProperty)) {
+                        } else if (FlumeConfiguratorUtils.isSelectorChannelReferenceBaseConfigurationProperty(keyProperty)) {
                             //Selector (property that reference channels)
 
                             //Depends if the values of the property (propertyValues) is setted for all elements of applidaElements property) or is setted one single time (and replicated after)

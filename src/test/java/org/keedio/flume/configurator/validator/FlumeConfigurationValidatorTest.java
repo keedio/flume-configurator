@@ -37,13 +37,15 @@ public class FlumeConfigurationValidatorTest {
     private static Method checkPropertiesFilePropertiesListMethod;
     private static Method checkPropertiesFileInterceptorListMethod;
     private static Method checkPropertiesFileElementsPropertiesMethod;
+    private static Method checkPropertiesFileSelectorsPropertiesMethod;
     private static Method checkPropertiesFileInterceptorsPropertiesMethod;
     private static Method checkNamespacesUniquenessMethod;
 
 
     @BeforeClass
     public static void loadPropertiesFile() throws IOException {
-        FileInputStream fis = new FileInputStream("src/test/resources/FlumeProperties/nAgent/agent1_flume.properties");
+        //FileInputStream fis = new FileInputStream("src/test/resources/FlumeProperties/nAgent/agent1_flume.properties");
+        FileInputStream fis = new FileInputStream("src/test/resources/FlumeProperties/nAgentWithSelectors/agent1_flume.properties");
         flumeConfigurationProperties.clear();
         flumeConfigurationProperties.load(fis);
         agentList = new ArrayList<>();
@@ -86,6 +88,13 @@ public class FlumeConfigurationValidatorTest {
 
             checkPropertiesFileElementsPropertiesMethod = FlumeConfigurationValidator.class.getDeclaredMethod("checkPropertiesFileElementsProperties", argsCheckPropertiesFileElementsPropertiesMethod);
             checkPropertiesFileElementsPropertiesMethod.setAccessible(true);
+
+            //checkPropertiesFileSelectorsProperties is a private method. Access by reflection
+            Class<?>[] argsCheckPropertiesFileSelectorsPropertiesMethod = new Class[1];
+            argsCheckPropertiesFileSelectorsPropertiesMethod[0] = List.class;
+
+            checkPropertiesFileSelectorsPropertiesMethod = FlumeConfigurationValidator.class.getDeclaredMethod("checkPropertiesFileSelectorsProperties", argsCheckPropertiesFileSelectorsPropertiesMethod);
+            checkPropertiesFileSelectorsPropertiesMethod.setAccessible(true);
 
             //checkPropertiesFileInterceptorsProperties is a private method. Access by reflection
             Class<?>[] argsCheckPropertiesFileInterceptorsPropertiesMethod = new Class[1];
@@ -850,7 +859,109 @@ public class FlumeConfigurationValidatorTest {
 
 
     @Test
-    public void test12CheckPropertiesFileInterceptorsProperties() {
+    public void test12CheckPropertiesFileSelectorsProperties() {
+
+        boolean isPropertiesFileOK;
+
+        try {
+
+            //Check selectors properties OK
+            loadPropertiesFile();
+            resetConfigurationValidator();
+            createInitialStructures();
+            isPropertiesFileOK = (boolean) checkPropertiesFileSelectorsPropertiesMethod.invoke(flumeConfigurationValidator, agentList);
+            Assert.assertTrue("The selectors properties validation is not correct", isPropertiesFileOK);
+
+            //Check agent list empty
+            loadPropertiesFile();
+            resetConfigurationValidator();
+            createInitialStructures();
+            isPropertiesFileOK = (boolean) checkPropertiesFileSelectorsPropertiesMethod.invoke(flumeConfigurationValidator, new ArrayList());
+            Assert.assertFalse("The selectors properties validation is not correct", isPropertiesFileOK);
+            showCheckErrors();
+
+            //Check not valid selector property
+            loadPropertiesFile();
+            resetConfigurationValidator();
+            createInitialStructures();
+            flumeConfigurationProperties.put("agent1.sources.source1_1.selector","propertyValue");
+            isPropertiesFileOK = (boolean) checkPropertiesFileSelectorsPropertiesMethod.invoke(flumeConfigurationValidator, agentList);
+            Assert.assertFalse("The selectors properties validation is not correct", isPropertiesFileOK);
+            showCheckErrors();
+
+            //Check selector property references a non exist agent
+            loadPropertiesFile();
+            resetConfigurationValidator();
+            createInitialStructures();
+            flumeConfigurationProperties.put("agentX.sources.source1_1.selector.propertyName","propertyValue");
+            isPropertiesFileOK = (boolean) checkPropertiesFileSelectorsPropertiesMethod.invoke(flumeConfigurationValidator, agentList);
+            Assert.assertFalse("The selectors properties validation is not correct", isPropertiesFileOK);
+            showCheckErrors();
+
+            //Check selector property references a non exist source for the agent
+            loadPropertiesFile();
+            resetConfigurationValidator();
+            createInitialStructures();
+            flumeConfigurationProperties.put("agent1.sources.sourceX.selector.propertyName","propertyValue");
+            isPropertiesFileOK = (boolean) checkPropertiesFileSelectorsPropertiesMethod.invoke(flumeConfigurationValidator, agentList);
+            Assert.assertFalse("The selectors properties validation is not correct", isPropertiesFileOK);
+            showCheckErrors();
+
+            //Check empty selector property
+            loadPropertiesFile();
+            resetConfigurationValidator();
+            createInitialStructures();
+            flumeConfigurationProperties.put("agent1.sources.source1_1.selector.header","");
+            isPropertiesFileOK = (boolean) checkPropertiesFileSelectorsPropertiesMethod.invoke(flumeConfigurationValidator, agentList);
+            Assert.assertFalse("The selectors properties validation is not correct", isPropertiesFileOK);
+            showCheckErrors();
+
+            //Check non exist .channels property for source of the selector
+            loadPropertiesFile();
+            resetConfigurationValidator();
+            createInitialStructures();
+            flumeConfigurationProperties.remove("agent1.sources.source1_1.channels");
+            isPropertiesFileOK = (boolean) checkPropertiesFileSelectorsPropertiesMethod.invoke(flumeConfigurationValidator, agentList);
+            Assert.assertFalse("The selectors properties validation is not correct", isPropertiesFileOK);
+            showCheckErrors();
+
+            //Check .channels property without multiple channels for source of the selector
+            loadPropertiesFile();
+            resetConfigurationValidator();
+            createInitialStructures();
+            flumeConfigurationProperties.put("agent1.sources.source1_1.channels", "channel1_1");
+            isPropertiesFileOK = (boolean) checkPropertiesFileSelectorsPropertiesMethod.invoke(flumeConfigurationValidator, agentList);
+            Assert.assertFalse("The selectors properties validation is not correct", isPropertiesFileOK);
+            showCheckErrors();
+
+            //Check channel reference property of the selector references a channel that doesn't belong to the agent of the selector
+            loadPropertiesFile();
+            resetConfigurationValidator();
+            createInitialStructures();
+            flumeConfigurationProperties.put("agent1.sources.source1_1.selector.default", "channel2_1");
+            isPropertiesFileOK = (boolean) checkPropertiesFileSelectorsPropertiesMethod.invoke(flumeConfigurationValidator, agentList);
+            Assert.assertFalse("The selectors properties validation is not correct", isPropertiesFileOK);
+            showCheckErrors();
+
+            //Check channel reference property of the selector references a channel that doesn't belong to the .channels property of the source
+            loadPropertiesFile();
+            resetConfigurationValidator();
+            createInitialStructures();
+            flumeConfigurationProperties.put("agent1.sources.source1_1.channels" ,"channel1_1 channel1_3");
+            isPropertiesFileOK = (boolean) checkPropertiesFileSelectorsPropertiesMethod.invoke(flumeConfigurationValidator, agentList);
+            Assert.assertFalse("The selectors properties validation is not correct", isPropertiesFileOK);
+            showCheckErrors();
+
+        } catch (Exception e) {
+            Assert.fail("An error has occurred [test12CheckPropertiesFileSelectorsProperties] method");
+            logger.error("An error has occurred [test12CheckPropertiesFileSelectorsProperties] method", e);
+        }
+    }
+
+
+
+    @Test
+    public void test13CheckPropertiesFileInterceptorsProperties() {
 
         boolean isPropertiesFileOK;
 
@@ -908,13 +1019,13 @@ public class FlumeConfigurationValidatorTest {
             showCheckErrors();
 
         } catch (Exception e) {
-            Assert.fail("An error has occurred [test12CheckPropertiesFileInterceptorsProperties] method");
-            logger.error("An error has occurred [test12CheckPropertiesFileInterceptorsProperties] method", e);
+            Assert.fail("An error has occurred [test13CheckPropertiesFileInterceptorsProperties] method");
+            logger.error("An error has occurred [test13CheckPropertiesFileInterceptorsProperties] method", e);
         }
     }
 
     @Test
-    public void test13ValidateFlumeConfiguration() {
+    public void test14ValidateFlumeConfiguration() {
 
         boolean isPropertiesFileOK;
 
@@ -1026,6 +1137,15 @@ public class FlumeConfigurationValidatorTest {
             Assert.assertFalse("The validation of the Flume configuration is not correct", isPropertiesFileOK);
             showCheckErrors();
 
+            //Check selectors properties error
+            loadPropertiesFile();
+            resetConfigurationValidator();
+            flumeConfigurationProperties.put("agent1.sources.source1_1.selector.default", "channel2_1");
+            flumeConfigurationValidator.validateFlumeConfiguration();
+            isPropertiesFileOK = flumeConfigurationValidator.isPropertiesFileOK();
+            Assert.assertFalse("The validation of the Flume configuration is not correct", isPropertiesFileOK);
+            showCheckErrors();
+
             //Check interceptors properties error
             loadPropertiesFile();
             resetConfigurationValidator();
@@ -1036,8 +1156,8 @@ public class FlumeConfigurationValidatorTest {
             showCheckErrors();
 
         } catch (Exception e) {
-            Assert.fail("An error has occurred [test13ValidateFlumeConfiguration] method");
-            logger.error("An error has occurred [test13ValidateFlumeConfiguration] method", e);
+            Assert.fail("An error has occurred [test14ValidateFlumeConfiguration] method");
+            logger.error("An error has occurred [test14ValidateFlumeConfiguration] method", e);
         }
     }
 

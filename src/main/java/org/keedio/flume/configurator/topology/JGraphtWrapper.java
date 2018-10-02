@@ -3,6 +3,7 @@ package org.keedio.flume.configurator.topology;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.Graphs;
 import org.jgrapht.ListenableGraph;
+import org.jgrapht.alg.ConnectivityInspector;
 import org.jgrapht.alg.CycleDetector;
 import org.jgrapht.experimental.dag.DirectedAcyclicGraph;
 import org.jgrapht.ext.CSVExporter;
@@ -185,5 +186,11 @@ public class JGraphtWrapper implements IGraph{
         return ((DirectedAcyclicGraph) directedGraph).getDescendants(((DirectedAcyclicGraph) directedGraph), vertex);
     }
 
+
+    @Override
+    public List<Set> getConnectedSets() {
+        ConnectivityInspector connectivityInspector = new ConnectivityInspector(directedGraph);
+        return connectivityInspector.connectedSets();
+    }
 
 }

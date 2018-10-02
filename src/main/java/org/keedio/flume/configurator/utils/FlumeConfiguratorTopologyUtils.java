@@ -2,6 +2,7 @@ package org.keedio.flume.configurator.utils;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.map.HashedMap;
+import org.apache.commons.math3.util.CombinatoricsUtils;
 import org.keedio.flume.configurator.builder.FlumeTopologyReversePropertiesGenerator;
 import org.keedio.flume.configurator.constants.FlumeConfiguratorConstants;
 import org.keedio.flume.configurator.exceptions.FlumeConfiguratorException;
@@ -37,14 +38,9 @@ public class FlumeConfiguratorTopologyUtils {
      */
     public static boolean isTreeCompliant(boolean withAgentNodes, List<FlumeTopology> listFlumeTopology, int nodesNumber, int sourcesNumber, int agentsNumber) {
 
-        boolean isTreeCompliant = true;
-        Map<String, FlumeTopology> mapTargetConnecion = new HashMap<>();
+        Map<String, FlumeTopology> targetConnectionMap = new HashMap<>();
 
         int connectionsNumber = listFlumeTopology.size(); // arches number
-
-        //System.out.println("Nodes number:" + nodesNumber);
-        //System.out.println("Sources number: " + sourcesNumber);
-        //System.out.println("Arches number: " + connectionsNumber);
 
         if (withAgentNodes) {
             if (connectionsNumber != (nodesNumber - agentsNumber)) {
@@ -56,22 +52,22 @@ public class FlumeConfiguratorTopologyUtils {
             }
         }
 
-        if ((listFlumeTopology != null) && (listFlumeTopology.size() > 0)) {
+        if (listFlumeTopology.size() > 0) {
 
             for (FlumeTopology flumeTopology : listFlumeTopology) {
                 String targetConnection = flumeTopology.getTargetConnection();
 
-                FlumeTopology elementConnection = mapTargetConnecion.get(targetConnection);
+                FlumeTopology elementConnection = targetConnectionMap.get(targetConnection);
                 if (elementConnection != null) {
                     //There is another element with the same target (a target has more than one source, so is not a tree)
                     return false;
                 } else {
-                    mapTargetConnecion.put(targetConnection, elementConnection);
+                    targetConnectionMap.put(targetConnection, null);
                 }
             }
         }
 
-        return isTreeCompliant;
+        return true;
     }
 
 
@@ -81,7 +77,7 @@ public class FlumeConfiguratorTopologyUtils {
      * @param node ancestor node of the searched node
      * @return the node of the tree with the indicated id
      */
-    public static DefaultMutableTreeNode searchTreeNode(String id, DefaultMutableTreeNode node){
+    static DefaultMutableTreeNode searchTreeNode(String id, DefaultMutableTreeNode node){
         FlumeTopology flumeTopologyNode = (FlumeTopology) node.getUserObject();
         if (flumeTopologyNode.getId().equals(id)) {
             return node;
@@ -557,14 +553,14 @@ public class FlumeConfiguratorTopologyUtils {
      * @param propertyName Name of the property
      * @return true if is a special property, false otherwise
      */
-    public static boolean isSpecialProperty(String propertyName) {
+    static boolean isSpecialProperty(String propertyName) {
 
         boolean isSpecialProperty = false;
 
-        String agenNameCommentProperty = FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_AGENT_NAME + FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_COMMENT_SUFIX;
+        String agentNameCommentProperty = FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_AGENT_NAME + FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_COMMENT_SUFIX;
         String elementTopologyNameCommentProperty = FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME + FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_COMMENT_SUFIX;
 
-        if ((propertyName.equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_AGENT_NAME)) || (propertyName.equals(agenNameCommentProperty))
+        if ((propertyName.equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_AGENT_NAME)) || (propertyName.equals(agentNameCommentProperty))
                 || (propertyName.equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME)) || (propertyName.equals(elementTopologyNameCommentProperty))) {
             isSpecialProperty = true;
         }
@@ -1011,7 +1007,7 @@ public class FlumeConfiguratorTopologyUtils {
 
     /**
      * Get the number of parts of the Flume property
-     * @param property
+     * @param property name of the property
      */
     public static int getPropertyPartsNumber(String property) {
 
@@ -1312,7 +1308,7 @@ public class FlumeConfiguratorTopologyUtils {
      * @param flumeTopologyList List of Flume Topology elements
      * @return Get the connection to the first interceptor of a source (interceptor's ID)
      */
-    public static String getInterceptorConnection(String sourceConnectionId, List<FlumeTopology> listTopologyConnections, List<FlumeTopology> flumeTopologyList) {
+    static String getInterceptorConnection(String sourceConnectionId, List<FlumeTopology> listTopologyConnections, List<FlumeTopology> flumeTopologyList) {
 
         String interceptorConnectionID = "";
 
@@ -1394,8 +1390,9 @@ public class FlumeConfiguratorTopologyUtils {
 
                 List<FlumeTopology> sourcesList = agentGraph.successorListOf(agentVertex);
 
-                int interceptorsNumber = 0;
+                int interceptorsNumber;
                 int maxInterceptorsNumber = 0;
+                boolean withSelector = false;
                 boolean withSinkGroup = false;
 
                 //Get the descendants of the source
@@ -1416,6 +1413,10 @@ public class FlumeConfiguratorTopologyUtils {
                                 interceptorsNumber ++;
                             }
 
+                            if (sourceChild.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SELECTOR)) {
+                                withSelector = true;
+                            }
+
                             if (sourceChild.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP)) {
                                 withSinkGroup = true;
                             }
@@ -1428,6 +1429,9 @@ public class FlumeConfiguratorTopologyUtils {
                 }
 
                 int fixedSlicesNumber = FlumeConfiguratorConstants.FIXED_SLICES_NUMBER;
+                if (withSelector) {
+                    fixedSlicesNumber++;
+                }
                 if (withSinkGroup) {
                     fixedSlicesNumber++;
                 }
@@ -1475,8 +1479,8 @@ public class FlumeConfiguratorTopologyUtils {
 
     /**
      * Get next Y Coordinate in function of max Y coordinate and first element of slice
-     * @param maxYCoordinate
-     * @param isFirstElementSlice
+     * @param maxYCoordinate the max Y coordinate obtained until now
+     * @param isFirstElementSlice true if is the first element of the slice, false otherwise
      * @return next Y Coordinate
      */
     public static int getNextYCoordinate(int maxYCoordinate, boolean isFirstElementSlice) {
@@ -1493,11 +1497,11 @@ public class FlumeConfiguratorTopologyUtils {
 
     /**
      * Detect if a list contains a sublist
-     * @param list
-     * @param searchedElementsSublist
+     * @param list the list
+     * @param searchedElementsSublist the sublist
      * @return true if the list contains the sublist in identical order, false otherwise
      */
-    public static boolean isCorrectOrderSublist(List<String> list, List<String> searchedElementsSublist) {
+    static boolean isCorrectOrderSublist(List<String> list, List<String> searchedElementsSublist) {
 
         boolean hasOrderedSublist = false;
 
@@ -1539,7 +1543,7 @@ public class FlumeConfiguratorTopologyUtils {
 
                 for(String sharedChannelName : sharedChannelsList) {
 
-                    if (mapSharedChannelsSourcesRelation.get(sharedChannelName) == null) {
+                    if (!mapSharedChannelsSourcesRelation.containsKey(sharedChannelName)) {
                         mapSharedChannelsSourcesRelation.put(sharedChannelName, new ArrayList<>());
                     }
                     if (!mapSharedChannelsSourcesRelation.get(sharedChannelName).contains(sharedSourceName)) {
@@ -1590,74 +1594,91 @@ public class FlumeConfiguratorTopologyUtils {
 
 
     /**
-     * Get permutatios that preserve a order determinated by shared channels
+     * Get permutations that preserve a order determinated by shared channels
      * @param completeSourcesList complete list of shared sources
-     * @param mapSharedChannelsSourcesRelation relation between shared channels and sources
+     * @param sharedChannelsSourcesRelationMap relation between shared channels and sources
      * @return list of permutatios of shared sources that preserve a order determinated by shared channels
      */
-    public static Collection<List<String>> getCorrectSourcesPermutations (List<String> completeSourcesList, Map<String, List<String>> mapSharedChannelsSourcesRelation) {
+    public static Collection<List<String>> getSharedSourcesPermutations(List<String> completeSourcesList, Map<String, List<String>> sharedChannelsSourcesRelationMap) {
 
-        Collection<List<String>> correctSourcesPermutations = new ArrayList<>();
         Collection<List<String>> sourcesPermutations = new ArrayList<>();
 
-        List<String> sourcesInMap = new ArrayList<>();
-        List<String> sourcesNotInMap = new ArrayList<>();
-        List<String> sourcesNotInMapWithSourcePermutation = new ArrayList<>();
-        boolean isSharedSource = false;
+        List<String> sourcesReferencedByMap = new ArrayList<>();
+        List<String> sourcesNotReferencedByMap = new ArrayList<>();
+        boolean isSharedSource;
 
-        if (completeSourcesList != null && mapSharedChannelsSourcesRelation != null) {
-            if (mapSharedChannelsSourcesRelation.size() > 0) {
+        if (completeSourcesList != null && sharedChannelsSourcesRelationMap != null) {
+
+            if (sharedChannelsSourcesRelationMap.size() > 0) {
+
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Generating sources permutations");
+                }
+
                 //Detect sources not referencied by map
                 for (String sourceName : completeSourcesList) {
                     isSharedSource = false;
-                    for (String channelName : mapSharedChannelsSourcesRelation.keySet()) {
-                        List<String> channelSourcesList = mapSharedChannelsSourcesRelation.get(channelName);
+                    for (String channelName : sharedChannelsSourcesRelationMap.keySet()) {
+                        List<String> channelSourcesList = sharedChannelsSourcesRelationMap.get(channelName);
                         if (channelSourcesList.contains(sourceName)) {
-                            if (!sourcesInMap.contains(sourceName)) {
-                                sourcesInMap.add(sourceName);
+                            if (!sourcesReferencedByMap.contains(sourceName)) {
+                                sourcesReferencedByMap.add(sourceName);
                             }
                             isSharedSource = true;
                         }
                     }
 
                     if (!isSharedSource) {
-                        sourcesNotInMap.add(sourceName);
+                        sourcesNotReferencedByMap.add(sourceName);
                     }
                 }
+
 
                 //Get all permutations and correct permutations of the sources
-                boolean isCorrectSourcerOrder = false;
+                if (sourcesReferencedByMap.size() <= FlumeConfiguratorConstants.MAX_NUMBER_SOURCES_FOR_PERMUTATIONS) {
+                    sourcesPermutations = CollectionUtils.permutations(sourcesReferencedByMap);
+                } else {
 
-                sourcesPermutations = CollectionUtils.permutations(sourcesInMap);
+                    if (sharedChannelsSourcesRelationMap.size() <= FlumeConfiguratorConstants.MAX_NUMBER_CHANNELS_FOR_PERMUTATIONS) {
 
-                Iterator<List<String>> itSourcesPermutations = sourcesPermutations.iterator();
-                while (itSourcesPermutations.hasNext()) {
-                    List<String> sourcePermutation = itSourcesPermutations.next();
 
-                    isCorrectSourcerOrder = true;
-                    for (String channelName : mapSharedChannelsSourcesRelation.keySet()) {
-                        List<String> channelSourcesList = mapSharedChannelsSourcesRelation.get(channelName);
-                        isCorrectSourcerOrder = isCorrectSourcerOrder && FlumeConfiguratorTopologyUtils.isCorrectOrderSublist(sourcePermutation, channelSourcesList);
-                    }
+                        sourcesPermutations = getSourcesPartialNumberPermutations(sharedChannelsSourcesRelationMap);
 
-                    if (isCorrectSourcerOrder) {
-                        //Add permutation from sources not in map + correct permutation of sources in map
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("Order completeSourcesList: " + Arrays.toString(completeSourcesList.toArray()));
+                            if (sourcesPermutations.size() > 0) {
+                                logger.debug("Order getSourcesPartialNumberPermutations(0): " + Arrays.toString(sourcesPermutations.iterator().next().toArray()));
+                            }
+                        }
 
-                        sourcesNotInMapWithSourcePermutation = new ArrayList(sourcesNotInMap);
-                        sourcesNotInMapWithSourcePermutation.addAll(sourcePermutation);
-                        correctSourcesPermutations.add(sourcesNotInMapWithSourcePermutation);
+                        if (sourcesPermutations.size() == 0) {
+                            //The permutations doesn't have been calculated (the cartesian product is too big)
+                            if (logger.isWarnEnabled()) {
+                                logger.warn("There is no permutations calculation (too many elements for any cartesian product)");
+                            }
+                            sourcesPermutations.add(completeSourcesList);
+                        }
 
-                        //correctSourcesPermutations.add(sourcePermutation);
+                    } else {
+                        //There is no optimal sources permutation. Take the complete sources list as optimal permutation
+                        if (logger.isWarnEnabled()) {
+                            logger.warn("There is no permutations calculation (too many elements) - Num shared sources: " + sourcesReferencedByMap.size() + " Num shared channels: " + sharedChannelsSourcesRelationMap.size() + " Limit shared channels: " + FlumeConfiguratorConstants.MAX_NUMBER_CHANNELS_FOR_PERMUTATIONS);
+                        }
+                        sourcesPermutations.add(completeSourcesList);
                     }
                 }
+
+                sourcesPermutations = addSourcesNotReferencedByMapToPermutation(sourcesPermutations, sourcesNotReferencedByMap);
+
             } else {
                 //It's not neccesary permutations. Any order is OK
-                correctSourcesPermutations.add(completeSourcesList);
+                sourcesPermutations.add(completeSourcesList);
             }
         }
 
-        return correctSourcesPermutations;
+        return sourcesPermutations;
     }
+
 
 
     /**
@@ -1744,7 +1765,7 @@ public class FlumeConfiguratorTopologyUtils {
                     }
 
                 }
-                //mapSourcesIndependentChannelsNumberRelation.put(sourceName, sourceIndependentChannelsNumber);
+
                 mapSourcesIndependentChannelsRelation.put(sourceName, sourceIndependentChannelsList);
             }
         }
@@ -1785,6 +1806,38 @@ public class FlumeConfiguratorTopologyUtils {
 
 
     /**
+     * Get list of descendants of a source with the indicated type
+     * @param flumeTopologySourceElement Flume Topology element of the source
+     * @param agentGraph graph of agent of the source
+     * @param descendantType type of the descendant
+     * @return list of descendants of a source with the indicated type
+     */
+    public static List<String> getSourceDescendantsTypeList(FlumeTopology flumeTopologySourceElement, IGraph agentGraph, String descendantType) {
+
+        List<String> sourceInterceptorsList = new ArrayList<>();
+
+        if (flumeTopologySourceElement != null && agentGraph != null && descendantType != null && !descendantType.isEmpty()) {
+
+            Set<FlumeTopology> sourceChildren = FlumeConfiguratorTopologyUtils.convetTreeSet(agentGraph.getVertexDescendants(flumeTopologySourceElement));
+            Iterator<FlumeTopology> itSourceChildren = sourceChildren.iterator();
+
+            while (itSourceChildren.hasNext()) {
+                FlumeTopology sourceChild = itSourceChildren.next();
+
+                if (sourceChild.getType().equals(descendantType)) {
+                    String interceptorName = sourceChild.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
+                    sourceInterceptorsList.add(interceptorName);
+                }
+
+            }
+        }
+
+        return sourceInterceptorsList;
+
+    }
+
+
+    /**
      * Get relation between sources and interceptors
      * @param agentGraph graph of the agent
      * @return relation between sources and interceptors
@@ -1796,8 +1849,6 @@ public class FlumeConfiguratorTopologyUtils {
         if (agentGraph != null) {
 
             FlumeTopology agentVertex = FlumeConfiguratorTopologyUtils.getAgentVertexFromGraph(agentGraph);
-            String agentName = agentVertex.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
-
             List<FlumeTopology> sourcesList = agentGraph.successorListOf(agentVertex);
 
             //Get the descendants of the source
@@ -1816,117 +1867,6 @@ public class FlumeConfiguratorTopologyUtils {
         return mapSourcesInterceptorsRelation;
     }
 
-
-    /**
-     * Get optimal sources permutation
-     * @param sourcesCorrectPermutations collection of allowed permutations
-     * @param mapSourcesIndependentChannelsRelation relation between shared sources and independent channels
-     * @param mapSourcesInterceptorsRelation relation between sources and interceptors
-     * @return the optimal sources permutation
-     */
-    public static List<String> getOptimalSourcesPermutation(Collection<List<String>> sourcesCorrectPermutations, Map<String,List<String>> mapSourcesIndependentChannelsRelation, Map<String,List<String>> mapSourcesInterceptorsRelation) {
-
-        List<String> optimalSourcesPermutation = null;
-
-        if (sourcesCorrectPermutations != null && mapSourcesIndependentChannelsRelation != null && mapSourcesInterceptorsRelation != null ) {
-
-            if (sourcesCorrectPermutations.size() == 1) {
-                optimalSourcesPermutation = CollectionUtils.get(sourcesCorrectPermutations, 0);
-
-            } else  if (sourcesCorrectPermutations.size() > 1) {
-
-                String firstSource = null;
-                String secondSource = null;
-                int firstSourceIndependentChannelsNumber = 0;
-                int secondSourceIndependentChannelsNumber = 0;
-                int firstSourceInterceptorsNumber = 0;
-                int secondSourceInterceptorsNumber = 0;
-
-                //boolean isFirstElement = true;
-                int elementNumber = 1;
-                for (String sourceName : mapSourcesIndependentChannelsRelation.keySet()) {
-
-                    int sourceIndependentChannelsNumber = mapSourcesIndependentChannelsRelation.get(sourceName).size();
-                    int sourceInterceptorsNumber = mapSourcesInterceptorsRelation.get(sourceName).size();
-
-                    if (elementNumber == 1) {
-                        firstSource = sourceName;
-                        firstSourceIndependentChannelsNumber = sourceIndependentChannelsNumber;
-                        firstSourceInterceptorsNumber = sourceInterceptorsNumber;
-                    } else if (elementNumber == 2) {
-                        secondSource = sourceName;
-                        secondSourceIndependentChannelsNumber = sourceIndependentChannelsNumber;
-                        secondSourceInterceptorsNumber = sourceInterceptorsNumber;
-                    }
-
-                    /*
-                    if (isFirstElement) {
-                        firstSource = sourceName;
-                        secondSource = sourceName;
-                        firstSourceIndependentChannelsNumber = sourceIndependentChannelsNumber;
-                        secondSourceIndependentChannelsNumber = sourceIndependentChannelsNumber;
-                        firstSourceInterceptorsNumber = sourceInterceptorsNumber;
-                        secondSourceInterceptorsNumber = sourceInterceptorsNumber;
-                        isFirstElement = false;
-                    }
-                    */
-
-                    if (sourceIndependentChannelsNumber > firstSourceIndependentChannelsNumber) {
-                        secondSource = firstSource;
-                        secondSourceIndependentChannelsNumber = firstSourceIndependentChannelsNumber;
-                        firstSource = sourceName;
-                        firstSourceIndependentChannelsNumber = sourceIndependentChannelsNumber;
-                    } else if (sourceIndependentChannelsNumber == firstSourceIndependentChannelsNumber) {
-                        if (sourceInterceptorsNumber >= firstSourceInterceptorsNumber) {
-                            secondSource = firstSource;
-                            secondSourceIndependentChannelsNumber = firstSourceIndependentChannelsNumber;
-                            secondSourceInterceptorsNumber = firstSourceInterceptorsNumber;
-                            firstSource = sourceName;
-                            firstSourceIndependentChannelsNumber = sourceIndependentChannelsNumber;
-                            firstSourceInterceptorsNumber = sourceInterceptorsNumber;
-
-                        } else if (sourceInterceptorsNumber >= secondSourceInterceptorsNumber) {
-                            secondSource = sourceName;
-                            secondSourceIndependentChannelsNumber = sourceIndependentChannelsNumber;
-                            secondSourceInterceptorsNumber = sourceInterceptorsNumber;
-                        }
-                    } else if (sourceIndependentChannelsNumber > secondSourceIndependentChannelsNumber) {
-                        secondSource = sourceName;
-                        secondSourceIndependentChannelsNumber = sourceIndependentChannelsNumber;
-                        secondSourceInterceptorsNumber = sourceInterceptorsNumber;
-                    } else if (sourceIndependentChannelsNumber == secondSourceIndependentChannelsNumber) {
-                        if (sourceInterceptorsNumber >= secondSourceInterceptorsNumber) {
-                            secondSource = sourceName;
-                            secondSourceIndependentChannelsNumber = sourceIndependentChannelsNumber;
-                            secondSourceInterceptorsNumber = sourceInterceptorsNumber;
-                        }
-                    }
-
-                    elementNumber++;
-
-                }
-
-                boolean foundPermutation = false;
-                Iterator<List<String>> itSourcesCorrectPermutations = sourcesCorrectPermutations.iterator();
-                while (itSourcesCorrectPermutations.hasNext() && !foundPermutation) {
-                    List<String> correctSourcesPermutation = itSourcesCorrectPermutations.next();
-
-                    //Check if permutation is correct
-
-                    if (correctSourcesPermutation.get(correctSourcesPermutation.size() -1).equals(firstSource) &&
-                            correctSourcesPermutation.get(0).equals(secondSource)) {
-
-                        optimalSourcesPermutation = correctSourcesPermutation;
-                        foundPermutation = true;
-                    }
-                }
-            }
-
-
-        }
-
-        return optimalSourcesPermutation;
-    }
 
     /**
      * Detect existence of a sinkgroup slice
@@ -1959,6 +1899,40 @@ public class FlumeConfiguratorTopologyUtils {
         }
 
         return existSinkGroupSlice;
+    }
+
+    /**
+     * Detect existence of a slice of the indicated type
+     * @param flumeGraphTopology map with the graph topology of agents
+     * @param agentName name of the agent
+     * @param sliceType type of the slice
+     * @return true if the agent has a slice of the indicated type, false otherwise
+     */
+    public static boolean existSliceType(Map<String, IGraph> flumeGraphTopology, String agentName, String sliceType) {
+
+        boolean existSliceType = false;
+
+        if (flumeGraphTopology != null && agentName != null && !agentName.isEmpty()) {
+
+            IGraph agentGraph = flumeGraphTopology.get(agentName);
+
+            if (agentGraph != null) {
+                FlumeTopology agentVertex = FlumeConfiguratorTopologyUtils.getAgentVertexFromGraph(agentGraph);
+
+                Set<FlumeTopology> agentChildren = agentGraph.getVertexDescendants(agentVertex);
+                Iterator<FlumeTopology> itAgentChildren = agentChildren.iterator();
+
+                while (itAgentChildren.hasNext()) {
+                    FlumeTopology agentChild = itAgentChildren.next();
+
+                    if (agentChild.getType().equals(sliceType)) {
+                        existSliceType = true;
+                    }
+                }
+            }
+        }
+
+        return existSliceType;
     }
 
 
@@ -2022,7 +1996,7 @@ public class FlumeConfiguratorTopologyUtils {
 
                 for(String sharedSinkGroupName : sharedSinkGroupsList) {
 
-                    if (mapSharedSinkGroupsSourcesRelation.get(sharedSinkGroupName) == null) {
+                    if (!mapSharedSinkGroupsSourcesRelation.containsKey(sharedSinkGroupName)) {
                         mapSharedSinkGroupsSourcesRelation.put(sharedSinkGroupName, new ArrayList<>());
                     }
                     if (!mapSharedSinkGroupsSourcesRelation.get(sharedSinkGroupName).contains(sharedSourceName)) {
@@ -2034,6 +2008,7 @@ public class FlumeConfiguratorTopologyUtils {
 
         return mapSharedSinkGroupsSourcesRelation;
     }
+
 
 
     /**
@@ -2062,4 +2037,1027 @@ public class FlumeConfiguratorTopologyUtils {
 
         return ancestorNode;
     }
+
+
+    /**
+     * Indicate if a property (flume configuration) is a property of selector that references channels
+     * @param propertyName String with the name of the property
+     * @return true if the property is t a property of selector that references channels, false otherwise
+     */
+    public static boolean isSelectorChannelReferenceFlumeConfigurationProperty(String propertyName) {
+
+        return (FlumeConfiguratorTopologyUtils.getPropertyPartsNumber(propertyName) >= 4 &&
+            FlumeConfiguratorConstants.SOURCES_PROPERTY.equals(FlumeConfiguratorTopologyUtils.getPropertyPart(propertyName, FlumeConfiguratorConstants.SOURCES_LIST_PROPERTY_PART_INDEX)) &&
+            FlumeConfiguratorConstants.SELECTOR_PROPERTY.equals(FlumeConfiguratorTopologyUtils.getPropertyPart(propertyName, FlumeConfiguratorConstants.SOURCE_SELECTOR_PROPERTY_PART_INDEX)) &&
+            (FlumeConfiguratorConstants.MAPPING_PROPERTY.equals(FlumeConfiguratorTopologyUtils.getPropertyPart(propertyName, FlumeConfiguratorConstants.SOURCE_SELECTOR_PROPERTY_PART_INDEX + 1)) ||
+             FlumeConfiguratorConstants.OPTIONAL_PROPERTY.equals(FlumeConfiguratorTopologyUtils.getPropertyPart(propertyName, FlumeConfiguratorConstants.SOURCE_SELECTOR_PROPERTY_PART_INDEX + 1)) ||
+             FlumeConfiguratorConstants.DEFAULT_PROPERTY.equals(FlumeConfiguratorTopologyUtils.getPropertyPart(propertyName, FlumeConfiguratorConstants.SOURCE_SELECTOR_PROPERTY_PART_INDEX + 1))));
+    }
+
+
+    /**
+     * Get the free average Y coordinate position for an flume topology element relationated with another elements connected to it
+     * @param agentGraph graph of the agent
+     * @param flumeTopologyList list of Flume Topology elements
+     * @param flumeTopologyElement Flume Topology element
+     * @param referenceTypeElement type of elements connected to it
+     * @return free average Y coordinate position
+     */
+    public static int getElementAveragePosition(IGraph agentGraph, List<FlumeTopology> flumeTopologyList, FlumeTopology flumeTopologyElement, String referenceTypeElement) {
+        int average_Y_Coordinate;
+        int min_Y_coordinate = -1;
+        int max_Y_coordinate = -1;
+
+        //Get descendants of the element
+        String elementName = flumeTopologyElement.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
+
+        boolean isAgentWithSource = FlumeConfiguratorConstants.FLUME_TOPOLOGY_AGENT.equals(flumeTopologyElement.getType()) && FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE.equals(referenceTypeElement);
+        boolean isSourceWithChannel = FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE.equals(flumeTopologyElement.getType()) && FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL.equals(referenceTypeElement);
+        boolean isChannelWithSink = FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL.equals(flumeTopologyElement.getType()) && FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK.equals(referenceTypeElement);
+        boolean isChannelWithSource = FlumeConfiguratorConstants.FLUME_TOPOLOGY_CHANNEL.equals(flumeTopologyElement.getType()) && FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE.equals(referenceTypeElement);
+        boolean isSinkgroupWithSink = FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP.equals(flumeTopologyElement.getType()) && FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINK.equals(referenceTypeElement);
+
+        logger.debug("Calculating average position of element [" + elementName + " relation with its [" + referenceTypeElement + "]");
+
+        if (isAgentWithSource || isSourceWithChannel || isChannelWithSink) {
+
+            Set<FlumeTopology> flumeTopologyElementChildren = agentGraph.getVertexDescendants(flumeTopologyElement);
+            Iterator<FlumeTopology> itFlumeTopologyElementChildren = flumeTopologyElementChildren.iterator();
+
+            while (itFlumeTopologyElementChildren.hasNext()) {
+
+                FlumeTopology flumeTopologyElementChild = itFlumeTopologyElementChildren.next();
+
+                if (flumeTopologyElementChild.getType().equals(referenceTypeElement)) {
+                    if (flumeTopologyElementChild.getY() != null && !flumeTopologyElementChild.getY().isEmpty() && Integer.valueOf(flumeTopologyElementChild.getY()) > max_Y_coordinate) {
+                        max_Y_coordinate =  Integer.valueOf(flumeTopologyElementChild.getY());
+                    }
+
+                    if (min_Y_coordinate == -1) {
+                        if (flumeTopologyElementChild.getY() != null && !flumeTopologyElementChild.getY().isEmpty()) {
+                            min_Y_coordinate = Integer.valueOf(flumeTopologyElementChild.getY());
+                        }
+                    } else {
+                        if (flumeTopologyElementChild.getY() != null && !flumeTopologyElementChild.getY().isEmpty() && Integer.valueOf(flumeTopologyElementChild.getY()) < min_Y_coordinate) {
+                            min_Y_coordinate = Integer.valueOf(flumeTopologyElementChild.getY());
+                        }
+                    }
+                }
+            }
+        } else if (isChannelWithSource || isSinkgroupWithSink) {
+
+            Set<FlumeTopology> flumeTopologyElementAncestors = agentGraph.getVertexAncestors(flumeTopologyElement);
+            Iterator<FlumeTopology> itFlumeTopologyElementAncestors = flumeTopologyElementAncestors.iterator();
+
+            while (itFlumeTopologyElementAncestors.hasNext()) {
+                FlumeTopology flumeTopologyElementAncestor = itFlumeTopologyElementAncestors.next();
+
+                if (flumeTopologyElementAncestor.getType().equals(referenceTypeElement)) {
+                    if (flumeTopologyElementAncestor.getY() != null && !flumeTopologyElementAncestor.getY().isEmpty() && Integer.valueOf(flumeTopologyElementAncestor.getY()) > max_Y_coordinate) {
+                        max_Y_coordinate =  Integer.valueOf(flumeTopologyElementAncestor.getY());
+                    }
+
+                    if (min_Y_coordinate == -1) {
+                        if (flumeTopologyElementAncestor.getY() != null && !flumeTopologyElementAncestor.getY().isEmpty()) {
+                            min_Y_coordinate = Integer.valueOf(flumeTopologyElementAncestor.getY());
+                        }
+                    } else {
+                        if (flumeTopologyElementAncestor.getY() != null && !flumeTopologyElementAncestor.getY().isEmpty() && Integer.valueOf(flumeTopologyElementAncestor.getY()) < min_Y_coordinate) {
+                            min_Y_coordinate = Integer.valueOf(flumeTopologyElementAncestor.getY());
+                        }
+                    }
+                }
+            }
+
+        }
+
+
+        logger.debug("min_Y_coordinate descendants / ancestors element [ " + elementName + "]: " + min_Y_coordinate);
+        logger.debug("max_Y_coordinate  descendants / ancestors element [ " + elementName + "]: " + max_Y_coordinate);
+
+        if (max_Y_coordinate == min_Y_coordinate) {
+            average_Y_Coordinate = min_Y_coordinate;
+        } else {
+            average_Y_Coordinate = min_Y_coordinate + (max_Y_coordinate - min_Y_coordinate) / 2;
+        }
+
+        logger.debug("average_Y_Coordinate (PRE isEmptyPosition) [ " + elementName + "]: " + average_Y_Coordinate);
+
+        while (!isEmptyPosition(flumeTopologyList, flumeTopologyElement, average_Y_Coordinate)) {
+            logger.debug("Element " + elementName + " has a non valid recalculated Y-coordinate position : " + average_Y_Coordinate);
+            average_Y_Coordinate = getNextYCoordinate(average_Y_Coordinate, false);
+            logger.debug("New proposed Y-coordinate position for element"  + elementName + " : " + average_Y_Coordinate);
+        }
+
+        logger.debug("average_Y_Coordinate element (POST isEmptyPosition) [ " + elementName + "]: " + average_Y_Coordinate);
+        return average_Y_Coordinate;
+    }
+
+
+    /**
+     * Return if the position is a empty position or there are another element
+     * @param flumeTopologyList list of Flume Topology elements
+     * @param flumeTopologyElement Flume topology element
+     * @param position_Y_coordinate Y-coordinate position
+     * @return true if the Y-coordinate position is free
+     */
+    private static boolean isEmptyPosition(List<FlumeTopology> flumeTopologyList, FlumeTopology flumeTopologyElement, int position_Y_coordinate) {
+
+        boolean isEmptyPosition = true;
+
+        for (FlumeTopology flumeTopologyListElement : flumeTopologyList) {
+
+            if (flumeTopologyListElement.getType().equals(flumeTopologyElement.getType()) && !flumeTopologyListElement.equals(flumeTopologyElement)) {
+                if (flumeTopologyListElement.getY() != null && !flumeTopologyListElement.getY().isEmpty()) {
+                    int element_Y_coordinate = Integer.valueOf(flumeTopologyListElement.getY());
+                    int separation = FlumeConfiguratorConstants.CANVAS_ELEMENTS_HEIGHT_PX_SEPARATION * 2;
+
+                    logger.debug("Comparing position_Y_coordinate " + position_Y_coordinate + " with position of list element with id " + flumeTopologyListElement.getId() + " (y_coordinate:  " + element_Y_coordinate + ")");
+
+                    if (Math.abs(element_Y_coordinate - position_Y_coordinate) < separation) {
+                        isEmptyPosition = false;
+                    }
+
+                    logger.debug("isEmptyPosition:" + isEmptyPosition);
+
+                }
+            }
+        }
+
+        return isEmptyPosition;
+    }
+
+    /***
+     * Insert element in a correct position of an ordered list (in function of values of maps of min and max Y coordinates)
+     * @param orderedList ordered List
+     * @param element element to be inserted
+     * @param map_min_Y_Source_Coordinate Map with min Y coordinate of the sources of the element
+     * @param map_max_Y_Source_Coordinate Map with max Y coordinate of the sources of the element
+     * @return ordered list with the element inserted on correct position
+     */
+    public static List<String> insertOrderedList(List<String> orderedList, String element, Map<String, Integer> map_min_Y_Source_Coordinate, Map<String, Integer> map_max_Y_Source_Coordinate) {
+        if (orderedList.isEmpty()) {
+            orderedList.add(element);
+        } else {
+
+            boolean elementAdded = false;
+            for (int i=0; i<orderedList.size(); i++) {
+                String elementListName = orderedList.get(i);
+                if (map_min_Y_Source_Coordinate.get(element) < map_min_Y_Source_Coordinate.get(elementListName)) {
+                    orderedList.add(i, element);
+                    elementAdded = true;
+                    break;
+                } else if (map_min_Y_Source_Coordinate.get(element) == map_min_Y_Source_Coordinate.get(elementListName)) {
+                    if (map_max_Y_Source_Coordinate.get(element) < map_max_Y_Source_Coordinate.get(elementListName)) {
+                        orderedList.add(i, element);
+                        elementAdded = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!elementAdded) {
+                orderedList.add(element);
+            }
+        }
+
+        return orderedList;
+    }
+
+    /**
+     * Get the elements that belong to a set or the elements than belong to intersection between 2 sets
+     * @param mapSharedChannelsSourcesRelation map with the sets of elements
+     * @param channel1Name name of the set 1
+     * @param channel2Name name of the set 2
+     * @param onlyInSet1 true if we want the elements belong to set 1, false if we want the elements that belong to intersection between set 1 and set 3
+     * @return list with the elements that belong to a set or the elements than belong to intersection between 2 sets
+     */
+    private static List<String> getElementsBelongToSet(Map<String, List<String>> mapSharedChannelsSourcesRelation, String channel1Name, String channel2Name, boolean onlyInSet1) {
+
+        List<String> elementsBelongToSet = new ArrayList<>();
+        if (mapSharedChannelsSourcesRelation != null && channel1Name != null && !channel1Name.isEmpty()) {
+
+            if (onlyInSet1) {
+                //Return elements that only belong to set1
+                Collection<String> channel1Elements = mapSharedChannelsSourcesRelation.get(channel1Name);
+                for (String channelName : mapSharedChannelsSourcesRelation.keySet()) {
+                    if (!channelName.equals(channel1Name)) {
+                        Collection<String> channelElements = mapSharedChannelsSourcesRelation.get(channelName);
+                        channel1Elements = CollectionUtils.subtract(channel1Elements, channelElements);
+                    }
+                }
+
+                elementsBelongToSet = new ArrayList<>(channel1Elements);
+            } else {
+
+                if (channel2Name != null && !channel2Name.isEmpty()) {
+                    Collection<String> channel1Elements = mapSharedChannelsSourcesRelation.get(channel1Name);
+                    Collection<String> channel2Elements = mapSharedChannelsSourcesRelation.get(channel2Name);
+
+                    elementsBelongToSet = new ArrayList<>(CollectionUtils.intersection(channel1Elements, channel2Elements));
+                }
+            }
+        }
+
+        return elementsBelongToSet;
+    }
+
+
+    /**
+     * Get cartesian product between elements or several lists
+     * @param lists list with the lists of elements to get the cartesian product
+     * @return cartesian product between elements or several lists
+     */
+    private static <T> List<List<T>> getCartesianProduct(List<List<T>> lists) {
+        List<List<T>> resultLists = new ArrayList<>();
+        if (lists.size() == 0) {
+            resultLists.add(new ArrayList<T>());
+            return resultLists;
+        } else {
+            List<T> firstList = lists.get(0);
+            List<List<T>> remainingLists = getCartesianProduct(lists.subList(1, lists.size()));
+            for (T condition : firstList) {
+                for (List<T> remainingList : remainingLists) {
+                    ArrayList<T> resultList = new ArrayList<>();
+                    resultList.add(condition);
+                    resultList.addAll(remainingList);
+                    resultLists.add(resultList);
+                }
+            }
+        }
+        return resultLists;
+    }
+
+    /**
+     * Get permutations of sources based on cartesian products of sources of each channel
+     * @param mapSharedChannelsSourcesRelation map with relation between channels and sources
+     * @return permutations of sources based on cartesian products of sources of each channel
+     */
+    private static Collection<List<String>> getSourcesPartialNumberPermutations(Map<String, List<String>> mapSharedChannelsSourcesRelation) {
+
+        Collection<List<String>> sourcesPartialPermutations = new ArrayList<>();
+
+        if (mapSharedChannelsSourcesRelation != null) {
+            Collection<List<String>> channelsPermutations =
+                    CollectionUtils.permutations(mapSharedChannelsSourcesRelation.keySet());
+            if (logger.isDebugEnabled()) {
+                logger.debug("Generating channels permutations of size: " + mapSharedChannelsSourcesRelation.keySet().size());
+            }
+
+            for (List<String> channelPermutation : channelsPermutations) {
+
+                if (sourcesPartialPermutations.size() > FlumeConfiguratorConstants.MAX_NUMBER_CARTESIAN_PRODUCT_NUMBER) {
+                    //The number of partial permutations is two big
+                    if (logger.isWarnEnabled()) {
+                        logger.warn("The number of partial permutations obtained until now is two big. Don't continue getting new permutations. Number of partial permutations : " + sourcesPartialPermutations.size() + " Limit cartesianProductNumber: " + FlumeConfiguratorConstants.MAX_NUMBER_CARTESIAN_PRODUCT_NUMBER);
+                    }
+                    break;
+                }
+                if (logger.isDebugEnabled()) {
+                    logger.debug("The number of partial permutations obtained until now: " + sourcesPartialPermutations.size());
+                }
+
+
+                List<List<String>> channelSourcesLists = new ArrayList<>();
+                List<Collection<List<String>>> channelSourcesPermutationLists = new ArrayList<>();
+                List<List<Integer>> permutationsSizesLists = new ArrayList<>();
+
+
+                //Process a permutation. Build a list of list of sources
+                for (int i = 0; i < channelPermutation.size(); i++) {
+                    String channelName = channelPermutation.get(i);
+                    //Get elements that only belong to this channel
+                    List<String> channelNameExclusiveElements = getElementsBelongToSet(mapSharedChannelsSourcesRelation, channelName, null, true);
+
+                    channelSourcesLists.add(channelNameExclusiveElements);
+                    for (int j = i + 1; j < channelPermutation.size(); j++) {
+                        String referenceChannelName = channelPermutation.get(j);
+                        List<String> channelNameSharedElements = getElementsBelongToSet(mapSharedChannelsSourcesRelation, channelName, referenceChannelName, false);
+
+                        //Add shared elements (only if they don't belong to list)
+                        List<String> channelNameSharedElementsList = new ArrayList<>();
+                        for (String channelNameSharedElement : channelNameSharedElements) {
+                            boolean existSource = false;
+                            for (List<String> predecessorList : channelSourcesLists) {
+                                if (predecessorList.contains(channelNameSharedElement)) {
+                                    existSource = true;
+                                }
+                            }
+                            if (!existSource) {
+                                channelNameSharedElementsList.add(channelNameSharedElement);
+                            }
+                        }
+                        channelSourcesLists.add(channelNameSharedElementsList);
+                    }
+                }
+
+                //Calculate product cartesian number
+                long cartesianProductNumber = 1;
+                for (List<String> channelSourcesList : channelSourcesLists) {
+                    cartesianProductNumber = cartesianProductNumber * CombinatoricsUtils.factorial(channelSourcesList.size());
+                }
+
+                if (cartesianProductNumber > FlumeConfiguratorConstants.MAX_NUMBER_CARTESIAN_PRODUCT_NUMBER) {
+                    //The cartesian product is too big
+                    if (logger.isWarnEnabled()) {
+                        logger.warn("There cartesian product will not be calculated (too many elements) - cartesianProductNumber: " + cartesianProductNumber + " Limit cartesianProductNumber: " + FlumeConfiguratorConstants.MAX_NUMBER_CARTESIAN_PRODUCT_NUMBER);
+                    }
+
+                    continue;
+                }
+
+                //Generate permutations of the lists of the list
+                Collection<List<String>> permutationsList;
+                for (List<String> channelSourcesList : channelSourcesLists) {
+                    if (channelSourcesList.size() > 0) {
+                        permutationsList = CollectionUtils.permutations(channelSourcesList);
+                    } else {
+                        permutationsList = Collections.EMPTY_LIST;
+                    }
+                    channelSourcesPermutationLists.add(permutationsList);
+                    List<Integer> permutationsSizesList = generateSizesList(permutationsList);
+                    permutationsSizesLists.add(permutationsSizesList);
+                }
+
+                //Cartesian product
+                List<List<Integer>> cartesianProductPermutationSizesLists = getCartesianProduct(permutationsSizesLists);
+
+                for (List<Integer> cartesianProductPermutationSizesElement : cartesianProductPermutationSizesLists) {
+                    List<String> totalSourcesList = new ArrayList<>();
+                    for(int i=0; i<cartesianProductPermutationSizesElement.size(); i++) {
+                        //Get the permutation on index
+                        Integer indexPermutation = cartesianProductPermutationSizesElement.get(i);
+                        if (indexPermutation > 0) {
+                            //Index base 1
+                            indexPermutation = indexPermutation - 1;
+
+                            //Get the permutation (list (i) - permutation (indexPermutation))
+                            List<String> partialSourcesList = CollectionUtils.get(channelSourcesPermutationLists.get(i), indexPermutation);
+
+                            totalSourcesList.addAll(partialSourcesList);
+                        }
+                    }
+                    sourcesPartialPermutations.add(totalSourcesList);
+                }
+            }
+        }
+
+        return sourcesPartialPermutations;
+
+    }
+
+
+    /**
+     * Generate a list with the sizes of the lists of the collection
+     * @param collection Collection with the lists
+     * @return list with the sizes of the lists of the collection
+     */
+    private static List<Integer> generateSizesList(Collection<?> collection) {
+
+        List<Integer> sizesList = new ArrayList<>();
+
+        if (collection != null) {
+            int size = collection.size();
+
+            if (size == 0) {
+                sizesList.add(0);
+            } else {
+                for (int i=1; i<=size; i++) {
+                    sizesList.add(i);
+                }
+            }
+        }
+
+        return sizesList;
+    }
+
+
+    /**
+     * Get groups of shared sources than share any channel with other source(s) of the group. The groups
+     * @param mapSharedChannelsSourcesRelation
+     * @return
+     */
+    public static Map<String, List<String>> getSharedSourcesGroups(Map<String, List<String>> mapSharedChannelsSourcesRelation) {
+
+        Map<String, List<String>> sharedSourcesGroups = new HashedMap<>();
+        Map<String, List<String>> sharedChannelsGroups = new HashedMap<>();
+        List<Set> listSharedSourcesChannels;
+
+        if (mapSharedChannelsSourcesRelation != null) {
+
+            Set<String> keySet = mapSharedChannelsSourcesRelation.keySet();
+
+            String[] keySetArray = keySet.toArray(new String[keySet.size()]);
+
+            for (int i=0; i<keySetArray.length; i++) {
+
+                for (int j=0; j<keySetArray.length; j++) {
+
+                    String channel_i_name = keySetArray[i];
+                    String channel_j_name = keySetArray[j];
+
+                    if (!sharedChannelsGroups.containsKey(channel_i_name)) {
+                        sharedChannelsGroups.put(channel_i_name, new ArrayList<>());
+                    }
+
+                    List<String> sourcesChannel_i = mapSharedChannelsSourcesRelation.get(keySetArray[i]);
+                    List<String> sourcesChannel_j = mapSharedChannelsSourcesRelation.get(keySetArray[j]);
+
+                    if (CollectionUtils.containsAny(sourcesChannel_i, sourcesChannel_j)) {
+                        sharedChannelsGroups.get(channel_i_name).add(channel_j_name);
+                    }
+                }
+            }
+
+            //Create graph
+            IGraph channelsRelationGraph = GraphFactory.createDefaultDirectedGraph("jgrapht");
+
+            //Add vertex
+            for (String channelName : sharedChannelsGroups.keySet()) {
+                FlumeTopology channelFT = new FlumeTopology();
+                channelFT.setId(channelName);
+                channelsRelationGraph.addGraphVertex(channelFT);
+            }
+
+            //Add edges
+            for (String channelName : sharedChannelsGroups.keySet()) {
+                FlumeTopology nodeSource = channelsRelationGraph.getVertex(channelName, false);
+                List<String> sharedChannels = sharedChannelsGroups.get(channelName);
+
+                for(String sharedChannelName : sharedChannels) {
+                    FlumeTopology nodeTarget = channelsRelationGraph.getVertex(sharedChannelName, false);
+                    channelsRelationGraph.addGraphEdge(nodeSource, nodeTarget);
+                }
+            }
+
+            //Get subgroups
+            listSharedSourcesChannels = channelsRelationGraph.getConnectedSets();
+
+            int i=1;
+
+            //Create shared sources groups
+            for (Set sharedSourcesChannel : listSharedSourcesChannels) {
+                List<String> sourcesList = new ArrayList<>();
+                for (Object sharedChannelElement : sharedSourcesChannel) {
+                    FlumeTopology sharedChannelElementFT = (FlumeTopology) sharedChannelElement;
+                    String channelElement = sharedChannelElementFT.getId();
+                    List<String> sourcesChannelList = mapSharedChannelsSourcesRelation.get(channelElement);
+                    sourcesList.addAll(sourcesChannelList);
+                }
+                //Remove duplicates
+                List<String> sourcesListWithoutDuplicates = new ArrayList<>(new HashSet<>(sourcesList));
+                //Put in map
+                sharedSourcesGroups.put(FlumeConfiguratorConstants.SOURCES_GROUP_PREFIX_NAME+i, sourcesListWithoutDuplicates);
+                i++;
+            }
+
+        }
+        return sharedSourcesGroups;
+    }
+
+
+    /**
+     * Get number of sources of a list referenced by a map
+     * @param completeSourcesList list of sources
+     * @param mapSharedChannelsSourcesRelation map with relation between channels and sources
+     * @return number of sources of a list referenced by a map
+     */
+    public static int getSourcesNumberReferencedByMap(List<String> completeSourcesList, Map<String,List<String>> mapSharedChannelsSourcesRelation) {
+
+        List<String> sourcesReferencedByMap = new ArrayList<>();
+        int sourcesNumberReferencedByMap = 0;
+
+        if (completeSourcesList != null && mapSharedChannelsSourcesRelation != null) {
+            //Detect sources not referencied by map
+            for (String sourceName : completeSourcesList) {
+                for (String channelName : mapSharedChannelsSourcesRelation.keySet()) {
+                    List<String> channelSourcesList = mapSharedChannelsSourcesRelation.get(channelName);
+                    if (channelSourcesList.contains(sourceName)) {
+                        if (!sourcesReferencedByMap.contains(sourceName)) {
+                            sourcesReferencedByMap.add(sourceName);
+                            sourcesNumberReferencedByMap++;
+                        }
+                    }
+                }
+            }
+        }
+
+        return sourcesNumberReferencedByMap;
+    }
+
+
+    /**
+     * Add sources from a list to all permutations from the collection
+     * @param sourcesPermutations Collection with the permutations of sources
+     * @param sourcesNotReferencedByMap list of sources to add to the permutations
+     * @return Collection of permutations with the sources added
+     */
+    private static Collection<List<String>> addSourcesNotReferencedByMapToPermutation(Collection<List<String>> sourcesPermutations,
+                                                                         List<String> sourcesNotReferencedByMap) {
+
+        Collection<List<String>> enrichedSourcesPermutations = new ArrayList<>();
+        List<String> sourcesNotInMapWithSourcePermutation;
+
+        if (sourcesPermutations != null && sourcesNotReferencedByMap != null) {
+
+
+            Iterator<List<String>> itSourcesPermutations = sourcesPermutations.iterator();
+
+            while (itSourcesPermutations.hasNext()) {
+                List<String> sourcePermutation = itSourcesPermutations.next();
+
+                //Add permutation from sources not in map + permutation of sources in map
+                sourcesNotInMapWithSourcePermutation = new ArrayList<>(sourcesNotReferencedByMap);
+                sourcesNotInMapWithSourcePermutation.addAll(sourcePermutation);
+                enrichedSourcesPermutations.add(sourcesNotInMapWithSourcePermutation);
+            }
+        }
+
+        return enrichedSourcesPermutations;
+    }
+
+    /**
+     * Detect if exists a relation (ancestor or descendant) between two elements
+     * @param igraph Graph of the agent
+     * @param flumeTopologyList list of Flume Topology elements
+     * @param element1_Name name of the first element
+     * @param element2_Name name of the second element
+     * @return true if exists a relation (ancestor or descendant) between elements, false otherwise
+     */
+    private static boolean existRelation(IGraph igraph, List<FlumeTopology> flumeTopologyList, String element1_Name, String element2_Name) {
+
+        boolean existRelation = false;
+
+        if (igraph != null && flumeTopologyList != null && element1_Name != null && !element1_Name.isEmpty() && element2_Name != null && !element2_Name.isEmpty()) {
+
+
+            String element1_ID = FlumeConfiguratorTopologyUtils.getFlumeTopologyId(flumeTopologyList, element1_Name);
+            String element2_ID = FlumeConfiguratorTopologyUtils.getFlumeTopologyId(flumeTopologyList, element2_Name);
+
+            FlumeTopology element1_FlumeTopology = igraph.getVertex(element1_ID, true);
+            FlumeTopology element2_FlumeTopology = igraph.getVertex(element2_ID, true);
+
+            Set<FlumeTopology> element1_Descendants = igraph.getVertexDescendants(element1_FlumeTopology);
+            for (FlumeTopology element1_Descendant : element1_Descendants) {
+                if (element1_Descendant.equals(element2_FlumeTopology)) {
+                    existRelation = true;
+                }
+            }
+
+            if (!existRelation) {
+                Set<FlumeTopology> element1_Ancestors = igraph.getVertexAncestors(element1_FlumeTopology);
+                for (FlumeTopology element1_Ancestor : element1_Ancestors) {
+                    if (element1_Ancestor.equals(element2_FlumeTopology)) {
+                        existRelation = true;
+                    }
+                }
+            }
+        }
+
+        return existRelation;
+
+    }
+
+    /**
+     * Get degree of grouping of the sources of the channels from a permutation. The degree will be
+     * 0 when all sources of a channel are together. The number of sources than don't belong to
+     * the channel between the first source than belong to the channel and last one will be the
+     * channel grouping degree.
+     * @param igraph graph of the agent
+     * @param flumeTopologyList list of Flume Topology elements
+     * @param sourcesPermutation permutation of the sources
+     * @param sharedChannelsSourcesRelationMap map with relation between sources and channels
+     * @return the degree of grouping of the sources of the channels from a permutation
+     */
+    private static int getPermutationChannelGroupingDegree(IGraph igraph, List<FlumeTopology> flumeTopologyList, List<String> sourcesPermutation, Map<String, List<String>> sharedChannelsSourcesRelationMap) {
+
+        int permutationGroupingDegree = 0;
+
+        if (igraph != null && flumeTopologyList != null && sourcesPermutation != null && sharedChannelsSourcesRelationMap != null) {
+            for (String channelName : sharedChannelsSourcesRelationMap.keySet()) {
+                //Get permutation grouping degree for the channel
+                boolean firstElementFound = false;
+                int noChannelBlockSourcesNumber = 0;
+                int noChannelSourcesNumber = 0;
+                for (String sourceName : sourcesPermutation) {
+                    boolean existRelation = existRelation(igraph, flumeTopologyList, sourceName, channelName);
+                    if (existRelation) {
+                        if (!firstElementFound) {
+                            firstElementFound = true;
+                        } else {
+                            noChannelSourcesNumber = noChannelSourcesNumber + noChannelBlockSourcesNumber;
+                            noChannelBlockSourcesNumber = 0;
+                        }
+                    } else {
+                        if (firstElementFound) {
+                            noChannelBlockSourcesNumber++;
+                        }
+                    }
+                }
+
+                permutationGroupingDegree = permutationGroupingDegree + noChannelSourcesNumber;
+
+            }
+        }
+
+        return permutationGroupingDegree * FlumeConfiguratorConstants.FACTOR_CHANNEL_GROUPING_DEGREE;
+    }
+
+
+    /**
+     * Get degree of grouping of the sources of the sinkgroups from a permutation. The degree will be
+     * 0 when all sources of a sinkgroup are together. The number of sources than don't belong to
+     * the sinkgroup between the first source than belong to the sinkgroup and last one will be the
+     * sinkgroup grouping degree.
+     * @param igraph igraph graph of the agent
+     * @param flumeTopologyList list of Flume Topology elements
+     * @param sourcesPermutation permutation of the sources
+     * @param mapSharedSinkgroupsSourcesRelation map with relation between sources and sinkgroups
+     * @return the degree of grouping of the sources of the sinkgroups from a permutation
+     */
+    private static int getPermutationSinkgroupGroupingDegree(IGraph igraph, List<FlumeTopology> flumeTopologyList, List<String> sourcesPermutation, Map<String, List<String>> mapSharedSinkgroupsSourcesRelation) {
+
+        int permutationGroupingDegree = 0;
+
+        for (String sinkgroupName : mapSharedSinkgroupsSourcesRelation.keySet()) {
+            //Get permutation grouping degree for the channel
+            boolean firstElementFound = false;
+            int noSinkgroupBlockSourcesNumber = 0;
+            int noSinkgroupSourcesNumber = 0;
+            for (String sourceName : sourcesPermutation) {
+                boolean existRelation = mapSharedSinkgroupsSourcesRelation.get(sinkgroupName).contains(sourceName);
+                if (existRelation) {
+                    if (!firstElementFound) {
+                        firstElementFound = true;
+                    } else {
+                        noSinkgroupSourcesNumber = noSinkgroupSourcesNumber + noSinkgroupBlockSourcesNumber;
+                        noSinkgroupBlockSourcesNumber = 0;
+                    }
+                } else {
+                    if (firstElementFound) {
+                        noSinkgroupBlockSourcesNumber++;
+                    }
+                }
+            }
+
+            permutationGroupingDegree = permutationGroupingDegree + noSinkgroupSourcesNumber;
+
+        }
+
+        return permutationGroupingDegree * FlumeConfiguratorConstants.FACTOR_SINKGROUP_GROUPING_DEGREE;
+    }
+
+
+    /**
+     * Get degree of outsiding of the sources from a permutation. The degree will be
+     * 0 when the two sources with maximum number of independent channels and interceptors are first and last source of the permutation. The distance
+     * between the position of the two sources with maximum number of independent channels/indicators and the first or last position of the permutation
+     * will be the degree of outsiding.
+     * @param sourcesPermutation permutation of the sources
+     * @param sourcesIndependentChannelsRelationMap map with relation between sources and their independent channels
+     * @param sourcesInterceptorsRelationMap map with relation between sources and their interceptors
+     * @return the degree of outsiding of the sources from a permutation
+     */
+    private static int getPermutationOutsidingDegree(List<String> sourcesPermutation, Map<String,List<String>> sourcesIndependentChannelsRelationMap, Map<String,List<String>> sourcesInterceptorsRelationMap) {
+
+        int permutationOutsidingDegree = 0;
+
+        if (sourcesPermutation != null && sourcesIndependentChannelsRelationMap != null && sourcesInterceptorsRelationMap != null ) {
+
+            //Get the 2 best options
+            String firstSource = null;
+            String secondSource = null;
+            int firstSourceIndependentChannelsNumber = 0;
+            int secondSourceIndependentChannelsNumber = 0;
+            int firstSourceInterceptorsNumber = 0;
+            int secondSourceInterceptorsNumber = 0;
+
+            //boolean isFirstElement = true;
+            int elementNumber = 1;
+            for (String sourceName : sourcesIndependentChannelsRelationMap.keySet()) {
+
+                if (sourcesPermutation.contains(sourceName)) {
+                    int sourceIndependentChannelsNumber = sourcesIndependentChannelsRelationMap.get(sourceName).size();
+                    int sourceInterceptorsNumber = sourcesInterceptorsRelationMap.get(sourceName).size();
+
+                    if (elementNumber == 1) {
+                        firstSource = sourceName;
+                        firstSourceIndependentChannelsNumber = sourceIndependentChannelsNumber;
+                        firstSourceInterceptorsNumber = sourceInterceptorsNumber;
+                    } else if (elementNumber == 2) {
+                        secondSource = sourceName;
+                        secondSourceIndependentChannelsNumber = sourceIndependentChannelsNumber;
+                        secondSourceInterceptorsNumber = sourceInterceptorsNumber;
+                    }
+
+                    if (sourceIndependentChannelsNumber > firstSourceIndependentChannelsNumber) {
+                        secondSource = firstSource;
+                        secondSourceIndependentChannelsNumber = firstSourceIndependentChannelsNumber;
+                        firstSource = sourceName;
+                        firstSourceIndependentChannelsNumber = sourceIndependentChannelsNumber;
+                    } else if (sourceIndependentChannelsNumber == firstSourceIndependentChannelsNumber) {
+                        if (sourceInterceptorsNumber >= firstSourceInterceptorsNumber) {
+                            secondSource = firstSource;
+                            secondSourceIndependentChannelsNumber = firstSourceIndependentChannelsNumber;
+                            secondSourceInterceptorsNumber = firstSourceInterceptorsNumber;
+                            firstSource = sourceName;
+                            firstSourceIndependentChannelsNumber = sourceIndependentChannelsNumber;
+                            firstSourceInterceptorsNumber = sourceInterceptorsNumber;
+
+                        } else if (sourceInterceptorsNumber >= secondSourceInterceptorsNumber) {
+                            secondSource = sourceName;
+                            secondSourceIndependentChannelsNumber = sourceIndependentChannelsNumber;
+                            secondSourceInterceptorsNumber = sourceInterceptorsNumber;
+                        }
+                    } else if (sourceIndependentChannelsNumber > secondSourceIndependentChannelsNumber) {
+                        secondSource = sourceName;
+                        secondSourceIndependentChannelsNumber = sourceIndependentChannelsNumber;
+                        secondSourceInterceptorsNumber = sourceInterceptorsNumber;
+                    } else if (sourceIndependentChannelsNumber == secondSourceIndependentChannelsNumber) {
+                        if (sourceInterceptorsNumber >= secondSourceInterceptorsNumber) {
+                            secondSource = sourceName;
+                            secondSourceIndependentChannelsNumber = sourceIndependentChannelsNumber;
+                            secondSourceInterceptorsNumber = sourceInterceptorsNumber;
+                        }
+                    }
+
+                    elementNumber++;
+                }
+            }
+
+            //Calculate distance between position and idoneal position of two best elements
+            int distanceFirstSource;
+            int distanceSecondSource;
+            int posFirstSource = sourcesPermutation.indexOf(firstSource);
+            int posSecondSource = sourcesPermutation.indexOf(secondSource);
+
+
+            String source_permutation_begin = sourcesPermutation.get(0);
+            String source_permutation_end = sourcesPermutation.get(sourcesPermutation.size()-1);
+
+            int source_permutation_begin_IndependentChannelsNumber = sourcesIndependentChannelsRelationMap.get(source_permutation_begin).size();
+            int source_permutation_begin_InterceptorsNumber = sourcesInterceptorsRelationMap.get(source_permutation_begin).size();
+
+            int source_permutation_end_IndependentChannelsNumber = sourcesIndependentChannelsRelationMap.get(source_permutation_end).size();
+            int source_permutation_end_InterceptorsNumber = sourcesInterceptorsRelationMap.get(source_permutation_end).size();
+
+
+            if (source_permutation_begin_IndependentChannelsNumber == firstSourceIndependentChannelsNumber && source_permutation_begin_InterceptorsNumber == firstSourceInterceptorsNumber) {
+                //Source at index 0 is as good as firstSource
+                posFirstSource = 0;
+
+                if (source_permutation_end_IndependentChannelsNumber == secondSourceIndependentChannelsNumber && source_permutation_end_InterceptorsNumber == secondSourceInterceptorsNumber) {
+                    posSecondSource = sourcesPermutation.size()-1;
+                }
+
+            } else if (source_permutation_end_IndependentChannelsNumber == firstSourceIndependentChannelsNumber && source_permutation_end_InterceptorsNumber == firstSourceInterceptorsNumber) {
+                //Source at index n-1 is as good as firstSource
+                posFirstSource = sourcesPermutation.size()-1;
+
+                if (source_permutation_begin_IndependentChannelsNumber == secondSourceIndependentChannelsNumber && source_permutation_begin_InterceptorsNumber == secondSourceInterceptorsNumber) {
+                    posSecondSource = 0;
+                }
+            }
+
+
+            int distanceToEndFirstSource = Math.abs(sourcesPermutation.size() - 1 - posFirstSource);
+
+            if (distanceToEndFirstSource <= posFirstSource) {
+                distanceFirstSource = distanceToEndFirstSource;
+                distanceSecondSource = posSecondSource;
+            } else {
+                distanceFirstSource = posFirstSource;
+                distanceSecondSource = Math.abs(sourcesPermutation.size() - 1 - posSecondSource);
+            }
+
+            permutationOutsidingDegree = distanceFirstSource + distanceSecondSource;
+
+        }
+
+
+        return permutationOutsidingDegree * FlumeConfiguratorConstants.FACTOR_OUTSIDIND_DEGREE;
+    }
+
+
+
+    public static List<String> getOptimalSharedSourcesPermutation(IGraph igraph, List<FlumeTopology> flumeTopologyList,
+                                                            Collection<List<String>> sourcesPermutations,
+                                                            Map<String, List<String>> sharedChannelsSourcesRelationMap,
+                                                            Map<String,List<String>> sourcesIndependentChannelsRelationMap,
+                                                            Map<String,List<String>> sourcesInterceptorsRelationMap,
+                                                            Map<String,List<String>> sharedSinkGroupsSourcesRelationsMap,
+                                                            List<Integer> alternativeOptimizationPermutationAgentList,
+                                                            int agentIndex) {
+
+        List<String> optimalSourcesPermutation = null;
+
+        if (alternativeOptimizationPermutationAgentList == null || alternativeOptimizationPermutationAgentList.size() == 0 || alternativeOptimizationPermutationAgentList.size() <= agentIndex) {
+            //The alternative number 1 is choosen
+            optimalSourcesPermutation = getOptimalSharedSourcesPermutationWithAlternatives(igraph, flumeTopologyList, sourcesPermutations, sharedChannelsSourcesRelationMap, sourcesIndependentChannelsRelationMap,
+                    sourcesInterceptorsRelationMap, sharedSinkGroupsSourcesRelationsMap, 1);
+        } else {
+            //The alternative indicated by list for the agent
+            int alternativeOptimizationPermutationAgent = alternativeOptimizationPermutationAgentList.get(agentIndex);
+            optimalSourcesPermutation = getOptimalSharedSourcesPermutationWithAlternatives(igraph, flumeTopologyList, sourcesPermutations, sharedChannelsSourcesRelationMap, sourcesIndependentChannelsRelationMap,
+                    sourcesInterceptorsRelationMap, sharedSinkGroupsSourcesRelationsMap, alternativeOptimizationPermutationAgent);
+        }
+
+        return optimalSourcesPermutation;
+
+    }
+
+
+
+    public static List<String> getOptimalSharedSourcesPermutationWithAlternatives(IGraph igraph, List<FlumeTopology> flumeTopologyList,
+                                                                  Collection<List<String>> sourcesPermutations,
+                                                                  Map<String, List<String>> sharedChannelsSourcesRelationMap,
+                                                                  Map<String,List<String>> sourcesIndependentChannelsRelationMap,
+                                                                  Map<String,List<String>> sourcesInterceptorsRelationMap,
+                                                                  Map<String,List<String>> sharedSinkGroupsSourcesRelationsMap,
+                                                                  int alternativesNumber) {
+
+        List<String> optimalSourcesPermutation = null;
+
+        if (igraph != null && flumeTopologyList != null && sourcesPermutations != null && sharedChannelsSourcesRelationMap != null && sourcesIndependentChannelsRelationMap != null && sourcesInterceptorsRelationMap != null) {
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("Calculating shared sources optimal permutation. Number of alternative: " + alternativesNumber);
+            }
+            if (sourcesPermutations.size() == 1) {
+                optimalSourcesPermutation = CollectionUtils.get(sourcesPermutations, 0);
+
+            } else if (sourcesPermutations.size() > 1) {
+
+                int minPermutationOptimalDegreeValue = Integer.MAX_VALUE;
+                int sourcesPermutationChannelGroupingDegree = 0;
+                int sourcesPermutationOutsidingDegree = 0;
+                int sourcesPermutationSinkgroupGroupingDegree = 0;
+                int sourcesPermutationOptimalDegree= 0;
+
+                int optimalSourcesPermutationIterNumber = 1;
+                int iterNumber = 1;
+
+                //Creation of a queue
+                LinkedList<List<String>> alternativesQueue = new LinkedList<>();
+                LinkedList<List<String>> alternativesZeroDegreeQueue = new LinkedList<>();
+
+
+                Iterator<List<String>> itSourcesPermutations = sourcesPermutations.iterator();
+
+
+               // while (itSourcesPermutations.hasNext() && minPermutationOptimalDegreeValue > 0) {
+                while (itSourcesPermutations.hasNext() && alternativesZeroDegreeQueue.size() < alternativesNumber) {
+
+                    if (iterNumber % 100000 == 0) {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("Permutations processed number: (" + iterNumber + " / " + sourcesPermutations.size() + ")");
+                        }
+                    }
+                    List<String> sourcesPermutation = itSourcesPermutations.next();
+
+                    sourcesPermutationChannelGroupingDegree = getPermutationChannelGroupingDegree(igraph, flumeTopologyList, sourcesPermutation, sharedChannelsSourcesRelationMap);
+                    sourcesPermutationOutsidingDegree = getPermutationOutsidingDegree(sourcesPermutation, sourcesIndependentChannelsRelationMap, sourcesInterceptorsRelationMap);
+                    sourcesPermutationSinkgroupGroupingDegree = getPermutationSinkgroupGroupingDegree(igraph, flumeTopologyList, sourcesPermutation, sharedSinkGroupsSourcesRelationsMap);
+
+                    sourcesPermutationOptimalDegree = sourcesPermutationChannelGroupingDegree + sourcesPermutationOutsidingDegree + sourcesPermutationSinkgroupGroupingDegree;
+
+                    if (sourcesPermutationOptimalDegree < minPermutationOptimalDegreeValue || sourcesPermutationOptimalDegree == 0) {
+
+                        if (alternativesQueue.size() < alternativesNumber) {
+                            alternativesQueue.add(sourcesPermutation);
+                        } else {
+                            alternativesQueue.remove();
+                            alternativesQueue.add(sourcesPermutation);
+                        }
+
+                        if (sourcesPermutationOptimalDegree == 0) {
+                            alternativesZeroDegreeQueue.add(sourcesPermutation);
+                        }
+
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("New optimal sources permutation found. Optimization function value: " +  sourcesPermutationOptimalDegree + ". Iteration number: " + iterNumber + " / " + sourcesPermutations.size());
+                        }
+                        minPermutationOptimalDegreeValue = sourcesPermutationOptimalDegree;
+                        optimalSourcesPermutationIterNumber = iterNumber;
+                    }
+
+                    iterNumber++;
+
+                }
+
+                if (logger.isDebugEnabled()) {
+                    iterNumber--;
+                    logger.debug("Optimal sources permutation found at iteration number " + optimalSourcesPermutationIterNumber + " with " + iterNumber + " permutations processed of " + sourcesPermutations.size());
+                    logger.debug("sourcesPermutationOptimalDegree: " +  sourcesPermutationOptimalDegree + " (sourcesPermutationChannelGroupingDegree: " + sourcesPermutationChannelGroupingDegree + " / sourcesPermutationOutsidingDegree: " + sourcesPermutationOutsidingDegree + " sourcesPermutationSinkgroupGroupingDegree: " + sourcesPermutationSinkgroupGroupingDegree + ")");
+                }
+
+                //Log alternatives
+                if (logger.isDebugEnabled()) {
+                    StringBuilder sb = new StringBuilder();
+                    for (int i = 1; i <= alternativesQueue.size(); i++) {
+                       sb.setLength(0);
+                        List<String> alternative = alternativesQueue.get(i-1);
+                        sb.append("Alternative number: ").append(i).append(" Sources");
+                        sb.append(Arrays.toString(alternative.toArray()));
+                        logger.debug(sb.toString());
+
+                    }
+                }
+
+                ////Get the chosen optimal alternative
+                if (alternativesNumber > alternativesZeroDegreeQueue.size()) {
+                    int index = 0;
+                    optimalSourcesPermutation = alternativesQueue.get(index);
+                    int alternativeIndex = index + 1;
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("optimalSourcesPermutation (alternative " + alternativeIndex + ") Sources: " + Arrays.toString(optimalSourcesPermutation.toArray()));
+                    }
+                } else {
+                    int index = alternativesQueue.size() - 1;
+                    optimalSourcesPermutation = alternativesQueue.get(index);
+                    int alternativeIndex = index + 1;
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("optimalSourcesPermutation (alternative " + alternativeIndex + ") Sources: " + Arrays.toString(optimalSourcesPermutation.toArray()));
+                    }
+                }
+
+
+            }
+        }
+
+        return optimalSourcesPermutation;
+    }
+
+
+
+
+
+    public static Map<String, List<String>> getMapSharedSinkGroupsSourcesRelation(IGraph agentGraph, List<FlumeTopology> flumeTopologyList, List<String> sourcesList) {
+
+        Map<String, List<String>> mapSharedSinkGroupsSourcesRelation = new HashedMap<>();
+        Map<String, List<String>> sourcesSharedSinkGroupsRelationsMap = new HashMap<>();
+        List<String> sharedSinkGroupSources = new ArrayList<>();
+
+        if (agentGraph != null && flumeTopologyList != null && sourcesList != null) {
+            //Create relation between sources and shared sinkgroups
+            for (String sourceName : sourcesList) {
+
+                String sourceID = FlumeConfiguratorTopologyUtils.getFlumeTopologyId(flumeTopologyList, sourceName);
+                FlumeTopology flumeTopologySourceElement = FlumeConfiguratorTopologyUtils.getFlumeTopologyElement(flumeTopologyList, sourceID);
+
+                if (flumeTopologySourceElement.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE)) {
+
+                    sourcesSharedSinkGroupsRelationsMap.put(sourceName, new ArrayList<>());
+
+                    //Get descendants of source
+                    Set<FlumeTopology> sourceChildren = agentGraph.getVertexDescendants(flumeTopologySourceElement);
+                    Iterator<FlumeTopology> itSourceChildren = sourceChildren.iterator();
+
+                    while (itSourceChildren.hasNext()) {
+                        FlumeTopology sourceChild = itSourceChildren.next();
+
+                        if (sourceChild.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SINKGROUP)) {
+
+                            String sinkGroupName = sourceChild.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
+
+                            //Get all sources from sink group
+                            Set<FlumeTopology> sinkGroupAncestorsList = agentGraph.getVertexAncestors(sourceChild);
+
+                            for (FlumeTopology sinkGroupAncestor : sinkGroupAncestorsList) {
+
+                                if (sinkGroupAncestor.getType().equals(FlumeConfiguratorConstants.FLUME_TOPOLOGY_SOURCE)) {
+                                    String sinkGroupAncestorSourceName = sinkGroupAncestor.getData().get(FlumeConfiguratorConstants.FLUME_TOPOLOGY_PROPERTY_ELEMENT_TOPOLOGY_NAME);
+
+                                    if (!sinkGroupName.equals(sinkGroupAncestorSourceName)) {
+                                        logger.debug("The source " + sourceName + " has a sink group with a different source: " + sinkGroupAncestorSourceName);
+                                        //The channel has a different source
+                                        //Add the shared sinkGroup
+                                        sourcesSharedSinkGroupsRelationsMap.get(sourceName).add(sinkGroupName);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            //Get list of fully independent sources and independent sources that share sinkgroup
+            for (String sourceName : sourcesSharedSinkGroupsRelationsMap.keySet()) {
+
+                List<String> sharedSinkGroupList = sourcesSharedSinkGroupsRelationsMap.get(sourceName);
+                if (sharedSinkGroupList.size() > 0) {
+                    //Source share sinkGroups with other sources
+                    sharedSinkGroupSources.add(sourceName);
+                }
+            }
+
+            mapSharedSinkGroupsSourcesRelation = getMapSharedSinkGroupsSourcesRelation(sharedSinkGroupSources, sourcesSharedSinkGroupsRelationsMap);
+
+        }
+
+        return mapSharedSinkGroupsSourcesRelation;
+
+    }
+
+
 }

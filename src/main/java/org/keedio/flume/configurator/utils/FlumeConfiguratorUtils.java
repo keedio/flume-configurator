@@ -841,11 +841,11 @@ public class FlumeConfiguratorUtils {
     }
 
     /**
-     * Indicate if a property is a property of selector that references channels
+     * Indicate if a property (base configuration) is a property of selector that references channels
      * @param propertyName String with the name of the property
      * @return true if the property is t a property of selector that references channels, false otherwise
      */
-    public static boolean isSelectorChannelReferenceProperty(String propertyName) {
+    public static boolean isSelectorChannelReferenceBaseConfigurationProperty(String propertyName) {
 
         return (propertyName.startsWith(FlumeConfiguratorConstants.SELECTORS_COMMON_PROPERTY_PROPERTIES_PREFIX) ||
                 propertyName.startsWith(FlumeConfiguratorConstants.SELECTORS_PARTIAL_PROPERTY_PROPERTIES_PREFIX)) &&
@@ -855,6 +855,8 @@ public class FlumeConfiguratorUtils {
                 propertyName.contains(FlumeConfiguratorConstants.DEFAULT_PROPERTY)));
 
     }
+
+
 
     /**
      * Split the value of a property
